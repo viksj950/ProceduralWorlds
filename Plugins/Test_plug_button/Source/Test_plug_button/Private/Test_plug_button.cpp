@@ -9,8 +9,12 @@
 #include "Selection.h"
 #include "LevelEditor.h"
 #include "Editor.h"
+#include "Editor/EditorEngine.h"
 #include "Landscape.h"
 #include "Engine/World.h"
+#include "LandscapeInfo.h"
+
+
 
 
 static const FName Test_plug_buttonTabName("Test_plug_button");
@@ -82,14 +86,14 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 
 	FQuat InRotation{0,0,0,0};
-	FVector InTranslation{0,0,0};
+	FVector InTranslation{0,0,5};
 	FVector InScale{1,1,1};
 	FTransform LandscapeTransform{ InRotation, InTranslation, InScale };
 	int32 QuadsPerSection{63};
 	int32 SectionsPerComponent{1};
 	int32 ComponentCountX{8};
 	int32 ComponentCountY{8};
-	int32 QuadsPerComponent{505};
+	int32 QuadsPerComponent{63};
 	int32 SizeX{505};
 	int32 SizeY{505};
 
@@ -102,74 +106,50 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	HeightData.SetNum(SizeX * SizeY);
 	for (int32 i = 0; i < HeightData.Num(); i++)
 	{
+		/*if (i % 2 == 0)
+		{
+			HeightData[i] = 60000;
+		}
+		else {
+			HeightData[i] = 32768;
+		}*/
+		
 		HeightData[i] = 32768;
 	}
+	HeightData[75000] = 60000;
 
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(HeightData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
 
 
 	UWorld* World = nullptr;
-	{
+	
 		// We want to create the landscape in the landscape editor mode's world
 		FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
 		World = EditorWorldContext.World();
-	}
 
+	ALandscape* Landscape = World->SpawnActor<ALandscape>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f)); //THIS IS THE PROBLEM AT THE MOMENT
 
-	//ALandscape* Landscape = World->SpawnActor<ALandscape>();
+	Landscape->bCanHaveLayersContent = false;
+	Landscape->LandscapeMaterial = nullptr;
 
-	//const std::size_t width = 32;
-	//const std::size_t height = 32;
+	Landscape->SetActorTransform(LandscapeTransform);
+	Landscape->Import(FGuid::NewGuid(),0,0,SizeX - 1, SizeY - 1,SectionsPerComponent,QuadsPerComponent,
+		HeightDataPerLayers,nullptr,MaterialLayerDataPerLayers,ELandscapeImportAlphamapType::Additive);
 
-	//TArray<FColor> Pixels;
-	//Pixels.Init(FColor(0, 255, 0, 255), 32 * 32);
+	Landscape->StaticLightingLOD = FMath::DivideAndRoundUp(FMath::CeilLogTwo((SizeX * SizeY) / (2048 * 2048) + 1), (uint32)2);
+	// Register all the landscape components
+	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
 
-	//FString PackageName = TEXT("/Game/Texture");
-	//FString TextureName = TEXT("my_heightmap");
+	LandscapeInfo->UpdateLayerInfoMap(Landscape);
 
-	//PackageName += TextureName;
-	//UPackage* Package = CreatePackage(NULL, *PackageName);
-	//Package->FullyLoad();
+	Landscape->RegisterAllComponents();
 
-	//UTexture2D* res = NewObject<UTexture2D>(Package, *TextureName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
+	// Need to explicitly call PostEditChange on the LandscapeMaterial property or the landscape proxy won't update its material
+	FPropertyChangedEvent MaterialPropertyChangedEvent(FindFieldChecked< FProperty >(Landscape->GetClass(), FName("LandscapeMaterial")));
+	Landscape->PostEditChangeProperty(MaterialPropertyChangedEvent);
+	Landscape->PostEditChange();
 
-	//res->AddToRoot();
-	//res->SRGB = 0;
-	//res->MipGenSettings = TMGS_NoMipmaps;
-
-	//res->PlatformData = new FTexturePlatformData();	// Then we initialize the PlatformData
-	//res->PlatformData->SizeX = width;
-	//res->PlatformData->SizeY = height;
-	//res->PlatformData->PixelFormat = EPixelFormat::PF_R8G8B8A8;
-	//res->UpdateResource();
-
-	//// // Allocate first mipmap.
-	//FTexture2DMipMap* Mip = new FTexture2DMipMap();
-	//res->PlatformData->Mips.Add(Mip);
-	//Mip->SizeX = width;
-	//Mip->SizeY = height;
-
-	//Mip->BulkData.Lock(LOCK_READ_WRITE);
-	//uint8* TextureData = static_cast<uint8*>(Mip->BulkData.Realloc(width * height * sizeof(FColor)));
-	//FMemory::Memcpy(TextureData, Pixels.GetData(), width * height * sizeof(FColor));
-	//Mip->BulkData.Unlock();
-
-	//// Apply Texture changes to GPU memory
-	//res->UpdateResource();
-
-	//res->Source.Init(
-	//	width,
-	//	height,
-	//	1, 1, ETextureSourceFormat::TSF_RGBA8, reinterpret_cast<uint8*>(Pixels.GetData()));
-
-	//res->UpdateResource();
-	//Package->MarkPackageDirty();
-	//FAssetRegistryModule::AssetCreated(res);
-
-	//FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
-	//bool bSaved = UPackage::SavePackage(Package, res, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
-	//check(bSaved)
 
 
 }
