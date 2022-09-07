@@ -6,15 +6,17 @@
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
 #include "AssetRegistrymodule.h"
-#include "Selection.h"
+#include "Engine/Selection.h"
 #include "LevelEditor.h"
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
 #include "Landscape.h"
 #include "Engine/World.h"
 #include "LandscapeInfo.h"
+#include "UObject/UObjectGlobals.h"
 
-
+#include "LandscapeStreamingProxy.h"
+#include "LandscapeSubsystem.h"
 
 
 static const FName Test_plug_buttonTabName("Test_plug_button");
@@ -57,37 +59,43 @@ void FTest_plug_buttonModule::ShutdownModule()
 void FTest_plug_buttonModule::PluginButtonClicked()
 {
 	// Put your "OnButtonClicked" stuff here
-
-	
-	
 	USelection* SelectedActors = GEditor->GetSelectedActors();
-	//TArray<AActor*> Actors;
-	//TArray<ULevel*> UniqueLevels;
-	//for (FSelectionIterator Iter(SelectedActors->get); Iter; ++Iter)
-	//{
-	//	AActor Actor = Cast(*Iter);
-	//	if (Actor)
-	//	{
-	//		Actors.Add(Actor);
-	//		//UniqueLevels.AddUnique 1(Actor->GetLevel());
-	//	}
-	//}
 	
-	FText DialogText = FText::FromString(SelectedActors->GetSelectedObject(0)->GetName());
-	/*FText DialogText = FText::Format(
-							LOCTEXT("PluginButtonDialogText", "Add code to {0} in {1} to override this button's actions"),
-							FText::FromString(TEXT("FTest_plug_buttonModule::PluginButtonClicked()")),
-							FText::FromString(TEXT("Test_plug_button.cpp"))
-					   );*/
+	FText DialogText;
 
-	
-	//FText DialogText = FText::AsNumber(res->GetSizeX());
+	if (SelectedActors)
+	{
+		DialogText = FText::FromString(SelectedActors->GetSelectedObject(0)->GetName());
+		/*FText DialogText = FText::Format(
+								LOCTEXT("PluginButtonDialogText", "Add code to {0} in {1} to override this button's actions"),
+								FText::FromString(TEXT("FTest_plug_buttonModule::PluginButtonClicked()")),
+								FText::FromString(TEXT("Test_plug_button.cpp"))
+						   );*/
+		FSelectionIterator it(*SelectedActors);
+		//TArray< ALandscapeProxy* > myProxies;
+		ALandscape* myland = Cast<ALandscape>(*it);
+
+		if (myland)
+		{
+			DialogText = FText::FromString("We have selected a Landscape");
+			//DialogText = FText::FromString(myland->GetLandscapeProxies()[0]->GetName());
+			//auto myProxies = myland->GetLandscapeProxies();
+		}
+		else
+		{
+			DialogText = FText::FromString("We have NOT selected a Landscape");
+		}
+	}
+	else
+	{
+		DialogText = FText::FromString("We have nothing selected");
+	}
 
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 
 	FQuat InRotation{0,0,0,0};
 	FVector InTranslation{0,0,5};
-	FVector InScale{1,1,1};
+	FVector InScale{100,100,100};
 	FTransform LandscapeTransform{ InRotation, InTranslation, InScale };
 	int32 QuadsPerSection{63};
 	int32 SectionsPerComponent{1};
@@ -128,9 +136,9 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 		FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
 		World = EditorWorldContext.World();
 
-	ALandscape* Landscape = World->SpawnActor<ALandscape>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f)); //THIS IS THE PROBLEM AT THE MOMENT
+	ALandscape* Landscape = World->SpawnActor<ALandscape>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f)); //This is working Pog
 
-	Landscape->bCanHaveLayersContent = false;
+	Landscape->bCanHaveLayersContent = true;
 	Landscape->LandscapeMaterial = nullptr;
 
 	Landscape->SetActorTransform(LandscapeTransform);
@@ -140,7 +148,7 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	Landscape->StaticLightingLOD = FMath::DivideAndRoundUp(FMath::CeilLogTwo((SizeX * SizeY) / (2048 * 2048) + 1), (uint32)2);
 	// Register all the landscape components
 	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
-
+	
 	LandscapeInfo->UpdateLayerInfoMap(Landscape);
 
 	Landscape->RegisterAllComponents();
@@ -149,8 +157,17 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	FPropertyChangedEvent MaterialPropertyChangedEvent(FindFieldChecked< FProperty >(Landscape->GetClass(), FName("LandscapeMaterial")));
 	Landscape->PostEditChangeProperty(MaterialPropertyChangedEvent);
 	Landscape->PostEditChange();
+	
+	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
+	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo,2);
 
 
+
+
+	
+	
+
+	
 
 }
 
