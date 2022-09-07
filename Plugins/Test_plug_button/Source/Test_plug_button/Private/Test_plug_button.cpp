@@ -14,6 +14,12 @@
 #include "Engine/World.h"
 #include "LandscapeInfo.h"
 
+#include "LandscapeProxy.h" //added, not needed yet
+#include "LandscapeStreamingProxy.h" //added, not needed yet
+#include "UObject/UObjectGlobals.h" //added
+#include "LandscapeComponent.h"
+#include "LandscapeSubsystem.h"
+
 
 
 
@@ -58,9 +64,16 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 {
 	// Put your "OnButtonClicked" stuff here
 
+	USelection* SelectedActors = nullptr;
+	FText DialogText;
 	
+	if (GEditor->GetSelectedActors() == nullptr) {
+		SelectedActors = GEditor->GetSelectedActors();
 	
-	USelection* SelectedActors = GEditor->GetSelectedActors();
+	}
+	else {
+		DialogText = FText::FromString("Landscape plugin activated, creating landscape...");
+	}
 	//TArray<AActor*> Actors;
 	//TArray<ULevel*> UniqueLevels;
 	//for (FSelectionIterator Iter(SelectedActors->get); Iter; ++Iter)
@@ -73,7 +86,6 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	//	}
 	//}
 	
-	FText DialogText = FText::FromString(SelectedActors->GetSelectedObject(0)->GetName());
 	/*FText DialogText = FText::Format(
 							LOCTEXT("PluginButtonDialogText", "Add code to {0} in {1} to override this button's actions"),
 							FText::FromString(TEXT("FTest_plug_buttonModule::PluginButtonClicked()")),
@@ -87,7 +99,7 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 
 	FQuat InRotation{0,0,0,0};
 	FVector InTranslation{0,0,5};
-	FVector InScale{1,1,1};
+	FVector InScale{100,100,100};
 	FTransform LandscapeTransform{ InRotation, InTranslation, InScale };
 	int32 QuadsPerSection{63};
 	int32 SectionsPerComponent{1};
@@ -106,14 +118,6 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	HeightData.SetNum(SizeX * SizeY);
 	for (int32 i = 0; i < HeightData.Num(); i++)
 	{
-		/*if (i % 2 == 0)
-		{
-			HeightData[i] = 60000;
-		}
-		else {
-			HeightData[i] = 32768;
-		}*/
-		
 		HeightData[i] = 32768;
 	}
 	HeightData[75000] = 60000;
@@ -121,14 +125,18 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(HeightData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
 
-
 	UWorld* World = nullptr;
 	
 		// We want to create the landscape in the landscape editor mode's world
 		FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
 		World = EditorWorldContext.World();
 
-	ALandscape* Landscape = World->SpawnActor<ALandscape>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f)); //THIS IS THE PROBLEM AT THE MOMENT
+	ALandscape* Landscape = World->SpawnActor<ALandscape>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f));
+
+	ALandscapeStreamingProxy* LandscapeSP = World->SpawnActor<ALandscapeStreamingProxy>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f));
+
+	LandscapeSP->Import(FGuid::NewGuid(), 0, 0, SizeX - 1, SizeY - 1, SectionsPerComponent, QuadsPerComponent,
+		HeightDataPerLayers, nullptr, MaterialLayerDataPerLayers, ELandscapeImportAlphamapType::Additive);
 
 	Landscape->bCanHaveLayersContent = false;
 	Landscape->LandscapeMaterial = nullptr;
@@ -141,9 +149,16 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	// Register all the landscape components
 	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
 
-	LandscapeInfo->UpdateLayerInfoMap(Landscape);
+	ULandscapeInfo* LandscapeSPInfo = LandscapeSP->GetLandscapeInfo(); //for SP
+
+	LandscapeInfo->UpdateLayerInfoMap(LandscapeSP); //change to Landscape to revert;
+	LandscapeSPInfo->UpdateLayerInfoMap(Landscape); //for SP
+
+	/*Landscape->AddComponent(LandscapeSP->GetFName(), false, LandscapeTransform, LandscapeSP);*/
 
 	Landscape->RegisterAllComponents();
+
+	LandscapeSP->RegisterAllComponents(); //for SP
 
 	// Need to explicitly call PostEditChange on the LandscapeMaterial property or the landscape proxy won't update its material
 	FPropertyChangedEvent MaterialPropertyChangedEvent(FindFieldChecked< FProperty >(Landscape->GetClass(), FName("LandscapeMaterial")));
@@ -151,6 +166,10 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	Landscape->PostEditChange();
 
 
+	//This is information that extracts from landscape
+	//FText DialogInfo = FText::FromString(Landscape->LandscapeComponents[0].Get()->GetHeightmap()->GetName());
+	//FMessageDialog::Open(EAppMsgType::Ok, DialogInfo);
+	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, 2);
 
 }
 
