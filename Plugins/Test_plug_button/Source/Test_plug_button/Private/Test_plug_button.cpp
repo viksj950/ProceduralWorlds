@@ -6,21 +6,17 @@
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
 #include "AssetRegistrymodule.h"
-#include "Selection.h"
+#include "Engine/Selection.h"
 #include "LevelEditor.h"
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
 #include "Landscape.h"
 #include "Engine/World.h"
 #include "LandscapeInfo.h"
+#include "UObject/UObjectGlobals.h"
 
-#include "LandscapeProxy.h" //added, not needed yet
-#include "LandscapeStreamingProxy.h" //added, not needed yet
-#include "UObject/UObjectGlobals.h" //added
-#include "LandscapeComponent.h"
+#include "LandscapeStreamingProxy.h"
 #include "LandscapeSubsystem.h"
-
-
 
 
 static const FName Test_plug_buttonTabName("Test_plug_button");
@@ -131,14 +127,9 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 		FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
 		World = EditorWorldContext.World();
 
-	ALandscape* Landscape = World->SpawnActor<ALandscape>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f));
+	ALandscape* Landscape = World->SpawnActor<ALandscape>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f)); //This is working Pog
 
-	ALandscapeStreamingProxy* LandscapeSP = World->SpawnActor<ALandscapeStreamingProxy>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f));
-
-	LandscapeSP->Import(FGuid::NewGuid(), 0, 0, SizeX - 1, SizeY - 1, SectionsPerComponent, QuadsPerComponent,
-		HeightDataPerLayers, nullptr, MaterialLayerDataPerLayers, ELandscapeImportAlphamapType::Additive);
-
-	Landscape->bCanHaveLayersContent = false;
+	Landscape->bCanHaveLayersContent = true;
 	Landscape->LandscapeMaterial = nullptr;
 
 	Landscape->SetActorTransform(LandscapeTransform);
@@ -148,28 +139,26 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	Landscape->StaticLightingLOD = FMath::DivideAndRoundUp(FMath::CeilLogTwo((SizeX * SizeY) / (2048 * 2048) + 1), (uint32)2);
 	// Register all the landscape components
 	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
-
-	ULandscapeInfo* LandscapeSPInfo = LandscapeSP->GetLandscapeInfo(); //for SP
-
-	LandscapeInfo->UpdateLayerInfoMap(LandscapeSP); //change to Landscape to revert;
-	LandscapeSPInfo->UpdateLayerInfoMap(Landscape); //for SP
-
-	/*Landscape->AddComponent(LandscapeSP->GetFName(), false, LandscapeTransform, LandscapeSP);*/
+	
+	LandscapeInfo->UpdateLayerInfoMap(Landscape);
 
 	Landscape->RegisterAllComponents();
-
-	LandscapeSP->RegisterAllComponents(); //for SP
 
 	// Need to explicitly call PostEditChange on the LandscapeMaterial property or the landscape proxy won't update its material
 	FPropertyChangedEvent MaterialPropertyChangedEvent(FindFieldChecked< FProperty >(Landscape->GetClass(), FName("LandscapeMaterial")));
 	Landscape->PostEditChangeProperty(MaterialPropertyChangedEvent);
 	Landscape->PostEditChange();
+	
+	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
+	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo,2);
 
 
-	//This is information that extracts from landscape
-	//FText DialogInfo = FText::FromString(Landscape->LandscapeComponents[0].Get()->GetHeightmap()->GetName());
-	//FMessageDialog::Open(EAppMsgType::Ok, DialogInfo);
-	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, 2);
+
+
+	
+	
+
+	
 
 }
 
