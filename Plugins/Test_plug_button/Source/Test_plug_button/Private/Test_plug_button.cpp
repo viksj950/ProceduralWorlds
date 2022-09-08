@@ -17,7 +17,6 @@
 
 #include "LandscapeStreamingProxy.h"
 #include "LandscapeSubsystem.h"
-#include "NoiseGeneration.h"
 
 
 static const FName Test_plug_buttonTabName("Test_plug_button");
@@ -59,6 +58,7 @@ void FTest_plug_buttonModule::ShutdownModule()
 
 void FTest_plug_buttonModule::PluginButtonClicked()
 {
+	// Put your "OnButtonClicked" stuff here
 
 	USelection* SelectedActors = nullptr;
 	FText DialogText;
@@ -70,6 +70,26 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	else {
 		DialogText = FText::FromString("Landscape plugin activated, creating landscape...");
 	}
+	//TArray<AActor*> Actors;
+	//TArray<ULevel*> UniqueLevels;
+	//for (FSelectionIterator Iter(SelectedActors->get); Iter; ++Iter)
+	//{
+	//	AActor Actor = Cast(*Iter);
+	//	if (Actor)
+	//	{
+	//		Actors.Add(Actor);
+	//		//UniqueLevels.AddUnique 1(Actor->GetLevel());
+	//	}
+	//}
+	
+	/*FText DialogText = FText::Format(
+							LOCTEXT("PluginButtonDialogText", "Add code to {0} in {1} to override this button's actions"),
+							FText::FromString(TEXT("FTest_plug_buttonModule::PluginButtonClicked()")),
+							FText::FromString(TEXT("Test_plug_button.cpp"))
+					   );*/
+
+	
+	//FText DialogText = FText::AsNumber(res->GetSizeX());
 
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 
@@ -103,9 +123,9 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 
 	UWorld* World = nullptr;
 	
-	// We want to create the landscape in the landscape editor mode's world
-	FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
-	World = EditorWorldContext.World();
+		// We want to create the landscape in the landscape editor mode's world
+		FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
+		World = EditorWorldContext.World();
 
 	ALandscape* Landscape = World->SpawnActor<ALandscape>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f)); //This is working Pog
 
@@ -121,7 +141,7 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
 	
 	LandscapeInfo->UpdateLayerInfoMap(Landscape);
-	
+
 	Landscape->RegisterAllComponents();
 
 	// Need to explicitly call PostEditChange on the LandscapeMaterial property or the landscape proxy won't update its material
@@ -129,9 +149,16 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	Landscape->PostEditChangeProperty(MaterialPropertyChangedEvent);
 	Landscape->PostEditChange();
 	
-	//Changing Gridsize which will create LandscapestreamProxies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
+	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo,2);
 
+
+
+
+	
+	
+
+	
 
 }
 

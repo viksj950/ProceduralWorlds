@@ -21,14 +21,6 @@
 			"TargetAllowList": [
 				"Editor"
 			]
-		},
-		{
-			"Name": "Test_plugin",
-			"Enabled": false
-		},
-		{
-			"Name": "Test_plug_2",
-			"Enabled": false
 		}
 	]
 }
