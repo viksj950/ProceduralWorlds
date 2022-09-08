@@ -10,13 +10,17 @@
 #include "LevelEditor.h"
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
+
+//For world partition
+#include "LandscapeStreamingProxy.h"
+#include "LandscapeSubsystem.h"
 #include "Landscape.h"
 #include "Engine/World.h"
 #include "LandscapeInfo.h"
 #include "UObject/UObjectGlobals.h"
 
-#include "LandscapeStreamingProxy.h"
-#include "LandscapeSubsystem.h"
+//For noise
+#include "NoiseGenerator.h"
 
 
 static const FName Test_plug_buttonTabName("Test_plug_button");
@@ -58,7 +62,8 @@ void FTest_plug_buttonModule::ShutdownModule()
 
 void FTest_plug_buttonModule::PluginButtonClicked()
 {
-	// Put your "OnButtonClicked" stuff here
+	
+
 
 	USelection* SelectedActors = nullptr;
 	FText DialogText;
@@ -116,7 +121,22 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	{
 		HeightData[i] = 32768;
 	}
-	HeightData[75000] = 60000;
+	//HeightData[75000] = 60000;
+
+
+	NoiseGenerator<uint16, 505> noise{};
+	noise.GenerateNoiseValues();
+
+	int magicNumber = 32768; //This didnt woerks
+	for (size_t j = 0; j < SizeY; j++)
+	{
+		for (size_t i = 0; i < SizeX; i++)
+		{
+			HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j) * 0.05f)* magicNumber;
+
+		}
+	}
+
 
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(HeightData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
