@@ -117,10 +117,10 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 
 	TArray<uint16> HeightData;
 	HeightData.SetNum(SizeX * SizeY);
-	for (int32 i = 0; i < HeightData.Num(); i++)
+	/*for (int32 i = 0; i < HeightData.Num(); i++)
 	{
 		HeightData[i] = 32768;
-	}
+	}*/
 	//HeightData[75000] = 60000;
 
 
@@ -132,7 +132,7 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	{
 		for (size_t i = 0; i < SizeX; i++)
 		{
-			HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale;
+			HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
 
 			if((j * SizeX + i ) == SizeX*j*32){
 				UE_LOG(LogTemp, Warning, TEXT("Value of heightdata: %f"), noise.processCoord(Vec2<float>(i, j)));
