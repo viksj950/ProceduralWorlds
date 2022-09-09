@@ -5,6 +5,10 @@
 #include "CoreMinimal.h"
 #include <random>
 #include <cmath> 
+#include <functional>
+#include <algorithm>
+#include "Math/UnrealMathUtility.h"
+
 
 template<typename T>
 class Vec2
@@ -25,7 +29,7 @@ inline T lerp(const T& lo, const T& hi, const T& t)
 }
 
 inline
-float smoothstep(const float& t) { return t * t * (3 - 2 * t); }
+float smoothstep(const float& t) { return 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3)); }  // return t * t * (3 - 2 * t);
 
 template <typename T, unsigned N>
 class TEST_PLUG_BUTTON_API NoiseGenerator
@@ -34,29 +38,54 @@ public:
 	NoiseGenerator();
 	~NoiseGenerator() = default;
 
-	void GenerateNoiseValues(int32 seed = 2016);
+	void GenerateNoiseValues(unsigned seed = 2022);
 
 	float processCoord(Vec2<float> coord) const;
 
 	T size;
-	T data[N * N]{};
+	T data[N]{};
+
+	unsigned permutationTable[N * 2]{};
+	const unsigned kMaxTableSizeMask = (N - 1);
 };
 
 template <typename T, unsigned N>
-NoiseGenerator<T, N>::NoiseGenerator() : size{N} {
+NoiseGenerator<T, N>::NoiseGenerator() : size{ N } {
 	
 }
 
 template<typename T, unsigned N>
-inline void NoiseGenerator<T, N>::GenerateNoiseValues(int32 seed)
+inline void NoiseGenerator<T, N>::GenerateNoiseValues(unsigned seed)
 {
+	FMath mathInstance;
+
+	float tempa = mathInstance.FRandRange(0.0f, 10.0f);
 	std::mt19937 gen(seed);
+	UE_LOG(LogTemp, Warning, TEXT("Random float generation (tempa): %f"), tempa);
 	std::uniform_real_distribution<float> distrFloat;
-	auto randFloat = std::bind(distrFloat, gen);
+	auto randFloat = std::bind(distrFloat, tempa);
 
 	// create an array of random values (white noise)
-	for (auto k{0}; k < (size * size); ++k) {
-		data[k] = randFloat();
+	for (unsigned k{0}; k < size; ++k) {
+		data[k] = mathInstance.FRandRange(0.0f, 10.0f);
+		permutationTable[k] = k;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("PERMUTATION TABLE VALUE: %d"), permutationTable[150]);
+	
+	int tempa2 = mathInstance.RandRange(0, 2147000);
+	UE_LOG(LogTemp, Warning, TEXT("Random float generation (tepa2m): %d"), tempa2);
+	//thisd shuffle thepeu tablerm s
+	std::uniform_int_distribution<unsigned> distrUInt;
+	auto randUInt = std::bind(distrUInt, gen);
+	for (unsigned k = 0; k < size; ++k) {
+		unsigned i = mathInstance.RandRange(0, 2147000) & kMaxTableSizeMask;
+		unsigned temp;
+		temp = permutationTable[k];
+		permutationTable[k] = permutationTable[i];
+		permutationTable[i] = temp;
+
+		//std::swap(permutationTable[k], permutationTable[i]);
+		permutationTable[k + size] = permutationTable[k];
 	}
 
 }
@@ -64,22 +93,24 @@ inline void NoiseGenerator<T, N>::GenerateNoiseValues(int32 seed)
 template<typename T, unsigned N>
 inline float NoiseGenerator<T, N>::processCoord(Vec2<float> coord) const
 {
+
 	int xi = std::floor(coord.x);
 	int yi = std::floor(coord.y);
+
 
 	float tx = coord.x - xi;
 	float ty = coord.y - yi;
 
-	int rx0 = xi & size; //????? Bitwise AND desnuts
-	int rx1 = (rx0 + 1) & size;
-	int ry0 = yi & size;
-	int ry1 = (ry0 + 1) & size;
+	int rx0 = xi & kMaxTableSizeMask; //????? Bitwise AND desnuts
+	int rx1 = (rx0 + 1) & kMaxTableSizeMask;
+	int ry0 = yi & kMaxTableSizeMask;
+	int ry1 = (ry0 + 1) & kMaxTableSizeMask;
 
 	// random values at the corners of the cell using permutation table, (size - 1) is guesswork
-	const float& c00 = data[ry0 * (size - 1) + rx0];
-	const float& c10 = data[ry0 * (size - 1) + rx1];
-	const float& c01 = data[ry1 * (size - 1) + rx0];
-	const float& c11 = data[ry1 * (size - 1) + rx1];
+	const float& c00 = data[permutationTable[permutationTable[rx0] + ry0]];
+	const float& c10 = data[permutationTable[permutationTable[rx1] + ry0]];
+	const float& c01 = data[permutationTable[permutationTable[rx0] + ry1]];
+	const float& c11 = data[permutationTable[permutationTable[rx1] + ry1]];
 
 	// remapping of tx and ty using the Smoothstep function 
 	float sx = smoothstep(tx);

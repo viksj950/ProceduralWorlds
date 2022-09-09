@@ -125,18 +125,21 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 
 
 	NoiseGenerator<uint16, 505> noise{};
-	noise.GenerateNoiseValues();
+	noise.GenerateNoiseValues(2016);
 
-	int magicNumber = 32768; //This didnt woerks
+	int heightScale = 32; ///This didnt woerks
 	for (size_t j = 0; j < SizeY; j++)
 	{
 		for (size_t i = 0; i < SizeX; i++)
 		{
-			HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j) * 0.05f)* magicNumber;
+			HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale;
+
+			if((j * SizeX + i ) == SizeX*j*32){
+				UE_LOG(LogTemp, Warning, TEXT("Value of heightdata: %f"), noise.processCoord(Vec2<float>(i, j)));
+			}
 
 		}
 	}
-
 
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(HeightData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
