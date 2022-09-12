@@ -16,7 +16,19 @@ class Vec2
 public:
 	Vec2() : x(T(0)), y(T(0)) {}
 	Vec2(T xx, T yy) : x(xx), y(yy) {}
+	float length() {
+		return std::sqrt(x * x + y * y);
+	}
 	Vec2 operator * (const T& r) const { return Vec2(x * r, y * r); }
+
+	Vec2& operator /= (T scalar) {
+		x = x / scalar;
+		y = y / scalar;
+		return *this;
+	};
+	
+	
+	
 	T x, y;
 };
 

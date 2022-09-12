@@ -3,10 +3,10 @@
 
 #include "PerlinNoiseGenerator.h"
 
-PerlinNoiseGenerator::PerlinNoiseGenerator()
-{
-}
-
-PerlinNoiseGenerator::~PerlinNoiseGenerator()
-{
-}
+//PerlinNoiseGenerator::PerlinNoiseGenerator()
+//{
+//}
+//
+//PerlinNoiseGenerator::~PerlinNoiseGenerator()
+//{
+//}
