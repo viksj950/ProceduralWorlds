@@ -6,7 +6,7 @@
 #include "Styling/SlateStyle.h"
 
 /**  */
-class FTest_pluginStyle
+class FProceduralWorldStyle
 {
 public:
 

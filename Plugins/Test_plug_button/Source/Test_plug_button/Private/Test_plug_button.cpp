@@ -118,11 +118,7 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 
 	TArray<uint16> HeightData;
 	HeightData.SetNum(SizeX * SizeY);
-	/*for (int32 i = 0; i < HeightData.Num(); i++)
-	{
-		HeightData[i] = 32768;
-	}*/
-	//HeightData[75000] = 60000;
+
 
 	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
 	PerlinNoise.generateGradients();
@@ -180,15 +176,7 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo,2);
 
 
-	for (size_t i = 0; i < prxy; i++)
-	{
-		Tile new tile
-	}
-
-	read user input, city(10, 50);
-
-	find tile -> mark tile as city
-
+	
 
 	
 	

@@ -2,10 +2,10 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "Test_plug_2",
+	"FriendlyName": "ProceduralWorld",
 	"Description": "",
 	"Category": "Other",
-	"CreatedBy": "William",
+	"CreatedBy": "William Viktor",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
@@ -16,7 +16,7 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "Test_plug_2",
+			"Name": "ProceduralWorld",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}

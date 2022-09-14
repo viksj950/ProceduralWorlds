@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class Test_plug_2 : ModuleRules
+public class ProceduralWorld : ModuleRules
 {
-	public Test_plug_2(ReadOnlyTargetRules Target) : base(Target)
+	public ProceduralWorld(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -34,17 +34,16 @@ public class Test_plug_2 : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+				"Projects",
+				"InputCore",
+				"EditorFramework",
+				"UnrealEd",
+				"ToolMenus",
 				"CoreUObject",
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"InputCore",
-				"EditorFramework",
-				"EditorStyle",
-				"UnrealEd",
-				"LevelEditor",
-				"InteractiveToolsFramework",
-				"EditorInteractiveToolsFramework"
+				"Landscape",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
