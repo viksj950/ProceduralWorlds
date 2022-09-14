@@ -9,39 +9,9 @@
 #include <algorithm>
 #include "Math/UnrealMathUtility.h"
 
+//Our functions and Vec2
+#include "NoiseFunctions.h"
 
-template<typename T>
-class Vec2
-{
-public:
-	Vec2() : x(T(0)), y(T(0)) {}
-	Vec2(T xx, T yy) : x(xx), y(yy) {}
-	float length() {
-		return std::sqrt(x * x + y * y);
-	}
-	Vec2 operator * (const T& r) const { return Vec2(x * r, y * r); }
-
-	Vec2& operator /= (T scalar) {
-		x = x / scalar;
-		y = y / scalar;
-		return *this;
-	};
-	
-	
-	
-	T x, y;
-};
-
-typedef Vec2<float> Vec2f;
-
-template<typename T = float>
-inline T lerp(const T& lo, const T& hi, const T& t)
-{
-	return lo * (1 - t) + hi * t;
-}
-
-inline
-float smoothstep(const float& t) { return 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3)); }  // return t * t * (3 - 2 * t);
 
 template <typename T, unsigned N>
 class TEST_PLUG_BUTTON_API NoiseGenerator

@@ -108,8 +108,8 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	//int32 ComponentCountX{12345};
 	//int32 ComponentCountY{21123};
 	int32 QuadsPerComponent{63}; //deaultf is 63
-	int32 SizeX{1009};
-	int32 SizeY{1009}; //default is 505
+	int32 SizeX{505};
+	int32 SizeY{505}; //default is 505
 
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
@@ -124,20 +124,22 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	}*/
 	//HeightData[75000] = 60000;
 
-	PerlinNoiseGenerator<uint16, 5> PerlinNoise{};
+	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
 	PerlinNoise.generateGradients();
-	NoiseGenerator<uint16, 253> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
+	NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
 	noise.GenerateNoiseValues(2016);
 
-	int heightScale = 32; ///This didnt woerks
+	int heightScale = 4192; 
 	for (size_t j = 0; j < SizeY; j++)
 	{
 		for (size_t i = 0; i < SizeX; i++)
-		{
-			HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
+		{	
 
-			if((j * SizeX + i ) == SizeX*j*32){
-				UE_LOG(LogTemp, Warning, TEXT("Value of heightdata: %f"), noise.processCoord(Vec2<float>(i, j)));
+			HeightData[j * SizeX + i] = PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625) * heightScale + 32768;
+			//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
+
+			if((j * SizeX + i ) == SizeX*j*8){
+				//(LogTemp, Warning, TEXT("Value of heightdata: %f"), PerlinNoise.generateNoiseVal(Vec2<float>(i, j)));
 			}
 
 		}
@@ -178,6 +180,14 @@ void FTest_plug_buttonModule::PluginButtonClicked()
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo,2);
 
 
+	for (size_t i = 0; i < prxy; i++)
+	{
+		Tile new tile
+	}
+
+	read user input, city(10, 50);
+
+	find tile -> mark tile as city
 
 
 	
