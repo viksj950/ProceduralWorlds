@@ -12,10 +12,12 @@
 #include "LandscapeInfo.h"
 #include "UObject/UObjectGlobals.h"
 
+//misc
 #include "Engine/Selection.h"
 #include "LevelEditor.h"
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
+
 
 #include "Modules/ModuleManager.h"
 //Noise
@@ -27,5 +29,5 @@ class PROCEDURALWORLD_API CreateLandscape : public IModuleInterface
 public:
 	CreateLandscape();
 	~CreateLandscape();
-	void generate();
+	ALandscape* generate();
 };

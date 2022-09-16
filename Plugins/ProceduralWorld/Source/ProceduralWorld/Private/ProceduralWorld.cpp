@@ -9,18 +9,86 @@
 #include "Widgets/Text/STextBlock.h"
 #include "ToolMenus.h"
 
+
 //We added this
-#include "Components/Button.h"
-#include "Widgets/Input/SButton.h" //sbutton
-
-#include "CreateLandscape.h"
+#include "Widgets/Input/SButton.h" //sbutton for UI
+#include "CreateLandscape.h" //includes setup for landscape properties
 
 
-FReply FProceduralWorldModule::Testing() const
+FReply FProceduralWorldModule::Setup()
 {
-	UE_LOG(LogTemp, Warning, TEXT("testing works end mi life"));
+	//Call to CreateLandscape and generate its properties 
 	CreateLandscape myLand;
-	myLand.generate();
+	landscapePtr = myLand.generate();
+	
+	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
+	//TConstIterator<ALandscapeStreamingProxy> it(LandscapeInfo->Proxies.CreateConstIterator()); //LandscapeInfo->Proxies.CreateConstIterator();
+	UE_LOG(LogTemp, Warning, TEXT("Num of proxies: %d"), LandscapeInfo->Proxies.Num());
+	UE_LOG(LogTemp, Warning, TEXT("Num of tiles: %d"), tiles.Num());
+	tiles.Empty(); //Should not be needed, but for some reason tiles start of with a maxed out array, we must empty it.
+	UE_LOG(LogTemp, Warning, TEXT("Num of tiles after emptied: %d"), tiles.Num());
+
+	//for (size_t i = 0; i < LandscapeInfo->Proxies.Num(); i++)
+	//{
+	//	/*TObjectPtr<ALandscapeStreamingProxy> myPointer = LandscapeInfo->Proxies[i];
+	//	UE_LOG(LogTemp, Warning, TEXT("Value tx: %s"), *myPointer->GetName());*/
+
+	//	//tiles.Add(Tile(LandscapeInfo->Proxies[i]));
+	//	
+	//}
+	for (auto& it : LandscapeInfo->Proxies)
+	{
+		tiles.Add(Tile(it));
+
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Num of tiles after addding them: %d"), tiles.Num());
+
+	for (size_t i = 0; i < tiles.Num(); i++)
+	{
+		if (i % 2 ==0)
+		{
+			tiles[i].updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+		}
+	}
+
+	/*UMaterial* ExampleMaterial = nullptr;
+	ConstructorHelpers::FObjectFinderMaterialAsset(TEXT(""))
+		ConstructorHelpers::*/
+
+	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("D:/Unreal Engine Projects/ProceduralWorlds/Content/Test_assets/M_grassMaterial.uasset"));
+
+	//if (Material.Object != NULL)
+	//{
+	//	tiles[0].streamingProxy->EditorSetLandscapeMaterial((UMaterial*)Material.Object);
+	//	//TheMaterial = (UMaterial*)Material.Object;
+	//}
+
+
+
+	//tiles[0].streamingProxy->LandscapeMaterial
+
+	//tiles[0].streamingProxy->material
+	
+	/*for (size_t i = 0; i < tiles.Num();i++)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Value tx: %s"), *tiles[i].streamingProxy->GetName());
+	}*/
+	//for(auto& it:LandscapeInfo->Proxies)
+	//{
+	//	//it->GetName();
+	//	//UE_LOG(LogTemp, Warning, TEXT("Value tx: %s"), *it->GetName());
+	//	tiles.Add(Tile(it));
+	//}
+	/*for (auto& it : tiles)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Value tx: %s"), *it.streamingProxy->GetName());
+		
+	}*/
+	//tiles.Add(Tile(LandscapeInfo.));
+
+	//TArray<ALandscapeProxy*> proxies = landscapePtr->GetLandscapeProxies();
+	
+	
 	return FReply::Handled();
 }
 
@@ -89,7 +157,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		[
 			SNew(SButton)
 			.Text(WidgetText)
-			.OnClicked_Raw(this, &FProceduralWorldModule::Testing)
+			.OnClicked_Raw(this, &FProceduralWorldModule::Setup)
 		
 		
 				

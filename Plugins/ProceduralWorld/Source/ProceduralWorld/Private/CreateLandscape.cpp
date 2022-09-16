@@ -11,7 +11,7 @@ CreateLandscape::~CreateLandscape()
 {
 }
 
-void CreateLandscape::generate()
+ALandscape* CreateLandscape::generate()
 {
 	USelection* SelectedActors = nullptr;
 	FText DialogText;
@@ -80,6 +80,19 @@ void CreateLandscape::generate()
 
 	Landscape->bCanHaveLayersContent = true;
 	Landscape->LandscapeMaterial = nullptr;
+	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Materials/YourMaterialName.YourMaterialName'"));
+	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'"));
+
+	//if (Material.Object != NULL)
+	//{
+	//	Landscape->LandscapeMaterial = (UMaterial*)Material.Object;
+	//	//TheMaterial = (UMaterial*)Material.Object;
+	//}else{ 
+	//	Landscape->LandscapeMaterial = nullptr; 
+	//}
+
+
+	
 
 	Landscape->SetActorTransform(LandscapeTransform);
 	Landscape->Import(FGuid::NewGuid(), 0, 0, SizeX - 1, SizeY - 1, SectionsPerComponent, QuadsPerComponent,
@@ -101,6 +114,6 @@ void CreateLandscape::generate()
 	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, 2);
 
-	//return FReply::Handled();
+	return Landscape;
 
 }

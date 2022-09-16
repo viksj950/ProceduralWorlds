@@ -4,6 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
+#include "Landscape.h"
+#include "Containers/Array.h"
+#include "LandscapeProxy.h"
+#include "LandscapeInfo.h"
+
+#include "Tile.h"
+
 
 class FToolBarBuilder;
 class FMenuBuilder;
@@ -15,10 +22,16 @@ public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
-	FReply Testing() const;
+
+	FReply Setup();
 	
 	/** This function will be bound to Command (by default it will bring up plugin window) */
 	void PluginButtonClicked();
+
+	//member variable for landscape we are creating   
+	ALandscape* landscapePtr;
+
+	TArray<Tile> tiles;
 	
 private:
 
