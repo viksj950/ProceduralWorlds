@@ -7,22 +7,34 @@
 
 
 #include "UObject/UObjectGlobals.h"
+#include "Containers/StaticArray.h"
 
-class PROCEDURALWORLD_API Tile
+#include "Tile.generated.h"
+
+
+UCLASS() //uclass for reflection system 
+class PROCEDURALWORLD_API UTile : public UObject
 {
+
+GENERATED_BODY()
 public:
-	Tile();
-	Tile(TObjectPtr<ALandscapeStreamingProxy> inProxy);
-	~Tile() = default;
+	UTile();
+	UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy);
+	~UTile() = default;
 
 	void updateMaterial(UMaterial* inMaterial);
-
-
+	void updateAdjacentTiles(TArray<UTile> &inTiles, const uint32 gridSizeProxy);
+	UPROPERTY()
 	TObjectPtr<ALandscapeStreamingProxy> streamingProxy = nullptr;
+	UPROPERTY()
 	UMaterial* tileMaterial = nullptr;
 
 	bool isCity = false;
 	bool isRoad = false;
 	//Addd more (dungeons, biotope, river, lakes)
 
+	int32 index{0};
+	
+	TArray<UTile*> adjacentTiles;
+	//TStaticArray<Tile*> asd[8]{ nullptr };
 };

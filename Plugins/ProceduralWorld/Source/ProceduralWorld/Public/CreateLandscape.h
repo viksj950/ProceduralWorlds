@@ -30,4 +30,8 @@ public:
 	CreateLandscape();
 	~CreateLandscape();
 	ALandscape* generate();
+
+	const uint32 GetGridSizeOfProxies() const;
+private:
+	uint32 gridSizeOfProxies{ 0 };
 };

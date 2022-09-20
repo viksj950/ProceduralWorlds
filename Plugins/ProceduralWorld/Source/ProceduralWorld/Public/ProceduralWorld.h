@@ -24,14 +24,17 @@ public:
 	virtual void ShutdownModule() override;
 
 	FReply Setup();
+	FReply DeleteLandscape();
 	
 	/** This function will be bound to Command (by default it will bring up plugin window) */
 	void PluginButtonClicked();
 
 	//member variable for landscape we are creating   
-	ALandscape* landscapePtr;
+	
+	ALandscape* landscapePtr{nullptr};
 
-	TArray<Tile> tiles;
+	
+	TArray<UTile> tiles;
 	
 private:
 

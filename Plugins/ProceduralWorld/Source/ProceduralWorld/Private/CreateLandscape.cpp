@@ -24,7 +24,8 @@ ALandscape* CreateLandscape::generate()
 		DialogText = FText::FromString("Landscape plugin activated, creating landscape...");
 	}
 
-	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
+	//Add this to have confirmation window
+	//FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 
 	FQuat InRotation{ 0,0,0,0 };
 	FVector InTranslation{ 0,0,5 };
@@ -37,7 +38,7 @@ ALandscape* CreateLandscape::generate()
 	int32 QuadsPerComponent{ 63 }; //deaultf is 63
 	int32 SizeX{ 505 };
 	int32 SizeY{ 505 }; //default is 505
-
+	int32 ComponentsPerProxy{ 2 };
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
@@ -91,7 +92,7 @@ ALandscape* CreateLandscape::generate()
 	//	Landscape->LandscapeMaterial = nullptr; 
 	//}
 
-
+	
 	
 
 	Landscape->SetActorTransform(LandscapeTransform);
@@ -112,8 +113,15 @@ ALandscape* CreateLandscape::generate()
 	Landscape->PostEditChange();
 
 	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
-	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, 2);
+	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
 
+	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerSection * SectionsPerComponent) * ComponentsPerProxy);
+	
 	return Landscape;
 
+}
+
+const uint32 CreateLandscape::GetGridSizeOfProxies() const
+{
+	return gridSizeOfProxies;
 }
