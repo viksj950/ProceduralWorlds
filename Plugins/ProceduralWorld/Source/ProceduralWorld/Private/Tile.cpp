@@ -13,7 +13,8 @@ UTile::UTile()
 		myMaterial = (UMaterial*)Material.Object;
 		UE_LOG(LogTemp, Warning, TEXT("Value tx: %s"), *myMaterial->GetName());
 	}*/
-	
+	//tileMaterial = LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'"));
+	//updateMaterial(temp);
 }
 
 UTile::UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy)
@@ -46,7 +47,9 @@ void UTile::updateMaterial(UMaterial* inMaterial)
 	if (inMaterial)
 	{
 		tileMaterial = inMaterial;
-		
+
+		//streamingProxy.Get()->LandscapeMaterial = tileMaterial;
+
 		streamingProxy->LandscapeMaterial = tileMaterial;
 
 		FPropertyChangedEvent MaterialPropertyChangedEvent(FindFieldChecked< FProperty >(streamingProxy->GetClass(), FName("LandscapeMaterial")));
@@ -110,9 +113,6 @@ void UTile::updateAdjacentTiles(TArray<UTile>& inTiles, const uint32 gridSizePro
 	//	adjacentTiles[7] = &inTiles[index + gridSize + 1];
 	//	UE_LOG(LogTemp, Warning, TEXT("Case 8 : %d"), (index + gridSize + 1));
 	//}
-	
-	
-	
+
 
 }
-

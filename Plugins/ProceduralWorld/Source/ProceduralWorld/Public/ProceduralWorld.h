@@ -24,7 +24,9 @@ public:
 	virtual void ShutdownModule() override;
 
 	FReply Setup();
+	FReply ListTiles();
 	FReply DeleteLandscape();
+
 	
 	/** This function will be bound to Command (by default it will bring up plugin window) */
 	void PluginButtonClicked();
@@ -34,7 +36,9 @@ public:
 	ALandscape* landscapePtr{nullptr};
 
 	
-	TArray<UTile> tiles;
+	/*TArray<UTile*> tiles;*/
+	/*UPROPERTY()*/
+	TArray<TObjectPtr<UTile>> tiles;
 	
 private:
 

@@ -8,6 +8,7 @@
 
 #include "UObject/UObjectGlobals.h"
 #include "Containers/StaticArray.h"
+#include "UObject/WeakObjectPtrTemplates.h" //For tweaker ptr
 
 #include "Tile.generated.h"
 
@@ -16,7 +17,10 @@ UCLASS() //uclass for reflection system
 class PROCEDURALWORLD_API UTile : public UObject
 {
 
+//uclass generated body seem to be deprecated	
 GENERATED_BODY()
+
+
 public:
 	UTile();
 	UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy);
@@ -24,8 +28,14 @@ public:
 
 	void updateMaterial(UMaterial* inMaterial);
 	void updateAdjacentTiles(TArray<UTile> &inTiles, const uint32 gridSizeProxy);
+
+	///OLD
+	//UPROPERTY()
+	//TObjectPtr<ALandscapeStreamingProxy> streamingProxy = nullptr;
+	
 	UPROPERTY()
-	TObjectPtr<ALandscapeStreamingProxy> streamingProxy = nullptr;
+	TWeakObjectPtr<ALandscapeStreamingProxy> streamingProxy = nullptr;
+
 	UPROPERTY()
 	UMaterial* tileMaterial = nullptr;
 

@@ -16,8 +16,6 @@
 
 
 
-
-
 static const FName ProceduralWorldTabName("ProceduralWorld");
 
 #define LOCTEXT_NAMESPACE "FProceduralWorldModule"
@@ -66,11 +64,9 @@ void FProceduralWorldModule::ShutdownModule()
 
 TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
-	FText WidgetText = FText::Format(
-		LOCTEXT("WindowWidgetText", "Add code to {0} in {1} to override this window's contents"),
-		FText::FromString(TEXT("FProceduralWorldModule::OnSpawnPluginTab")),
-		FText::FromString(TEXT("ProceduralWorld.cpp"))
-		);
+	//FText WidgetText = FText::Format(
+	//	LOCTEXT("WindowWidgetText", "Generate landscape")
+	//	);
 
 	//CreateLandscape boomboom;
 
@@ -105,10 +101,23 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.VAlign(VAlign_Center)
 				[
 					SNew(SButton)
-					.Text(WidgetText)
+					.Text(FText::FromString("Generate landscape"))
 					.OnClicked_Raw(this, &FProceduralWorldModule::Setup)
 				]
 			]
+
+			+SVerticalBox::Slot()
+			[
+				SNew(SBox)
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Center)
+				[
+					SNew(SButton)
+					.Text(FText::FromString("List tiles"))
+					.OnClicked_Raw(this, &FProceduralWorldModule::ListTiles)
+				]
+			]
+
 			+SVerticalBox::Slot()
 				[
 					SNew(SBox)
@@ -116,7 +125,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					.VAlign(VAlign_Center)
 					[
 						SNew(SButton)
-						.Text(FText::FromString("Delete prev Landscape"))
+						.Text(FText::FromString("List and delete tiles"))
 						.OnClicked_Raw(this, &FProceduralWorldModule::DeleteLandscape)
 					]
 				]
@@ -132,8 +141,7 @@ FReply FProceduralWorldModule::Setup()
 	CreateLandscape myLand;
 	landscapePtr = myLand.generate();
 
-	//Dynamic size
-	//int sizeOfMyCock = myLand.GetGridSizeOfProxies() * myLand.GetGridSizeOfProxies();
+	//Dynamic sizes
 
 	//Reserve to not reallacoate during runtime. 
 	//tiles.Reserve(myLand.GetGridSizeOfProxies()*myLand.GetGridSizeOfProxies());
@@ -147,29 +155,28 @@ FReply FProceduralWorldModule::Setup()
 	if (!tiles.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("tiles is not empty, attempting to solve ezpz by resizing"));
-		//tiles.SetNum(sizeOfMyCock);
 			
 	}
 	//tiles.Empty(); //Should not be needed, but for some reason tiles start of with a maxed out array, we must empty it.
 	//UE_LOG(LogTemp, Warning, TEXT("Num of tiles after being resized: %d"), tiles.Num());
 
-	//uint32 index{ 0 };
-	//for (auto& it : LandscapeInfo->Proxies)
-	//{
-	//	Tile temp(it);
-	//	temp.index = index;
-	//	tiles.Add(temp);
+	uint32 index{ 0 };
+	for (auto& it : LandscapeInfo->Proxies)
+	{
+		TObjectPtr<UTile> temp = NewObject<UTile>();
+		temp->streamingProxy = it;
+		temp->index = index;
+		temp->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+		tiles.Add(temp);
+		index++;
 
-	//	index++;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Num of tiles after adding them: %d"), tiles.Num());
 
-	//	//delete temp;
-	//	//Här kallas temps destructor
-	//}
-	//UE_LOG(LogTemp, Warning, TEXT("Num of tiles after adding them: %d"), tiles.Num());
-
+	tiles[0]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
 	/*for (size_t i = 0; i < tiles.Num(); i++)
 	{
-
+	s
 		tiles[i].updateAdjacentTiles(tiles, myLand.GetGridSizeOfProxies());
 
 	}*/
@@ -177,34 +184,110 @@ FReply FProceduralWorldModule::Setup()
 	return FReply::Handled();
 }
 
+FReply FProceduralWorldModule::ListTiles()
+{
+	UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
+
+	for (auto& it : tiles) {
+		if (IsValid(it)) {
+			if (it->streamingProxy.IsValid()) {
+
+				UE_LOG(LogTemp, Warning, TEXT("Tiles contain a tile with index: %d"), it->index);
+				UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
+
+			}
+			else {
+
+				UE_LOG(LogTemp, Warning, TEXT("Proxy has been destroyed or is pending destruction"));
+				break;
+			}
+
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Tile is destroyed or about to be destroyed   "));
+			break;
+		}
+
+	}
+
+	return FReply::Handled();
+}
+
 FReply FProceduralWorldModule::DeleteLandscape()
 {
-	if (!tiles.IsEmpty() && landscapePtr != nullptr)
-	{
-		bool isDestroyed{ false };
-		for (auto& it : tiles)
-		{
 
-			isDestroyed = it.streamingProxy->Destroy();
-			if (!isDestroyed)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Could not delete all tiles"));
-				return FReply::Unhandled();
+	UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
+
+	//for array traversal (index)
+	int counter = 0;
+
+	for(auto& it : tiles  ){
+		if(IsValid(it)){
+			if (it->streamingProxy.IsValid()) {
+
+				UE_LOG(LogTemp, Warning, TEXT("Tiles contain a tile with index: %d"), it->index);
+				UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
+
+				/*if (it->streamingProxy) {
+					UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
+				}
+				else {
+					UE_LOG(LogTemp, Warning, TEXT("Proxy is null "));
+				}*/
 			}
+			else {
+
+				UE_LOG(LogTemp, Warning, TEXT("Proxy has been destroyed or is pending destruction"));
+				
+				tiles.RemoveAt(counter, 1, true);
+				break;
+				
+			}
+
+		}else{
+				UE_LOG(LogTemp, Warning, TEXT("Tile is destroyed or about to be destroyed   "));
+				break;
 		}
-		tiles.Empty();
-		landscapePtr->Destroy();
-		//delete landscapePtr;
-
 		
-		return FReply::Handled();
 
+		counter++;
 	}
-	else
-	{	
-		UE_LOG(LogTemp, Warning, TEXT("Could not delete landscape, no landscape is being pointed"));
-		return FReply::Unhandled();
-	}
+	//for (auto& it : tiles)
+	//{
+	//	if(it->streamingProxy == nullptr){
+	//		UE_LOG(LogTemp, Warning, TEXT("Proxy is null with id %d"), it->index);
+	//	}
+
+	//}
+
+	return FReply::Handled();
+
+	//if (!tiles.IsEmpty() && landscapePtr != nullptr)
+	//{
+	//	bool isDestroyed{ false };
+	//	for (auto& it : tiles)
+	//	{
+
+	//		isDestroyed = it->streamingProxy->Destroy();
+	//		if (!isDestroyed)
+	//		{
+	//			UE_LOG(LogTemp, Warning, TEXT("Could not delete all tiles"));
+	//			return FReply::Unhandled();
+	//		}
+	//	}
+	//	tiles.Empty();
+	//	landscapePtr->Destroy();
+	//	//delete landscapePtr;
+
+	//	
+	//	return FReply::Handled();
+
+	//}
+	//else
+	//{	
+	//	UE_LOG(LogTemp, Warning, TEXT("Could not delete landscape, no landscape is being pointed"));
+	//	return FReply::Unhandled();
+	//}
 	
 }
 void FProceduralWorldModule::PluginButtonClicked()
