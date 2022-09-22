@@ -212,7 +212,7 @@ FReply FProceduralWorldModule::ListTiles()
 	for (int i = 0; i < tiles[11]->adjacentTiles.Num(); i++) {
 		if (tiles[11]->adjacentTiles[i] != nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Adjacent tile to nr 0: %d"), tiles[11]->adjacentTiles[i]->index);
+			UE_LOG(LogTemp, Warning, TEXT("Adjacent tile has index : %d"), tiles[11]->adjacentTiles[i]->index);
 
 		}else{
 			UE_LOG(LogTemp, Warning, TEXT("Null tile with adjacent array index: %d"), i);
