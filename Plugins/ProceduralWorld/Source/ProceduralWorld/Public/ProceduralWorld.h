@@ -35,10 +35,11 @@ public:
 	
 	ALandscape* landscapePtr{nullptr};
 
-	
-	/*TArray<UTile*> tiles;*/
 	/*UPROPERTY()*/
-	TArray<TObjectPtr<UTile>> tiles;
+	TArray<UTile*> tiles;
+	
+	//UPROPERTY()
+	//TArray<TObjectPtr<UTile>> tiles;
 	
 private:
 

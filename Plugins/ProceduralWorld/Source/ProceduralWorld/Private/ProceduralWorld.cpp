@@ -144,7 +144,7 @@ FReply FProceduralWorldModule::Setup()
 	//Dynamic sizes
 
 	//Reserve to not reallacoate during runtime. 
-	//tiles.Reserve(myLand.GetGridSizeOfProxies()*myLand.GetGridSizeOfProxies());
+	tiles.Reserve(myLand.GetGridSizeOfProxies()*myLand.GetGridSizeOfProxies());
 
 	//tiles.Init(Tile(), 16);
 
@@ -163,8 +163,9 @@ FReply FProceduralWorldModule::Setup()
 	uint32 index{ 0 };
 	for (auto& it : LandscapeInfo->Proxies)
 	{
-		TObjectPtr<UTile> temp = NewObject<UTile>();
-		temp->streamingProxy = it;
+	
+		UTile* temp = new UTile(it);/* = NewObject<UTile>();*/
+		//temp->streamingProxy = it;
 		temp->index = index;
 		temp->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
 		tiles.Add(temp);
@@ -173,13 +174,13 @@ FReply FProceduralWorldModule::Setup()
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Num of tiles after adding them: %d"), tiles.Num());
 
-	tiles[0]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
-	/*for (size_t i = 0; i < tiles.Num(); i++)
+	tiles[11]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
+	for (size_t i = 0; i < tiles.Num(); i++)
 	{
-	s
-		tiles[i].updateAdjacentTiles(tiles, myLand.GetGridSizeOfProxies());
+	
+		tiles[i]->updateAdjacentTiles(tiles, myLand.GetGridSizeOfProxies());
 
-	}*/
+	}
 	
 	return FReply::Handled();
 }
@@ -187,6 +188,39 @@ FReply FProceduralWorldModule::Setup()
 FReply FProceduralWorldModule::ListTiles()
 {
 	UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
+
+	for (auto& it: tiles)
+	{
+		if (it->streamingProxy != nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Tile has a proxy, the id is: %d"), it->index);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Tile DO NOT have a proxy, the id is: %d"), it->index);
+		}
+
+
+	}
+
+	//for (auto& it: tiles)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Adjacent tile to nr 0: %s"), *it->streamingProxy->GetName());
+
+	//}
+
+	for (int i = 0; i < tiles[11]->adjacentTiles.Num(); i++) {
+		if (tiles[11]->adjacentTiles[i] != nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Adjacent tile to nr 0: %d"), tiles[11]->adjacentTiles[i]->index);
+
+		}else{
+			UE_LOG(LogTemp, Warning, TEXT("Null tile with adjacent array index: %d"), i);
+		}
+		
+		
+	}
+	/*UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
 
 	for (auto& it : tiles) {
 		if (IsValid(it)) {
@@ -208,7 +242,7 @@ FReply FProceduralWorldModule::ListTiles()
 			break;
 		}
 
-	}
+	}*/
 
 	return FReply::Handled();
 }
@@ -216,42 +250,42 @@ FReply FProceduralWorldModule::ListTiles()
 FReply FProceduralWorldModule::DeleteLandscape()
 {
 
-	UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
 
-	//for array traversal (index)
-	int counter = 0;
+	////for array traversal (index)
+	//int counter = 0;
 
-	for(auto& it : tiles  ){
-		if(IsValid(it)){
-			if (it->streamingProxy.IsValid()) {
+	//for(auto& it : tiles  ){
+	//	if(IsValid(it)){
+	//		if (it->streamingProxy.IsValid()) {
 
-				UE_LOG(LogTemp, Warning, TEXT("Tiles contain a tile with index: %d"), it->index);
-				UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
+	//			UE_LOG(LogTemp, Warning, TEXT("Tiles contain a tile with index: %d"), it->index);
+	//			UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
 
-				/*if (it->streamingProxy) {
-					UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
-				}
-				else {
-					UE_LOG(LogTemp, Warning, TEXT("Proxy is null "));
-				}*/
-			}
-			else {
+	//			/*if (it->streamingProxy) {
+	//				UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
+	//			}
+	//			else {
+	//				UE_LOG(LogTemp, Warning, TEXT("Proxy is null "));
+	//			}*/
+	//		}
+	//		else {
 
-				UE_LOG(LogTemp, Warning, TEXT("Proxy has been destroyed or is pending destruction"));
-				
-				tiles.RemoveAt(counter, 1, true);
-				break;
-				
-			}
+	//			UE_LOG(LogTemp, Warning, TEXT("Proxy has been destroyed or is pending destruction"));
+	//			
+	//			//tiles.RemoveAt(counter, 1, true);
+	//			break;
+	//			
+	//		}
 
-		}else{
-				UE_LOG(LogTemp, Warning, TEXT("Tile is destroyed or about to be destroyed   "));
-				break;
-		}
-		
+	//	}else{
+	//			UE_LOG(LogTemp, Warning, TEXT("Tile is destroyed or about to be destroyed   "));
+	//			break;
+	//	}
+	//	
 
-		counter++;
-	}
+	//	counter++;
+	//}
 	//for (auto& it : tiles)
 	//{
 	//	if(it->streamingProxy == nullptr){

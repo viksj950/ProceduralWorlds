@@ -21,7 +21,7 @@ UTile::UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy)
 {
 	streamingProxy = inProxy;
 	//streamingProxy->
-	//adjacentTiles.Init(nullptr,8);
+	adjacentTiles.Init(nullptr,8);
 
 	//Setting default material
 	// Try to find material named M_grassMaterial in the following path:
@@ -63,55 +63,84 @@ void UTile::updateMaterial(UMaterial* inMaterial)
 	}
 }
 
-void UTile::updateAdjacentTiles(TArray<UTile>& inTiles, const uint32 gridSizeProxy)
+void UTile::updateAdjacentTiles(TArray<UTile*>& inTiles, const uint32 gridSizeProxy)
 {
 	//Conveion from unsigned to signed, for correct comparisons
 	int32 numOfTiles = inTiles.Num();
 	int32 gridSize = gridSizeProxy;
 
-	/*UE_LOG(LogTemp, Warning, TEXT("gridSizeProxy : %d"), gridSizeProxy);
-	UE_LOG(LogTemp, Warning, TEXT("Nummer of tiles : %d"), numOfTiles);*/
-	//int temp;
-	
+	//UE_LOG(LogTemp, Warning, TEXT("gridSizeProxy : %d"), gridSizeProxy);
+	//UE_LOG(LogTemp, Warning, TEXT("Nummer of tiles : %d"), numOfTiles);	
 
-	//UE_LOG(LogTemp, Warning, TEXT("Case 1 : %d"),(index - gridSize - 1) );
-	if ((index - gridSize - 1) >= 0) //Top left
+	if ((index - gridSize - 1) >= 0 && !(index < gridSize) && index % gridSize != 0) //Top right
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Came in"));
-		adjacentTiles[0] = &inTiles[(index - gridSize - 1)];
+		adjacentTiles[0] = inTiles[(index - gridSize - 1)];
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("Case 2 : %d"),(index - gridSize) );
+
 	if ((index - gridSize) >= 0) // Top straight
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Came in"));
-		adjacentTiles[1] = &inTiles[index - gridSize];
+		adjacentTiles[1] = inTiles[index - gridSize];
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("Case 3 : %d"), (index - gridSize + 1));
-	if ((index - gridSize + 1) >= 0) // Top right
+
+	if ((index - gridSize + 1) >= 0 && !(index < gridSize) && (index + 1) % gridSize != 0) // Top left
 	{
-		adjacentTiles[2] = &inTiles[index - gridSize + 1];
+		adjacentTiles[2] = inTiles[index - gridSize + 1];
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("Case 4 : %d"), (index - 1));
-	//if ((index - 1) >= 0) // left
+	if ((index - 1) >= 0 && !(index % gridSize == 0)) // right
+	{
+		adjacentTiles[3] = inTiles[index - 1];
+	}
+	if ((index + 1) < numOfTiles && (index + 1) % gridSize != 0) // left
+	{
+		adjacentTiles[4] = inTiles[index + 1];
+	}
+	if ((index + gridSize - 1) < numOfTiles && index < numOfTiles - gridSize && index % gridSize != 0) // bottom right
+	{
+		adjacentTiles[5] = inTiles[index + gridSize - 1];
+	}
+	if ((index + gridSize) < numOfTiles) // bottom straight
+	{
+		adjacentTiles[6] = inTiles[index + gridSize];
+	}
+	if ((index + gridSize + 1) < numOfTiles && !(index >= (numOfTiles - gridSize)) && (index + 1) % gridSize != 0) // bottom left
+	{
+		adjacentTiles[7] = inTiles[index + gridSize + 1];
+	}
+
+	//if (index % gridSize == 0) //On right side edge dont add right adjacent tile
 	//{
-	//	adjacentTiles[3] = &inTiles[index - 1];
+	//	adjacentTiles[3] = nullptr;
 	//}
-	//if ((index + 1) < numOfTiles) // right
+	//else
 	//{
-	//	adjacentTiles[4] = &inTiles[index + 1];
+	//	adjacentTiles[3] = inTiles[index - 1];
 	//}
-	//if ((index + gridSize - 1) < numOfTiles) // bottom left
+
+	//if (index +1 % == 0) //On left side edge font Add left adjacent tile
 	//{
-	//	adjacentTiles[5] = &inTiles[index + gridSize - 1];
+
 	//}
-	//if ((index + gridSize) < numOfTiles) // bottom straight
+	//else
 	//{
-	//	adjacentTiles[6] = &inTiles[index + gridSize];
+	//	adjacentTiles[4] = inTiles[index + 1];
 	//}
-	//if ((index + gridSize + 1) < numOfTiles) // bottom right
+
+	//if (index < gridSize) //On top row dont add top adjacent tile
 	//{
-	//	adjacentTiles[7] = &inTiles[index + gridSize + 1];
-	//	UE_LOG(LogTemp, Warning, TEXT("Case 8 : %d"), (index + gridSize + 1));
+
+	//}
+	//else
+	//{
+	//	adjacentTiles[1] = inTiles[index - gridSize];
+	//}
+
+	//if ((index >= (numOfTiles - gridSize)) //On bottom row dont add bottom adjacent tile
+	//{
+
+	//}
+	//else
+	//{
+	//	adjacentTiles[6] = inTiles[index + gridSize];
 	//}
 
 

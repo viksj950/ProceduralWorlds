@@ -10,15 +10,15 @@
 #include "Containers/StaticArray.h"
 #include "UObject/WeakObjectPtrTemplates.h" //For tweaker ptr
 
-#include "Tile.generated.h"
+//#include "Tile.generated.h"
 
 
-UCLASS() //uclass for reflection system 
-class PROCEDURALWORLD_API UTile : public UObject
+//UCLASS() //uclass for reflection system 
+class PROCEDURALWORLD_API UTile //: public UObject
 {
 
 //uclass generated body seem to be deprecated	
-GENERATED_BODY()
+//GENERATED_BODY()
 
 
 public:
@@ -27,7 +27,7 @@ public:
 	~UTile() = default;
 
 	void updateMaterial(UMaterial* inMaterial);
-	void updateAdjacentTiles(TArray<UTile> &inTiles, const uint32 gridSizeProxy);
+	void updateAdjacentTiles(TArray<UTile*> &inTiles, const uint32 gridSizeProxy);
 
 	///OLD
 	//UPROPERTY()
