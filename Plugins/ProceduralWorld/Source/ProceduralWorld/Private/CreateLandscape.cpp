@@ -3,6 +3,7 @@
 
 #include "CreateLandscape.h"
 
+
 CreateLandscape::CreateLandscape()
 {
 }
@@ -105,6 +106,8 @@ ALandscape* CreateLandscape::generate()
 
 	LandscapeInfo->UpdateLayerInfoMap(Landscape);
 
+	
+
 	Landscape->RegisterAllComponents();
 
 	// Need to explicitly call PostEditChange on the LandscapeMaterial property or the landscape proxy won't update its material
@@ -115,6 +118,49 @@ ALandscape* CreateLandscape::generate()
 	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
 
+<<<<<<< Updated upstream
+=======
+	//FString expHeightmap;
+	//LandscapeInfo->ExportHeightmap(expHeightmap);
+	//UE_LOG(LogTemp, Warning, TEXT("Nummer of tiles : %s"), expHeightmap);
+	//FLandscapeEditDataInterface* dataInterface;
+	FLandscapeEditDataInterface LandscapeEdit(LandscapeInfo);
+	TArray<uint16> exportedHeightData;
+	int32 ExportWidth = 5;
+	int32 ExportHeight = 5;
+	int32 x1 = 0;
+	int32 y1 = 0;
+	int32 x2 = 4;
+	int32 y2 = 4;
+	exportedHeightData.AddZeroed(ExportWidth* ExportHeight);
+	LandscapeEdit.GetHeightDataFast(x1, y1, x2, y2, exportedHeightData.GetData(), 0);
+
+	for (auto& it : exportedHeightData)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Exported height values: %d"), it);
+
+	}
+
+
+
+
+
+
+	//Code for assets
+	FVector Location(0.0f, 0.0f, 0.0f); FRotator Rotation(0.0f, 0.0f, 0.0f); 
+	FActorSpawnParameters SpawnInfo; 
+
+	AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
+
+	UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
+
+	UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+	if (MeshComponent)
+	{
+		MeshComponent->SetStaticMesh(Mesh);
+	}
+
+>>>>>>> Stashed changes
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerSection * SectionsPerComponent) * ComponentsPerProxy);
 	
 	return Landscape;

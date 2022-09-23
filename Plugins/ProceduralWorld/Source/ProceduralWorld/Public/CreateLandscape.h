@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 
-//World partitiin
+//World partition
 #include "LandscapeStreamingProxy.h"
 #include "LandscapeSubsystem.h"
 #include "Landscape.h"
 #include "Engine/World.h"
 #include "LandscapeInfo.h"
 #include "UObject/UObjectGlobals.h"
+#include "LandscapeEdit.h"
 
 //misc
 #include "Engine/Selection.h"
@@ -18,11 +19,11 @@
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
 
-
 #include "Modules/ModuleManager.h"
 //Noise
 //#include "NoiseGenerator.h" we have not implemented Value Noise for this plugin
 #include "PerlinNoiseGenerator.h"
+
 
 class PROCEDURALWORLD_API CreateLandscape : public IModuleInterface
 {
