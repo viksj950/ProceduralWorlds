@@ -17,6 +17,8 @@
 #include "LevelEditor.h"
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMeshActor.h"
 
 
 #include "Modules/ModuleManager.h"

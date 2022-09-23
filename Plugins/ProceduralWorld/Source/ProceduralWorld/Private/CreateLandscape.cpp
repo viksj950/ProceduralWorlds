@@ -115,6 +115,20 @@ ALandscape* CreateLandscape::generate()
 	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
 
+	//Code for assets
+	FVector Location(0.0f, 0.0f, 0.0f); FRotator Rotation(0.0f, 0.0f, 0.0f); 
+	FActorSpawnParameters SpawnInfo; 
+	//AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Rotation, SpawnInfo);
+	AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
+
+	UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
+
+	UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+	if (MeshComponent)
+	{
+		MeshComponent->SetStaticMesh(Mesh);
+	}
+
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerSection * SectionsPerComponent) * ComponentsPerProxy);
 	
 	return Landscape;
