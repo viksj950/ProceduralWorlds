@@ -22,8 +22,21 @@ void ProceduralAssetDistribution::spawnActorObject(const UTile* t) {
 	FVector proxyLocation = t->streamingProxy->GetActorLocation();
 
 	FVector Location(proxyLocation); 
-	FRotator Rotation(0.0f, 0.0f, 0.0f);
+	//FRotator Rotation(0.0f, 0.0f, 0.0f);
+
+	FMath mathInstance;
+	float min = 0.0f;
+	float max = 90.0f;
+	float maxalt = 65000;
+
+	float randomVal = mathInstance.FRandRange(min, max);
+	//float randomVal2 = mathInstance.FRandRange(min, maxalt);
+
+	FRotator Rotation(randomVal, randomVal, randomVal);
+	//FVector Location(randomVal2, randomVal2, randomVal2);
+	
 	FActorSpawnParameters SpawnInfo;
+	//SpawnInfo.Name = "Tile_asset";
 
 	//Places at 0,0 world coords
 	//AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());

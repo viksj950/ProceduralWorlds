@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
+#include "Math/UnrealMathUtility.h"
 
 #include "Tile.h"  
 
@@ -15,12 +16,7 @@ public:
 	~ProceduralAssetDistribution();
 
 	//Function for spawning object within a tile, objectType is tree/house
-
-	//void spawnActorObject(const UTile* t, TObjectPtr<AStaticMeshActor>& objectType);
-
-	//void spawnActorObject(const UTile* t, UStaticMesh* objectType);
-
-	void spawnActorObject(const UTile* t); //FString objectType
+	void spawnActorObject(const UTile* t); 
 	
 
 };
