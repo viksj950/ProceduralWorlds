@@ -61,9 +61,9 @@ ALandscape* CreateLandscape::generate()
 			HeightData[j * SizeX + i] = PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625) * heightScale + 32768;
 			//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
 
-			if ((j * SizeX + i) == SizeX * j * 8) {
-				//(LogTemp, Warning, TEXT("Value of heightdata: %f"), PerlinNoise.generateNoiseVal(Vec2<float>(i, j)));
-			}
+			//if ((j * SizeX + i) == SizeX * j * 8) {
+				//UE_LOG(LogTemp, Warning, TEXT("Value of heightdata: %d"), HeightData[j * SizeX + i]);
+			//}
 
 		}
 	}
@@ -114,6 +114,7 @@ ALandscape* CreateLandscape::generate()
 
 	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
+	
 
 	//Code for assets
 	FVector Location(0.0f, 0.0f, 0.0f); FRotator Rotation(0.0f, 0.0f, 0.0f); 
@@ -131,6 +132,8 @@ ALandscape* CreateLandscape::generate()
 
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerSection * SectionsPerComponent) * ComponentsPerProxy);
 	
+
+	//LandscapeInfo->export
 	return Landscape;
 
 }

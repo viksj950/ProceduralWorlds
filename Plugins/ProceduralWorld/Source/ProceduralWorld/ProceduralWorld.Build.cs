@@ -44,6 +44,7 @@ public class ProceduralWorld : ModuleRules
 				"Slate",
 				"SlateCore",
 				"Landscape",
+                "AssetRegistry",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
