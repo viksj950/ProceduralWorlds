@@ -11,7 +11,7 @@
 #include "Engine/World.h"
 #include "LandscapeInfo.h"
 #include "UObject/UObjectGlobals.h"
-#include "LandscapeEdit.h"
+
 
 //misc
 #include "Engine/Selection.h"
