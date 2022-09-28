@@ -184,153 +184,21 @@ FReply FProceduralWorldModule::Setup()
 
 	ULandscapeInfo* myInfo = landscapePtr->CreateLandscapeInfo();
 	TArray<uint16> myHeightData;
-	GetHeightMapData(myInfo, 130, 130, 330, 330, myHeightData, nullptr);
+	GetHeightMapData(myInfo, 0, 0, 504, 504, myHeightData, nullptr);
 
-	UE_LOG(LogTemp, Warning, TEXT("A HEIGHT VALUE (0)?: %d"), myHeightData[0]);
-	
-	/*FString PackageName = TEXT("/Game/Content/");
-	PackageName += "asd";
-	UPackage* Package = CreatePackage(NULL, *PackageName);
-	Package->FullyLoad();
+	UE_LOG(LogTemp, Warning, TEXT("Number of values in hetdatagihs: %d"), myHeightData.Num());
+	uint16 min = myHeightData[0];
+	uint16 max = myHeightData[0];
 
-	UTexture2D* NewTexture = NewObject<UTexture2D>(Package, "asd", RF_Public | RF_Standalone | RF_MarkAsRootSet);*/
-
-	//FTexture2DMipMap* MyMipMap = &Texture2D->PlatformData->Mips[0];
-
-	//FByteBulkData* RawImageData = &MyMipMap->BulkData;
-
-	//FColor* FormatedImageData = static_cast<FColor*>(RawImageData->Lock(LOCK_READ_ONLY));
-
-	//RawImageData->Unlock();
-
-	/////////////////////////
-	//Try Changing the heightdata of one LandscapeComponent.
-	/*TArray<FColor> mtasd;
-	FColor myColor;
-	myColor.A = 254;
-	myColor.B = 254;
-	myColor.G = 254;
-	myColor.R = 254;
-	mtasd.Init(myColor,64*64);
-	tiles[0]->streamingProxy->LandscapeComponents[0]->InitHeightmapData(mtasd, true);
-	tiles[0]->streamingProxy->LandscapeComponents[0]->RequestHeightmapUpdate(true,true);*/
-
-	//UTexture2D* Texture2D = tiles[0]->streamingProxy->LandscapeComponents[0]->GetHeightmap();
-
-
-	//Texture2D->UpdateResource();
-
-	//// Get Platform Data.
-	//const auto PlatformData = Texture2D->GetPlatformData();
-
-	//// Get The Bulk Data
-	//const auto TextureData = PlatformData->Mips[0].BulkData;
-
-	//// Array Pixel Data Will Be Copied To
-	//TArray<FColor> DestPixels{};
-
-	//// Initialize The Array With The Correct Pixel Size;
-	//DestPixels.AddDefaulted(PlatformData->SizeX * PlatformData->SizeY);
-
-	//// Lock The Pixel Data For CPU Read Access.
-	//const auto PixelData = static_cast<const FColor*>(TextureData.LockReadOnly());
-
-	//// Copy The Pixel Data.
-	//FMemory::Memcpy(DestPixels.GetData(), &PixelData, sizeof(FColor) * DestPixels.Num());
-
-	//// Unlock So The GPU Can Access The Data Again.
-	//TextureData.Unlock();
-
-	// We Now Have All Pixel Data For The Texture And We Can Do What We Want Without Holding The GPU Up.
-
-	//for (int i = 0; i < DestPixels.Num(); i++) {
-	//	UE_LOG(LogTemp, Warning, TEXT("Value of raw data (FColor R): %d"), DestPixels[i].R);
-	//	UE_LOG(LogTemp, Warning, TEXT("Value of raw data (FColor G): %d"), DestPixels[i].G);
-	//	UE_LOG(LogTemp, Warning, TEXT("Value of raw data (FColor B): %d"), DestPixels[i].B);
-	//	UE_LOG(LogTemp, Warning, TEXT("Value of raw data (FColor A): %d"), DestPixels[i].A);
-	//}
-
-	//
-
-	//
-	//NewTexture->AddToRoot();				// This line prevents garbage collection of the texture
-	//NewTexture->PlatformData = new FTexturePlatformData();	// Then we initialize the PlatformData
-	//NewTexture->PlatformData->SizeX = Texture2D->GetSizeX();
-	//NewTexture->PlatformData->SizeY = Texture2D->GetSizeY();
-	////NewTexture->PlatformData->NumSlices = 1;
-	//NewTexture->PlatformData->PixelFormat = EPixelFormat::PF_B8G8R8A8;
-	//uint8* Pixels = (uint8*)malloc(Texture2D->GetSizeY() * Texture2D->GetSizeY() * 4);
-	////uint8* Pixels = new uint8[Texture2D->GetSizeX() * Texture2D->GetSizeY() * 4];
-	//for (int32 y = 0; y < Texture2D->GetSizeX(); y++)
-	//{
-	//	for (int32 x = 0; x < Texture2D->GetSizeY(); x++)
-	//	{
-	//		int32 curPixelIndex = ((y * Texture2D->GetSizeX()) + x);
-	//		Pixels[4 * curPixelIndex] = DestPixels[curPixelIndex].B;
-	//		Pixels[4 * curPixelIndex + 1] = DestPixels[curPixelIndex].G;
-	//		Pixels[4 * curPixelIndex + 2] = DestPixels[curPixelIndex].R;
-	//		Pixels[4 * curPixelIndex + 3] = DestPixels[curPixelIndex].A;
-	//	}
-	//}
-
-
-	///*FCreateTexture2DParamaters asd;
-	//UTexture2D* myimage = FImageUtils::CreateTexture2D(Texture2D->GetSizeX(), Texture2D->GetSizeY(), DestPixels, Package, "asde", EObjectFlags::RF_Standalone, );*/
-	//// Allocate first mipmap.
-	//FTexture2DMipMap* Mip = new(NewTexture->PlatformData->Mips) FTexture2DMipMap();
-	//Mip->SizeX = Texture2D->GetSizeX();
-	//Mip->SizeY = Texture2D->GetSizeY();
-
-	//// Lock the texture so it can be modified
-	//Mip->BulkData.Lock(LOCK_READ_WRITE);
-	//uint8* TextureData = (uint8*)Mip->BulkData.Realloc(Texture2D->GetSizeX() * Texture2D->GetSizeY() * 4);
-	////FMemory::Memcpy(TextureData, Pixels, sizeof(uint8) * Texture2D->GetSizeX() * Texture2D->GetSizeY() * 4);
-
-	//int width = Texture2D->GetSizeX();
-	//int height = Texture2D->GetSizeY();
-
-	////FMemory::Memcpy(TextureData, Pixels, sizeof(uint8) * width* height * 4);
-	//Mip->BulkData.Unlock();
-
-	//NewTexture->Source.Init(Texture2D->GetSizeX(), Texture2D->GetSizeY(), 1, 1, ETextureSourceFormat::TSF_BGRA8, Pixels);
-
-	//NewTexture->UpdateResource();
-	//Package->MarkPackageDirty();
-	//FAssetRegistryModule::AssetCreated(NewTexture);
-
-	//FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
-	//bool bSaved = UPackage::SavePackage(Package, NewTexture, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
-
-	//delete[] Pixels;	// Don't forget to free the memory here
-
-	
-	//UTexture2D* NewTexture = tiles[0]->streamingProxy->LandscapeComponents[0]->GetHeightmap();
-	
-		/*UE_LOG(LogTemp, Warning, TEXT("LandscapeComponent has Layer Data %d"), tiles[0]->streamingProxy->LandscapeComponents[0]->GetHeightmap()->Source.GetSizeX());
-
-		UTexture2D *namenTitta =  tiles[0]->streamingProxy->LandscapeComponents[0]->GetHeightmap();*/
-
-		//namenTitta->Get; //boom bam
+	for(int i = 0; i < myHeightData.Num(); i++){
 		
-		//UTexture2D* namenTex = namenTitta.Texture;
-		
-		//TArray64< uint8 > mipasd;
-		//mipasd.Init(0, tiles[0]->streamingProxy->LandscapeComponents[0]->GetHeightmap()->Source.GetSizeX() * tiles[0]->streamingProxy->LandscapeComponents[0]->GetHeightmap()->Source.GetSizeX());
-		
-		//tiles[0]->streamingProxy->LandscapeComponents[0]->GetHeightmap()->Source.GetMipData(mipasd,0,nullptr);
+		if (min > myHeightData[i]) { min = myHeightData[i]; }
+		if (max < myHeightData[i]) { max = myHeightData[i]; }
+	}
 
-		
-		//UE_LOG(LogTemp, Warning, TEXT("THIS IS THE DATA FROM SOURCE MIP %d"), mipasd[0]);
-
+	UE_LOG(LogTemp, Warning, TEXT("Max height data value: %d"), max);
+	UE_LOG(LogTemp, Warning, TEXT("Min height data value: %d"), min);
 	
-	
-		
-	
-	
-
-	//createTextureFromArray(64, 64, namenTitta);
-	
-	//UE_LOG(LogTemp, Warning, TEXT("DestPixels contains so many pixels: %d"),DestPixels.Num());
 	return FReply::Handled();
 }
 
@@ -349,14 +217,7 @@ FReply FProceduralWorldModule::ListTiles()
 			UE_LOG(LogTemp, Warning, TEXT("Tile DO NOT have a proxy, the id is: %d"), it->index);
 		}
 
-
 	}
-
-	//for (auto& it: tiles)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Adjacent tile to nr 0: %s"), *it->streamingProxy->GetName());
-
-	//}
 
 	for (int i = 0; i < tiles[11]->adjacentTiles.Num(); i++) {
 		if (tiles[11]->adjacentTiles[i] != nullptr)
@@ -369,29 +230,6 @@ FReply FProceduralWorldModule::ListTiles()
 		
 		
 	}
-	/*UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
-
-	for (auto& it : tiles) {
-		if (IsValid(it)) {
-			if (it->streamingProxy.IsValid()) {
-
-				UE_LOG(LogTemp, Warning, TEXT("Tiles contain a tile with index: %d"), it->index);
-				UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
-
-			}
-			else {
-
-				UE_LOG(LogTemp, Warning, TEXT("Proxy has been destroyed or is pending destruction"));
-				break;
-			}
-
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("Tile is destroyed or about to be destroyed   "));
-			break;
-		}
-
-	}*/
 
 	return FReply::Handled();
 }
@@ -481,16 +319,8 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 	int32 SubsectionSizeQuads = inLandscapeInfo->SubsectionSizeQuads;
 	int32 ComponentNumSubsections = inLandscapeInfo->ComponentNumSubsections;
 
-	UE_LOG(LogTemp, Warning, TEXT("ComponentSizeQuads: %d"), ComponentSizeQuads);
-	UE_LOG(LogTemp, Warning, TEXT("SubsectionSizeQuads: %d"), SubsectionSizeQuads);
-	UE_LOG(LogTemp, Warning, TEXT("Compoentnumsetionsc: %d"), ComponentNumSubsections);
-
 	ALandscape::CalcComponentIndicesNoOverlap(X1, Y1, X2, Y2, ComponentSizeQuads, ComponentIndexX1, ComponentIndexY1, ComponentIndexX2, ComponentIndexY2);
 
-	UE_LOG(LogTemp, Warning, TEXT("ComponentIndexX1: %d"), ComponentIndexX1);
-	UE_LOG(LogTemp, Warning, TEXT("ComponentIndexY1: %d"), ComponentIndexY1);
-	UE_LOG(LogTemp, Warning, TEXT("ComponentIndexX2: %d"), ComponentIndexX2);
-	UE_LOG(LogTemp, Warning, TEXT("ComponentIndexY2: %d"), ComponentIndexY2);
 
 	for (int32 ComponentIndexY = ComponentIndexY1; ComponentIndexY <= ComponentIndexY2; ComponentIndexY++)
 	{
@@ -502,10 +332,6 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 			{
 				continue;
 			}
-			/*else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("We found a component: %s"), *Component->GetName());
-			}*/
 
 			UTexture2D* Heightmap = InHeightmap != nullptr ? InHeightmap : Component->GetHeightmap(true);
 
@@ -513,13 +339,7 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 			{
 				continue;
 			}
-			//else
-			//{
-			//	UE_LOG(LogTemp, Warning, TEXT("We got a heightmap with sizeX: %d"), Heightmap->GetSizeX());
-			//}
 			
-
-
 			FLandscapeTextureDataInfo* TexDataInfo = NULL;
 			
 			FColor* HeightmapTextureData = NULL;
@@ -539,13 +359,6 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 			int32 SubIndexY1 = FMath::Clamp<int32>((ComponentY1 - 1) / SubsectionSizeQuads, 0, ComponentNumSubsections - 1);
 			int32 SubIndexX2 = FMath::Clamp<int32>(ComponentX2 / SubsectionSizeQuads, 0, ComponentNumSubsections - 1);
 			int32 SubIndexY2 = FMath::Clamp<int32>(ComponentY2 / SubsectionSizeQuads, 0, ComponentNumSubsections - 1);
-
-			UE_LOG(LogTemp, Warning, TEXT("ComponenX1 %d"), ComponentX1); //4 
-			UE_LOG(LogTemp, Warning, TEXT("ComponenX2 %d"), ComponentX2); //63
-
-			UE_LOG(LogTemp, Warning, TEXT("SubX1 %d"), SubIndexX1); ///0
-			UE_LOG(LogTemp, Warning, TEXT("SubX2 %d"), SubIndexX2); //0
-
 
 
 			for (int32 SubIndexY = SubIndexY1; SubIndexY <= SubIndexY2; SubIndexY++)
@@ -577,11 +390,6 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 							int32 TexX = HeightmapOffsetX + (SubsectionSizeQuads + 1) * SubIndexX + SubX;
 							int32 TexY = HeightmapOffsetY + (SubsectionSizeQuads + 1) * SubIndexY + SubY;
 							FColor& TexData = HeightmapTextureData[TexX + TexY * SizeU];
-
-							UE_LOG(LogTemp, Warning, TEXT("Texdata (red): %d"), TexData.R);
-							UE_LOG(LogTemp, Warning, TEXT("Texdata (green): %d"), TexData.G);
-							UE_LOG(LogTemp, Warning, TEXT("Texdata (blue irrelvanet): %d"), TexData.B);
-
 
 							uint16 Height = (((uint16)TexData.R) << 8) | TexData.G;
 
