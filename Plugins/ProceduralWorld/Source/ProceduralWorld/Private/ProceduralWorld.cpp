@@ -129,6 +129,19 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						.OnClicked_Raw(this, &FProceduralWorldModule::DeleteLandscape)
 					]
 				]
+			+ SVerticalBox::Slot()
+				[
+					SNew(SNumericEntryBox<int32>)
+					.AllowSpin(true)
+				.MinValue(0)
+				.MaxValue(12)
+				.MaxSliderValue(5)
+				.MinDesiredValueWidth(2)
+				.Value(0)
+				.OnValueChanged_Raw(this,&FProceduralWorldModule::SetSizeOfLandscape)
+					
+				
+				]
 
 			
 			
@@ -586,6 +599,19 @@ FLandscapeTextureDataInfo* FProceduralWorldModule::GetTextureDataInfo(UTexture2D
 void FProceduralWorldModule::PluginButtonClicked()
 {
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldTabName);
+}
+
+TOptional<int32> FProceduralWorldModule::GetNumberOfTiles()
+{
+	
+	return tiles.Num();
+}
+
+void FProceduralWorldModule::SetSizeOfLandscape(int32 inSize)
+{
+	sizeOfLandscape = inSize;
+	UE_LOG(LogTemp, Warning, TEXT("Changed size using the UI button of the landscape to: %d"),sizeOfLandscape);
+
 }
 
 void FProceduralWorldModule::RegisterMenus()
