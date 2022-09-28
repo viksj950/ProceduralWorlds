@@ -160,30 +160,33 @@ FReply FProceduralWorldModule::Setup()
 	//tiles.Empty(); //Should not be needed, but for some reason tiles start of with a maxed out array, we must empty it.
 	//UE_LOG(LogTemp, Warning, TEXT("Num of tiles after being resized: %d"), tiles.Num());
 
-	//uint32 index{ 0 };
-	//for (auto& it : LandscapeInfo->Proxies)
-	//{
-	//
-	//	UTile* temp = new UTile(it);/* = NewObject<UTile>();*/
-	//	//temp->streamingProxy = it;
-	//	temp->index = index;
-	//	temp->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
-	//	tiles.Add(temp);
-	//	index++;
+	uint32 index{ 0 };
+	for (auto& it : LandscapeInfo->Proxies)
+	{
+	
+		UTile* temp = new UTile(it);/* = NewObject<UTile>();*/
+		//temp->streamingProxy = it;
+		temp->index = index;
+		temp->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+		tiles.Add(temp);
+		index++;
 
-	//}
+	}
 	UE_LOG(LogTemp, Warning, TEXT("Num of tiles after adding them: %d"), tiles.Num());
 
-	/*tiles[11]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
+	tiles[11]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
 	for (size_t i = 0; i < tiles.Num(); i++)
 	{
 	
 		tiles[i]->updateAdjacentTiles(tiles, myLand.GetGridSizeOfProxies());
 
-	}*/
+	}
+
 	ULandscapeInfo* myInfo = landscapePtr->CreateLandscapeInfo();
-	TArray<uint16> mytest;
-	//GetHeightMapData(myInfo, 0, 0, 63, 63, mytest, nullptr);
+	TArray<uint16> myHeightData;
+	GetHeightMapData(myInfo, 130, 130, 330, 330, myHeightData, nullptr);
+
+	UE_LOG(LogTemp, Warning, TEXT("A HEIGHT VALUE (0)?: %d"), myHeightData[0]);
 	
 	/*FString PackageName = TEXT("/Game/Content/");
 	PackageName += "asd";
@@ -471,27 +474,51 @@ FReply FProceduralWorldModule::DeleteLandscape()
 	
 }
 //LandscapeEditInterface.cpp ///Line 600
-void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, const int32 X1, const int32 Y1, const int32 X2, const int32 Y2, TArray<uint16> StoreData, UTexture2D* InHeightmap)
+void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, const int32 X1, const int32 Y1, const int32 X2, const int32 Y2, TArray<uint16>& StoreData, UTexture2D* InHeightmap)
 {
 	int32 ComponentIndexX1, ComponentIndexY1, ComponentIndexX2, ComponentIndexY2;
 	int32 ComponentSizeQuads = inLandscapeInfo->ComponentSizeQuads;
 	int32 SubsectionSizeQuads = inLandscapeInfo->SubsectionSizeQuads;
 	int32 ComponentNumSubsections = inLandscapeInfo->ComponentNumSubsections;
 
+	UE_LOG(LogTemp, Warning, TEXT("ComponentSizeQuads: %d"), ComponentSizeQuads);
+	UE_LOG(LogTemp, Warning, TEXT("SubsectionSizeQuads: %d"), SubsectionSizeQuads);
+	UE_LOG(LogTemp, Warning, TEXT("Compoentnumsetionsc: %d"), ComponentNumSubsections);
+
 	ALandscape::CalcComponentIndicesNoOverlap(X1, Y1, X2, Y2, ComponentSizeQuads, ComponentIndexX1, ComponentIndexY1, ComponentIndexX2, ComponentIndexY2);
+
+	UE_LOG(LogTemp, Warning, TEXT("ComponentIndexX1: %d"), ComponentIndexX1);
+	UE_LOG(LogTemp, Warning, TEXT("ComponentIndexY1: %d"), ComponentIndexY1);
+	UE_LOG(LogTemp, Warning, TEXT("ComponentIndexX2: %d"), ComponentIndexX2);
+	UE_LOG(LogTemp, Warning, TEXT("ComponentIndexY2: %d"), ComponentIndexY2);
 
 	for (int32 ComponentIndexY = ComponentIndexY1; ComponentIndexY <= ComponentIndexY2; ComponentIndexY++)
 	{
 		for (int32 ComponentIndexX = ComponentIndexX1; ComponentIndexX <= ComponentIndexX2; ComponentIndexX++)
 		{
 			ULandscapeComponent* Component = inLandscapeInfo->XYtoComponentMap.FindRef(FIntPoint(ComponentIndexX, ComponentIndexY));
-
+			
 			if (Component == nullptr)
 			{
 				continue;
 			}
+			/*else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("We found a component: %s"), *Component->GetName());
+			}*/
 
-			UTexture2D* Heightmap = InHeightmap != nullptr ? InHeightmap : Component->GetHeightmap(false);
+			UTexture2D* Heightmap = InHeightmap != nullptr ? InHeightmap : Component->GetHeightmap(true);
+
+			if (Heightmap == nullptr)
+			{
+				continue;
+			}
+			//else
+			//{
+			//	UE_LOG(LogTemp, Warning, TEXT("We got a heightmap with sizeX: %d"), Heightmap->GetSizeX());
+			//}
+			
+
 
 			FLandscapeTextureDataInfo* TexDataInfo = NULL;
 			
@@ -499,6 +526,7 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 			TexDataInfo = GetTextureDataInfo(Heightmap);
 			HeightmapTextureData = (FColor*)TexDataInfo->GetMipData(0);
 
+			//UE_LOG(LogTemp, Warning, TEXT("HeghtMapTeurextiData (Red): %d"), HeightmapTextureData->R);
 
 			// Find coordinates of box that lies inside component
 			int32 ComponentX1 = FMath::Clamp<int32>(X1 - ComponentIndexX * ComponentSizeQuads, 0, ComponentSizeQuads);
@@ -512,11 +540,19 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 			int32 SubIndexX2 = FMath::Clamp<int32>(ComponentX2 / SubsectionSizeQuads, 0, ComponentNumSubsections - 1);
 			int32 SubIndexY2 = FMath::Clamp<int32>(ComponentY2 / SubsectionSizeQuads, 0, ComponentNumSubsections - 1);
 
+			UE_LOG(LogTemp, Warning, TEXT("ComponenX1 %d"), ComponentX1); //4 
+			UE_LOG(LogTemp, Warning, TEXT("ComponenX2 %d"), ComponentX2); //63
+
+			UE_LOG(LogTemp, Warning, TEXT("SubX1 %d"), SubIndexX1); ///0
+			UE_LOG(LogTemp, Warning, TEXT("SubX2 %d"), SubIndexX2); //0
+
+
 
 			for (int32 SubIndexY = SubIndexY1; SubIndexY <= SubIndexY2; SubIndexY++)
 			{
 				for (int32 SubIndexX = SubIndexX1; SubIndexX <= SubIndexX2; SubIndexX++)
 				{
+					//UE_LOG(LogTemp, Warning, TEXT("WE GOT HERE"));
 					// Find coordinates of box that lies inside subsection
 					int32 SubX1 = FMath::Clamp<int32>(ComponentX1 - SubsectionSizeQuads * SubIndexX, 0, SubsectionSizeQuads);
 					int32 SubY1 = FMath::Clamp<int32>(ComponentY1 - SubsectionSizeQuads * SubIndexY, 0, SubsectionSizeQuads);
@@ -528,8 +564,9 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 					{
 						for (int32 SubX = SubX1; SubX <= SubX2; SubX++)
 						{
-							int32 LandscapeX = SubIndexX * SubsectionSizeQuads + ComponentIndexX * ComponentSizeQuads + SubX;
-							int32 LandscapeY = SubIndexY * SubsectionSizeQuads + ComponentIndexY * ComponentSizeQuads + SubY;
+							
+							//int32 LandscapeX = SubIndexX * SubsectionSizeQuads + ComponentIndexX * ComponentSizeQuads + SubX;
+							//int32 LandscapeY = SubIndexY * SubsectionSizeQuads + ComponentIndexY * ComponentSizeQuads + SubY;
 
 							// Find the texture data corresponding to this vertex
 							int32 SizeU = Heightmap->Source.GetSizeX();
@@ -541,7 +578,13 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 							int32 TexY = HeightmapOffsetY + (SubsectionSizeQuads + 1) * SubIndexY + SubY;
 							FColor& TexData = HeightmapTextureData[TexX + TexY * SizeU];
 
+							UE_LOG(LogTemp, Warning, TEXT("Texdata (red): %d"), TexData.R);
+							UE_LOG(LogTemp, Warning, TEXT("Texdata (green): %d"), TexData.G);
+							UE_LOG(LogTemp, Warning, TEXT("Texdata (blue irrelvanet): %d"), TexData.B);
+
+
 							uint16 Height = (((uint16)TexData.R) << 8) | TexData.G;
+
 							StoreData.Add(Height);
 							//StoreData.Store(LandscapeX, LandscapeY, Height);
 							/*if (NormalData)

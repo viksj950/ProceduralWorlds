@@ -113,7 +113,7 @@ public:
 	FReply ListTiles();
 	FReply DeleteLandscape();
 
-	void GetHeightMapData(ULandscapeInfo* inLandscapeInfo,const int32 X1, const int32 Y1, const int32 X2, const int32 Y2, TArray<uint16> StoreData, UTexture2D* InHeightmap);
+	void GetHeightMapData(ULandscapeInfo* inLandscapeInfo,const int32 X1, const int32 Y1, const int32 X2, const int32 Y2, TArray<uint16>& StoreData, UTexture2D* InHeightmap);
 	void createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray<FColor> inData);
 	void createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray64< uint8 > inData);
 	
