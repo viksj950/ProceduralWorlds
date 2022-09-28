@@ -182,6 +182,16 @@ FReply FProceduralWorldModule::Setup()
 
 	}
 
+	ProceduralAssetDistribution temp;
+	for (size_t i = 0; i < tiles.Num(); i++)
+	{
+
+		temp.spawnActorObject(tiles[i]);
+
+	}
+
+
+
 	ULandscapeInfo* myInfo = landscapePtr->CreateLandscapeInfo();
 	TArray<uint16> myHeightData;
 	GetHeightMapData(myInfo, 0, 0, 504, 504, myHeightData, nullptr);

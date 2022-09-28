@@ -10,6 +10,7 @@
 #include "LandscapeInfo.h"
 
 #include "Tile.h"
+#include "ProceduralAssetDistribution.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
 //utility to create UTexture2D
