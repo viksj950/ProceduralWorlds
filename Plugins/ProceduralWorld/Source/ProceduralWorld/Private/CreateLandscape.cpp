@@ -120,18 +120,18 @@ ALandscape* CreateLandscape::generate()
 	
 
 	//Code for assets
-	FVector Location(0.0f, 0.0f, 0.0f); FRotator Rotation(0.0f, 0.0f, 0.0f); 
-	FActorSpawnParameters SpawnInfo; 
+	//FVector Location(0.0f, 0.0f, 0.0f); FRotator Rotation(0.0f, 0.0f, 0.0f); 
+	//FActorSpawnParameters SpawnInfo; 
 	//AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Rotation, SpawnInfo);
-	AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
+	//AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
 
-	UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
+	//UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
 
-	UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
-	if (MeshComponent)
-	{
-		MeshComponent->SetStaticMesh(Mesh);
-	}
+	//UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+	//if (MeshComponent)
+	//{
+	//	MeshComponent->SetStaticMesh(Mesh);
+	//}
 
 
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerSection * SectionsPerComponent) * ComponentsPerProxy);

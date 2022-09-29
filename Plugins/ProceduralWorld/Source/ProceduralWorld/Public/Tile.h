@@ -39,6 +39,8 @@ public:
 	UPROPERTY()
 	UMaterial* tileMaterial = nullptr;
 
+	TArray<TWeakObjectPtr<AStaticMeshActor>> tileAssets;
+
 	bool isCity = false;
 	bool isRoad = false;
 	//Addd more (dungeons, biotope, river, lakes)

@@ -125,7 +125,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					.VAlign(VAlign_Center)
 					[
 						SNew(SButton)
-						.Text(FText::FromString("List and delete tiles"))
+						.Text(FText::FromString("Delete Landscape"))
 						.OnClicked_Raw(this, &FProceduralWorldModule::DeleteLandscape)
 					]
 				]
@@ -141,12 +141,8 @@ FReply FProceduralWorldModule::Setup()
 	CreateLandscape myLand;
 	landscapePtr = myLand.generate();
 
-	//Dynamic sizes
-
 	//Reserve to not reallacoate during runtime. 
 	tiles.Reserve(myLand.GetGridSizeOfProxies()*myLand.GetGridSizeOfProxies());
-
-	//tiles.Init(Tile(), 16);
 
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
 	//TConstIterator<ALandscapeStreamingProxy> it(LandscapeInfo->Proxies.CreateConstIterator()); //LandscapeInfo->Proxies.CreateConstIterator();
@@ -182,16 +178,19 @@ FReply FProceduralWorldModule::Setup()
 
 	}
 
+	int32 QuadSize = LandscapeInfo->ComponentSizeQuads;
+	int32 NumOfQuads = LandscapeInfo->SubsectionSizeQuads;
+	int32 gridSizePerRow = myLand.GetGridSizeOfProxies();
+
 	ProceduralAssetDistribution temp;
-	for (size_t i = 0; i < tiles.Num(); i++)
-	{
+	
 
-		temp.spawnActorObject(tiles[i]);
+		temp.spawnActorObjects(tiles, QuadSize, NumOfQuads, gridSizePerRow);
 
-	}
-
+	
 
 
+	//Code for extracting heightdata values 
 	ULandscapeInfo* myInfo = landscapePtr->CreateLandscapeInfo();
 	TArray<uint16> myHeightData;
 	GetHeightMapData(myInfo, 0, 0, 504, 504, myHeightData, nullptr);
@@ -208,7 +207,23 @@ FReply FProceduralWorldModule::Setup()
 
 	UE_LOG(LogTemp, Warning, TEXT("Max height data value: %d"), max);
 	UE_LOG(LogTemp, Warning, TEXT("Min height data value: %d"), min);
-	
+
+	//Code for extracting landscape extent
+	ULandscapeInfo* myProxyInfo = tiles[0]->streamingProxy->CreateLandscapeInfo();
+	int32 minX{ 0 };
+	int32 maxX{ 0 };
+	int32 minY{ 0 };
+	int32 maxY{ 0 };
+
+	int32 asde = tiles[1]->streamingProxy->LandscapeComponents[2]->SectionBaseX;
+	UE_LOG(LogTemp, Warning, TEXT("minX: %d"), asde);
+		//myProxyInfo->GetSelectedExtent(minX,minY,maxX,maxY);
+		/*UE_LOG(LogTemp, Warning, TEXT("minX: %d"), minX);
+		UE_LOG(LogTemp, Warning, TEXT("minY: %d"), minY);
+		UE_LOG(LogTemp, Warning, TEXT("maxX: %d"), maxX);
+		UE_LOG(LogTemp, Warning, TEXT("maxY: %d"), maxY);*/
+
+
 	return FReply::Handled();
 }
 
@@ -220,7 +235,9 @@ FReply FProceduralWorldModule::ListTiles()
 	{
 		if (it->streamingProxy != nullptr)
 		{
+
 			UE_LOG(LogTemp, Warning, TEXT("Tile has a proxy, the id is: %d"), it->index);
+			UE_LOG(LogTemp, Warning, TEXT("Tile has asset count: %d"), it->tileAssets.Num());
 		}
 		else
 		{
@@ -229,17 +246,17 @@ FReply FProceduralWorldModule::ListTiles()
 
 	}
 
-	for (int i = 0; i < tiles[11]->adjacentTiles.Num(); i++) {
-		if (tiles[11]->adjacentTiles[i] != nullptr)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Adjacent tile has index : %d"), tiles[11]->adjacentTiles[i]->index);
+	//for (int i = 0; i < tiles[11]->adjacentTiles.Num(); i++) {
+	//	if (tiles[11]->adjacentTiles[i] != nullptr)
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Adjacent tile has index : %d"), tiles[11]->adjacentTiles[i]->index);
 
-		}else{
-			UE_LOG(LogTemp, Warning, TEXT("Null tile with adjacent array index: %d"), i);
-		}
+	//	}else{
+	//		UE_LOG(LogTemp, Warning, TEXT("Null tile with adjacent array index: %d"), i);
+	//	}
 		
 		
-	}
+	//}
 
 	return FReply::Handled();
 }
@@ -247,78 +264,39 @@ FReply FProceduralWorldModule::ListTiles()
 FReply FProceduralWorldModule::DeleteLandscape()
 {
 
-	//UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
+	UE_LOG(LogTemp, Warning, TEXT("Removal of tiles was called, number of tiles to remove:  %d"), tiles.Num());
 
-	////for array traversal (index)
-	//int counter = 0;
+	for (auto& it : tiles) {
+		bool isDestroyed{ false };
+		if (it) {
+			if (it->streamingProxy.IsValid()) {
+				//auto name = it->streamingProxy.Pin();
+				//UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
+				isDestroyed = it->streamingProxy->Destroy();
 
-	//for(auto& it : tiles  ){
-	//	if(IsValid(it)){
-	//		if (it->streamingProxy.IsValid()) {
+			}
 
-	//			UE_LOG(LogTemp, Warning, TEXT("Tiles contain a tile with index: %d"), it->index);
-	//			UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
+			for (auto& i: it->tileAssets )
+			{
+				i->Destroy();
+				
+			}
+			it->tileAssets.Empty();
 
-	//			/*if (it->streamingProxy) {
-	//				UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
-	//			}
-	//			else {
-	//				UE_LOG(LogTemp, Warning, TEXT("Proxy is null "));
-	//			}*/
-	//		}
-	//		else {
 
-	//			UE_LOG(LogTemp, Warning, TEXT("Proxy has been destroyed or is pending destruction"));
-	//			
-	//			//tiles.RemoveAt(counter, 1, true);
-	//			break;
-	//			
-	//		}
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Tile to be removed is null, nothing was done"));
+		}
 
-	//	}else{
-	//			UE_LOG(LogTemp, Warning, TEXT("Tile is destroyed or about to be destroyed   "));
-	//			break;
-	//	}
-	//	
-
-	//	counter++;
-	//}
-	//for (auto& it : tiles)
-	//{
-	//	if(it->streamingProxy == nullptr){
-	//		UE_LOG(LogTemp, Warning, TEXT("Proxy is null with id %d"), it->index);
-	//	}
-
-	//}
+	}
+	tiles.Empty();
+	landscapePtr->Destroy();
+	landscapePtr = nullptr;
+	//delete landscapePtr;
+	
 
 	return FReply::Handled();
-
-	//if (!tiles.IsEmpty() && landscapePtr != nullptr)
-	//{
-	//	bool isDestroyed{ false };
-	//	for (auto& it : tiles)
-	//	{
-
-	//		isDestroyed = it->streamingProxy->Destroy();
-	//		if (!isDestroyed)
-	//		{
-	//			UE_LOG(LogTemp, Warning, TEXT("Could not delete all tiles"));
-	//			return FReply::Unhandled();
-	//		}
-	//	}
-	//	tiles.Empty();
-	//	landscapePtr->Destroy();
-	//	//delete landscapePtr;
-
-	//	
-	//	return FReply::Handled();
-
-	//}
-	//else
-	//{	
-	//	UE_LOG(LogTemp, Warning, TEXT("Could not delete landscape, no landscape is being pointed"));
-	//	return FReply::Unhandled();
-	//}
 	
 }
 //LandscapeEditInterface.cpp ///Line 600

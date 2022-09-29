@@ -16,7 +16,7 @@ public:
 	~ProceduralAssetDistribution();
 
 	//Function for spawning object within a tile, objectType is tree/house
-	void spawnActorObject(const UTile* t); 
+	void spawnActorObjects(TArray<UTile*> &inTiles, const int32 ComponentSizeQuads, const int32 ComponentNumSubsections,const int32 GridSizeOfProxies);
 	
 
 };
