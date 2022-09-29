@@ -91,6 +91,56 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
+			SNew(SHorizontalBox)
+			+SHorizontalBox::Slot()
+			[	
+				
+					SNew(SSplitter)
+					.ResizeMode(ESplitterResizeMode::FixedSize)
+					+SSplitter::Slot()
+					.SizeRule(ESizeRule::SizeToContent)
+					[
+						SNew(SHorizontalBox)
+						+SHorizontalBox::Slot()
+						[			
+							
+							SNew(STextBlock)
+							.Text(FText::FromString("asd"))
+							
+		
+
+						]
+						
+							+SHorizontalBox::Slot()
+							[
+							SNew(SNumericEntryBox<int32>)
+							.AllowSpin(true)
+							.MinValue(0)
+							.MaxValue(12)
+							.MaxSliderValue(5)
+							.MinDesiredValueWidth(2)
+							.Value(0)
+							.OnValueChanged_Raw(this, &FProceduralWorldModule::SetSizeOfLandscape)
+							]
+
+
+					]
+					
+					
+					
+			]
+				
+				
+				
+				
+
+				
+				
+
+			
+			+SHorizontalBox::Slot()
+			[
+
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
 			.Padding(1.0f)
@@ -129,19 +179,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						.OnClicked_Raw(this, &FProceduralWorldModule::DeleteLandscape)
 					]
 				]
-			+ SVerticalBox::Slot()
-				[
-					SNew(SNumericEntryBox<int32>)
-					.AllowSpin(true)
-				.MinValue(0)
-				.MaxValue(12)
-				.MaxSliderValue(5)
-				.MinDesiredValueWidth(2)
-				.Value(0)
-				.OnValueChanged_Raw(this,&FProceduralWorldModule::SetSizeOfLandscape)
-					
-				
-				]
+		]
+			
 
 			
 			
