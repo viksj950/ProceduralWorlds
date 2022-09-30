@@ -170,7 +170,7 @@ FReply FProceduralWorldModule::Setup()
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Num of tiles after adding them: %d"), tiles.Num());
 
-	tiles[11]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
+	tiles[0]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
 	for (size_t i = 0; i < tiles.Num(); i++)
 	{
 	
@@ -180,12 +180,13 @@ FReply FProceduralWorldModule::Setup()
 
 	int32 QuadSize = LandscapeInfo->ComponentSizeQuads;
 	int32 NumOfQuads = LandscapeInfo->SubsectionSizeQuads;
+	int32 ComponentsPerProxy = LandscapeInfo->ComponentNumSubsections;
 	int32 gridSizePerRow = myLand.GetGridSizeOfProxies();
 
 	ProceduralAssetDistribution temp;
 	
 
-		temp.spawnActorObjects(tiles, QuadSize, NumOfQuads, gridSizePerRow);
+		temp.spawnActorObjects(tiles, QuadSize, ComponentsPerProxy, gridSizePerRow);
 
 	
 
@@ -207,22 +208,6 @@ FReply FProceduralWorldModule::Setup()
 
 	UE_LOG(LogTemp, Warning, TEXT("Max height data value: %d"), max);
 	UE_LOG(LogTemp, Warning, TEXT("Min height data value: %d"), min);
-
-	//Code for extracting landscape extent
-	ULandscapeInfo* myProxyInfo = tiles[0]->streamingProxy->CreateLandscapeInfo();
-	int32 minX{ 0 };
-	int32 maxX{ 0 };
-	int32 minY{ 0 };
-	int32 maxY{ 0 };
-
-	int32 asde = tiles[1]->streamingProxy->LandscapeComponents[2]->SectionBaseX;
-	UE_LOG(LogTemp, Warning, TEXT("minX: %d"), asde);
-		//myProxyInfo->GetSelectedExtent(minX,minY,maxX,maxY);
-		/*UE_LOG(LogTemp, Warning, TEXT("minX: %d"), minX);
-		UE_LOG(LogTemp, Warning, TEXT("minY: %d"), minY);
-		UE_LOG(LogTemp, Warning, TEXT("maxX: %d"), maxX);
-		UE_LOG(LogTemp, Warning, TEXT("maxY: %d"), maxY);*/
-
 
 	return FReply::Handled();
 }
@@ -366,8 +351,8 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 						for (int32 SubX = SubX1; SubX <= SubX2; SubX++)
 						{
 							
-							//int32 LandscapeX = SubIndexX * SubsectionSizeQuads + ComponentIndexX * ComponentSizeQuads + SubX;
-							//int32 LandscapeY = SubIndexY * SubsectionSizeQuads + ComponentIndexY * ComponentSizeQuads + SubY;
+							int32 LandscapeX = SubIndexX * SubsectionSizeQuads + ComponentIndexX * ComponentSizeQuads + SubX;
+							int32 LandscapeY = SubIndexY * SubsectionSizeQuads + ComponentIndexY * ComponentSizeQuads + SubY;
 
 							// Find the texture data corresponding to this vertex
 							int32 SizeU = Heightmap->Source.GetSizeX();
@@ -383,6 +368,13 @@ void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, c
 
 							StoreData.Add(Height);
 							//StoreData.Store(LandscapeX, LandscapeY, Height);
+							
+							uint16 Normals = (((uint16)TexData.B) << 8) | TexData.A;
+							FVector temp;
+							temp.X = LandscapeX;
+							temp.Y = LandscapeY;
+							temp.Z = Normals;
+							//UE_LOG(LogTemp, Warning, TEXT("Normals: %s"), *temp.ToString());
 							/*if (NormalData)
 							{
 								uint16 Normals = (((uint16)TexData.B) << 8) | TexData.A;

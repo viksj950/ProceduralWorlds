@@ -33,6 +33,8 @@ public:
 	CreateLandscape();
 	~CreateLandscape();
 	ALandscape* generate();
+	
+	//TArray<FVector> generateNormals(const TArray<uint16> &inHeight);
 
 	const uint32 GetGridSizeOfProxies() const;
 private:

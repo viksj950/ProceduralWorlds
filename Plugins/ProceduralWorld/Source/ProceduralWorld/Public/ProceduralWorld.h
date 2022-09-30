@@ -131,6 +131,8 @@ public:
 	bool bShouldDirtyPackage;
 	/*UPROPERTY()*/
 	TArray<UTile*> tiles;
+
+
 	
 	//UPROPERTY()
 	//TArray<TObjectPtr<UTile>> tiles;

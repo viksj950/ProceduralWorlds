@@ -36,10 +36,14 @@ ALandscape* CreateLandscape::generate()
 	int32 SectionsPerComponent{ 1 };
 	//int32 ComponentCountX{12345};
 	//int32 ComponentCountY{21123};
-	int32 QuadsPerComponent{ 63 }; //deaultf is 63
+	int32 QuadsPerComponent{ 63 }; 
 	int32 SizeX{ 505 };
-	int32 SizeY{ 505 }; //default is 505
-	int32 ComponentsPerProxy{ 2 };
+	int32 SizeY{ 505 }; 
+	int32 ComponentsPerProxy{ 1 };
+
+	//Original map template:505x505 1 63x63 64 2
+	//Smaller map template: 253x253 1 63x63 16 2
+
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
@@ -117,30 +121,27 @@ ALandscape* CreateLandscape::generate()
 
 	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
-	
-
-	//Code for assets
-	//FVector Location(0.0f, 0.0f, 0.0f); FRotator Rotation(0.0f, 0.0f, 0.0f); 
-	//FActorSpawnParameters SpawnInfo; 
-	//AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Rotation, SpawnInfo);
-	//AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
-
-	//UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
-
-	//UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
-	//if (MeshComponent)
-	//{
-	//	MeshComponent->SetStaticMesh(Mesh);
-	//}
-
 
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerSection * SectionsPerComponent) * ComponentsPerProxy);
 	
-
 	//LandscapeInfo->export
 	return Landscape;
 
 }
+
+////TArray<FVector> CreateLandscape::generateNormals(const TArray<uint16>& inHeight)
+////{
+////	//Distance between vertices in x and y is the same for all vertices, only difference is height
+
+////	//Find and mark all sampes wiht position
+	
+////	//use position to gret 1 ring
+////	Tarray height getOnering()
+
+
+
+////	return TArray<FVector>();
+////}
 
 const uint32 CreateLandscape::GetGridSizeOfProxies() const
 {
