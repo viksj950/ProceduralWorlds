@@ -148,6 +148,7 @@ public:
 	int32 sizeOfLandscape{ 0 };
 	TOptional<int32> GetNumberOfTiles();
 	void SetSizeOfLandscape(int32 inSize);
+	TOptional<int32> GetSizeOfLandscape() const;
 	
 private:
 

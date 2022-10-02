@@ -91,46 +91,102 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
-			SNew(SHorizontalBox)
+			SNew(SHorizontalBox)	//Main Horizontal box, now dividing setting on one box and generation/listinging/deletion in the other
 			+SHorizontalBox::Slot()
 			[	
-				
-					SNew(SSplitter)
-					.ResizeMode(ESplitterResizeMode::FixedSize)
-					+SSplitter::Slot()
-					.SizeRule(ESizeRule::SizeToContent)
-					[
+				SNew(SVerticalBox)	//Vertical box to store rows(Horizontal boxes) with text / settings
+				+SVerticalBox::Slot()
+				[
 						SNew(SHorizontalBox)
 						+SHorizontalBox::Slot()
+						.AutoWidth()
+						.MaxWidth(150)
+						.Padding(0)
+						.FillWidth(1.0f)
+						.VAlign(VAlign_Center)
+						.HAlign(HAlign_Left)
 						[			
 							
 							SNew(STextBlock)
-							.Text(FText::FromString("asd"))
+							.Text(FText::FromString("Some settings"))
 							
 		
 
 						]
 						
-							+SHorizontalBox::Slot()
-							[
+						+SHorizontalBox::Slot()
+							.AutoWidth()
+							.MaxWidth(150)
+							
+							.Padding(0)
+							.FillWidth(50.0f)
+							.VAlign(VAlign_Center)
+							.HAlign(HAlign_Left)
+						[
 							SNew(SNumericEntryBox<int32>)
 							.AllowSpin(true)
 							.MinValue(0)
 							.MaxValue(12)
 							.MaxSliderValue(5)
 							.MinDesiredValueWidth(2)
-							.Value(0)
+							.Value_Raw(this,&FProceduralWorldModule::GetSizeOfLandscape)
 							.OnValueChanged_Raw(this, &FProceduralWorldModule::SetSizeOfLandscape)
-							]
+						]
+
+							
 
 
-					]
+				
+
+
+
+
+				]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("asd"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<int32>)
+			.AllowSpin(true)
+		.MinValue(0)
+		.MaxValue(12)
+		.MaxSliderValue(5)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetSizeOfLandscape)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetSizeOfLandscape)
+		]
+
+
+		]
+					
+				
+				
+				
 					
 					
 					
 			]
-				
-				
+			
+		
 				
 				
 
@@ -651,6 +707,11 @@ void FProceduralWorldModule::SetSizeOfLandscape(int32 inSize)
 	sizeOfLandscape = inSize;
 	UE_LOG(LogTemp, Warning, TEXT("Changed size using the UI button of the landscape to: %d"),sizeOfLandscape);
 
+}
+
+TOptional<int32> FProceduralWorldModule::GetSizeOfLandscape() const
+{
+	return sizeOfLandscape;
 }
 
 void FProceduralWorldModule::RegisterMenus()
