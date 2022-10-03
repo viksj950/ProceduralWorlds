@@ -15,6 +15,15 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 //utility to create UTexture2D
 #include "ImageUtils.h"
+
+
+
+//Slate things (UI)
+#include "SlateFwd.h"
+#include "Widgets/Input/SNumericEntryBox.h"
+#include "Misc/Optional.h"
+#include "Widgets/Input/SSpinBox.h"
+
 class FToolBarBuilder;
 class FMenuBuilder;
 struct FLandscapeTextureDataInfo
@@ -136,6 +145,12 @@ public:
 	
 	//UPROPERTY()
 	//TArray<TObjectPtr<UTile>> tiles;
+
+	///Some functions for UI, maybe move this later?
+	int32 sizeOfLandscape{ 0 };
+	TOptional<int32> GetNumberOfTiles();
+	void SetSizeOfLandscape(int32 inSize);
+	TOptional<int32> GetSizeOfLandscape() const;
 	
 private:
 
