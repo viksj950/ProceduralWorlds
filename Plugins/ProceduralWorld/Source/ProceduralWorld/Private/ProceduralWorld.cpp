@@ -300,7 +300,7 @@ FReply FProceduralWorldModule::Setup()
 
 
 	//Code for extracting heightdata values 
-	ULandscapeInfo* myInfo = landscapePtr->CreateLandscapeInfo();
+	/*ULandscapeInfo* myInfo = landscapePtr->CreateLandscapeInfo();
 	TArray<uint16> myHeightData;
 	GetHeightMapData(myInfo, 0, 0, 504, 504, myHeightData, nullptr);
 
@@ -315,7 +315,7 @@ FReply FProceduralWorldModule::Setup()
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Max height data value: %d"), max);
-	UE_LOG(LogTemp, Warning, TEXT("Min height data value: %d"), min);
+	UE_LOG(LogTemp, Warning, TEXT("Min height data value: %d"), min);*/
 
 	return FReply::Handled();
 }
