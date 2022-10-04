@@ -22,8 +22,8 @@ class PROCEDURALWORLD_API UTile //: public UObject
 
 
 public:
-	UTile();
-	UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy);
+	UTile(int32 NumOfQuads, int32 ComponentsPerProxy);
+	UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy, int32 NumOfQuads, int32 ComponentsPerProxy);
 	~UTile() = default;
 
 	void updateMaterial(UMaterial* inMaterial);
@@ -46,7 +46,8 @@ public:
 	//Addd more (dungeons, biotope, river, lakes)
 
 	int32 index{0};
-	
+	int32 tileSize{0};
+	TArray<uint16> tileHeightData;
 	TArray<UTile*> adjacentTiles;
 	//TStaticArray<Tile*> asd[8]{ nullptr };
 };

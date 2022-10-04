@@ -20,23 +20,40 @@
 #include "Editor/EditorEngine.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMeshActor.h"
-
 #include "Modules/ModuleManager.h"
+
+//Tile system
+#include"Tile.h" 
+
 //Noise
-//#include "NoiseGenerator.h" we have not implemented Value Noise for this plugin
 #include "PerlinNoiseGenerator.h"
 
 
 class PROCEDURALWORLD_API CreateLandscape : public IModuleInterface
 {
 public:
-	CreateLandscape();
+	CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerComponent, int32 inComponentPerProxy, int32 inSectionsPerComponent);
 	~CreateLandscape();
+
+	//Assign data from heightData to a tile, given a startVert for the tile
+	int32 assignDataToTile(UTile* inTile, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent);
+	void assignDataToAllTiles(TArray<UTile*> inTiles, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent, int32 ComponentsPerProxy);
+
+	void PreProcessNoise(TArray<UTile*> &inTiles);
 	ALandscape* generate();
 	
-	//TArray<FVector> generateNormals(const TArray<uint16> &inHeight);
-
 	const uint32 GetGridSizeOfProxies() const;
+
+	TArray<uint16> heightData;
+
+	int32 SizeX;
+	int32 SizeY;
+	int32 QuadsPerComponent;
+	int32 ComponentsPerProxy;
+	int32 SectionsPerComponent;
+
+	
 private:
+
 	uint32 gridSizeOfProxies{ 0 };
 };

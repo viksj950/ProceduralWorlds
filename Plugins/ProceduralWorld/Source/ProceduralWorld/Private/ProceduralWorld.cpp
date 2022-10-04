@@ -236,6 +236,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					]
 				]
 		]
+
 			
 
 			
@@ -246,7 +247,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 FReply FProceduralWorldModule::Setup()
 {
 	//Call to CreateLandscape and generate its properties 
-	CreateLandscape myLand;
+	CreateLandscape myLand(505,505,63,1,1);
 	landscapePtr = myLand.generate();
 
 	//Reserve to not reallacoate during runtime. 
@@ -268,8 +269,7 @@ FReply FProceduralWorldModule::Setup()
 	for (auto& it : LandscapeInfo->Proxies)
 	{
 	
-		UTile* temp = new UTile(it);/* = NewObject<UTile>();*/
-		//temp->streamingProxy = it;
+		UTile* temp = new UTile(it, 63, 1);
 		temp->index = index;
 		temp->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
 		tiles.Add(temp);
@@ -279,6 +279,7 @@ FReply FProceduralWorldModule::Setup()
 	UE_LOG(LogTemp, Warning, TEXT("Num of tiles after adding them: %d"), tiles.Num());
 
 	tiles[0]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
+	tiles[1]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
 	for (size_t i = 0; i < tiles.Num(); i++)
 	{
 	
@@ -294,8 +295,15 @@ FReply FProceduralWorldModule::Setup()
 	ProceduralAssetDistribution temp;
 	
 
-		temp.spawnActorObjects(tiles, QuadSize, ComponentsPerProxy, gridSizePerRow);
+	temp.spawnActorObjects(tiles, QuadSize, ComponentsPerProxy, gridSizePerRow);
 
+
+
+	//new tile
+	//UTile* tempTile = new UTile(63, 1);
+	//int32 res = myLand.assignDataToTile(tempTile,0,505, 63);
+	myLand.assignDataToAllTiles(tiles,0,505,63,1);
+	UE_LOG(LogTemp, Warning, TEXT("LAST TILE LAST VERTEX:  %d"), tiles[63]->tileHeightData[4095]);
 	
 
 

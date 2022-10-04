@@ -28,7 +28,7 @@ void ProceduralAssetDistribution::spawnActorObjects(TArray<UTile*> &inTiles, con
 		
 	}*/
 	//UE_LOG(LogTemp, Warning, TEXT("ComponentNumSubsections %d"), ComponentNumSubsections);
-	UE_LOG(LogTemp, Warning, TEXT("ComponentSizeQuads %d"), ComponentSizeQuads);
+	//UE_LOG(LogTemp, Warning, TEXT("ComponentSizeQuads %d"), ComponentSizeQuads);
 	
 	for(auto& t: inTiles){
 
@@ -74,7 +74,7 @@ void ProceduralAssetDistribution::spawnActorObjects(TArray<UTile*> &inTiles, con
 
 		FRotator Rotation(tri.normal.Rotation());
 	
-		UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
+		//UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
 
 		FActorSpawnParameters SpawnInfo;
 		//SpawnInfo.Name = "Tile_asset";
