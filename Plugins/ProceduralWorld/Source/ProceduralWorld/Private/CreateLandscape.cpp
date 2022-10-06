@@ -20,7 +20,12 @@ CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerC
 	heightData[62 * 505 + 0 + 505 + 63] = 0; //31878
 	heightData[420] = 420; //31878
 
+
+
+	
+	heightData[(505 * 505 - 1) - 63*(504) - 63];
 	heightData[505 * 505 - 1] = 69;
+	heightData[0] = 7;
 
 }
 
@@ -28,14 +33,14 @@ CreateLandscape::~CreateLandscape()
 {
 }
 
-
+																	//0,505,63
 int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent)
 {
 	//Add all samples between last point and first point
-	int32 middlePart = (inQuadsPerComponent - 1) * inSizeX;
-	int32 edges = startVert + inSizeX + inQuadsPerComponent;
-	int32 endVert = middlePart + edges;
-	int32 vertCounter = startVert;
+	int32 middlePart = (inQuadsPerComponent - 1) * inSizeX; // (63 - 1) * 505 = 31 310
+	int32 edges = startVert + inSizeX + inQuadsPerComponent; // 0 + 505 + 1 = 506; 
+	int32 endVert = middlePart + edges;	// 31 310 + 506 = 31 816
+	int32 vertCounter = startVert;	// 0
 
 	int32 tileHeightDataCounter{ 0 };
 
@@ -51,24 +56,23 @@ int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 in
 		
 
 
-		vertCounter += (inSizeX-1);
-	} while (vertCounter < endVert);
+		vertCounter += inSizeX;
+	} while (vertCounter <= endVert);
 
-	return endVert - inQuadsPerComponent;
-	
+	return endVert - inQuadsPerComponent;	
 }
 
 void CreateLandscape::assignDataToAllTiles(TArray<UTile*> inTiles, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent, int32 inComponentsPerProxy)
 {
-	int32 rowVertCounter = startVert; //The start vertex for each row
+	int32 rowVertCounter = startVert; //The start vertex for each row					
 	int32 tilePerRow = (inSizeX - 1) / (inQuadsPerComponent * inComponentsPerProxy);
 	
 	int32 currentStartVert = startVert;
 	for (auto& it : inTiles)
 	{
-		if (it->index % (tilePerRow) != 0)
+		if (it->index % (tilePerRow) != 0 || it->index == 0)
 		{
-			currentStartVert = assignDataToTile(it,currentStartVert,inSizeX,inQuadsPerComponent);
+			currentStartVert = assignDataToTile(it,currentStartVert,inSizeX,inQuadsPerComponent); //First tile: 0,505,63
 		}
 		else
 		{
@@ -81,7 +85,78 @@ void CreateLandscape::assignDataToAllTiles(TArray<UTile*> inTiles, int32 startVe
 	
 
 
+}
+TArray<uint16> CreateLandscape::GetColumnOfHeightData(const TArray<uint16>& inData, int32 sizeOfSquare, int32 Column)
+{
+	//(sizeOfSquare = 64)
+	int32 startVertex = Column * sizeOfSquare; //63 * 64 = 4032
+	int32 endVertex = startVertex + sizeOfSquare - 1; // -1 since array index start at 0    //4032 + 64 - 1
 
+
+	TArray<uint16> temp;
+
+	for (size_t i = startVertex; i <= endVertex; i++)
+	{
+		temp.Add(inData[i]);
+	}
+
+	return temp;
+}
+
+TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
+{
+	TArray<uint16> outHeightData;
+	int32 heightDataIndex{ 0 };
+	//iterera från tile index 0 till adjacent[6] och för varje tile lägg till en kolumn med data.  
+	//(inSizeX - 1) / (inQuadsPerComponent * inComponentsPerProxy);
+	int32 tileSize = (SizeX - 1) / (QuadsPerComponent * ComponentsPerProxy); //Ger 8 för 1 component per proxy 505size och 63 quadsPerComponent.
+
+
+	for (size_t j = 0; j < tileSize; j++) //yttre löper igenom översta raden med tiles 0-7
+	{
+		size_t i = 1;
+		if (j == 0)
+		{
+			i = 0;
+		}
+
+		bool IsStart = true;
+		for (;i <= QuadsPerComponent; i++)	//löper igenom index för columner i varje tile.
+		{
+			UTile* tilePtr = inTiles[j];
+			while (tilePtr != nullptr)		//löper igenom tiles i en column med hjälp av adjacentTiles
+			{
+				if ( !IsStart)	//Om det är första tilen, då tar man inte bort
+				{
+					outHeightData.RemoveAt(heightDataIndex,1,true);
+					
+					//outHeightData.Shrink();
+					
+				}
+				/*else
+				{
+					heightDataIndex += 1;
+				}*/
+
+				outHeightData.Append(GetColumnOfHeightData(tilePtr->tileHeightData,QuadsPerComponent +1,i));
+				//UE_LOG(LogTemp, Warning, TEXT("Num of vertices added to outHeightData: %d"), outHeightData.Num());
+
+				heightDataIndex += QuadsPerComponent;
+
+				tilePtr = tilePtr->adjacentTiles[6];
+				IsStart = false;
+				
+			}
+			IsStart = true;
+			heightDataIndex += 1;
+			//inTiles[j]->adjacentTiles[6];
+		}
+		//After all tiles in the first column has added its data, the remaining columns of data do not add their first column of heightdata.
+		
+	}
+
+
+	return outHeightData;
 }
 void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles)
 {
@@ -149,10 +224,9 @@ ALandscape* CreateLandscape::generate()
 		}
 	}
 
-	for (size_t j = 0; j < 4096; j++){
-		HeightData[j] = 0;
-	}
+	
 
+	heightData = HeightData;
 
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(HeightData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
@@ -210,6 +284,81 @@ ALandscape* CreateLandscape::generate()
 
 }
 
+ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
+{
+
+	FQuat InRotation{ 0,0,0,0 };
+	FVector InTranslation{ 0,0,5 };
+	FVector InScale{ 100,100,100 };
+	FTransform LandscapeTransform{ InRotation, InTranslation, InScale };
+
+	TArray<uint16> concatedHeightData = concatHeightData(inTiles);
+
+	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
+	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
+	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
+
+	
+
+	HeightDataPerLayers.Add(FGuid(), MoveTemp(concatedHeightData));
+	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
+
+	UWorld* World = nullptr;
+
+	// We want to create the landscape in the landscape editor mode's world
+	FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
+	World = EditorWorldContext.World();
+
+	ALandscape* Landscape = World->SpawnActor<ALandscape>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f)); //This is working Pog
+
+	Landscape->bCanHaveLayersContent = true;
+	Landscape->LandscapeMaterial = nullptr;
+	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Materials/YourMaterialName.YourMaterialName'"));
+	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'"));
+
+	//if (Material.Object != NULL)
+	//{
+	//	Landscape->LandscapeMaterial = (UMaterial*)Material.Object;
+	//	//TheMaterial = (UMaterial*)Material.Object;
+	//}else{ 
+	//	Landscape->LandscapeMaterial = nullptr; 
+	//}
+
+	
+	
+
+	Landscape->SetActorTransform(LandscapeTransform);
+	Landscape->Import(FGuid::NewGuid(), 0, 0, SizeX - 1, SizeY - 1, SectionsPerComponent, QuadsPerComponent,
+		HeightDataPerLayers, nullptr, MaterialLayerDataPerLayers, ELandscapeImportAlphamapType::Additive);
+
+	Landscape->StaticLightingLOD = FMath::DivideAndRoundUp(FMath::CeilLogTwo((SizeX * SizeY) / (2048 * 2048) + 1), (uint32)2);
+	// Register all the landscape components
+	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
+
+	LandscapeInfo->UpdateLayerInfoMap(Landscape);
+
+	
+
+	Landscape->RegisterAllComponents();
+
+	// Need to explicitly call PostEditChange on the LandscapeMaterial property or the landscape proxy won't update its material
+	FPropertyChangedEvent MaterialPropertyChangedEvent(FindFieldChecked< FProperty >(Landscape->GetClass(), FName("LandscapeMaterial")));
+	Landscape->PostEditChangeProperty(MaterialPropertyChangedEvent);
+	Landscape->PostEditChange();
+
+	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
+	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
+
+	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent) * ComponentsPerProxy);
+	
+	//LandscapeInfo->export
+
+
+
+
+	return Landscape;
+}
+
 ////TArray<FVector> CreateLandscape::generateNormals(const TArray<uint16>& inHeight)
 ////{
 ////	//Distance between vertices in x and y is the same for all vertices, only difference is height
@@ -226,6 +375,7 @@ ALandscape* CreateLandscape::generate()
 
 const uint32 CreateLandscape::GetGridSizeOfProxies() const
 {
+
 	return gridSizeOfProxies;
 }
 

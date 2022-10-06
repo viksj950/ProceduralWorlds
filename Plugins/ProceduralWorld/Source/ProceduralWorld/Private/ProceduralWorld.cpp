@@ -86,6 +86,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 	//		]
 	//
 	//	];
+	
+
+	
+	
 
 
 	return SNew(SDockTab)
@@ -145,38 +149,77 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 	+ SVerticalBox::Slot()
 		[
 			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.MaxWidth(150)
+			+SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
 			.Padding(0)
 			.FillWidth(1.0f)
 			.VAlign(VAlign_Center)
 			.HAlign(HAlign_Left)
+				[
+
+					SNew(STextBlock)
+					.Text(FText::FromString("asd"))
+
+
+
+				]
+
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+				[
+					SNew(SNumericEntryBox<int32>)
+					.AllowSpin(true)
+					.MinValue(0)
+					.MaxValue(12)
+					.MaxSliderValue(5)
+					.MinDesiredValueWidth(2)
+					.Value_Raw(this, &FProceduralWorldModule::GetSizeOfLandscape)
+					.OnValueChanged_Raw(this, &FProceduralWorldModule::SetSizeOfLandscape)
+				]
+
+
+		]
+	+ SVerticalBox::Slot()
 		[
+			SNew(SComboBox<TSharedPtr<LandscapeSetting>>)
+			.OptionsSource(&LandscapeComboSettings)
+			.OnGenerateWidget_Lambda([](TSharedPtr<LandscapeSetting> Item)
+			{
+					return SNew(STextBlock).Text(FText::FromString(*Item->Description));
+					//return SNew(SButton).Text(FText::FromString(*Item->Description));
+			})
+			.OnSelectionChanged_Lambda([this](TSharedPtr<LandscapeSetting> InSelection, ESelectInfo::Type InSelectInfo )
+			{
+					if (InSelection.IsValid() && ComboBoxTitleBlock.IsValid())
+					{
+						ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
+						this->SetLandscapeSettings(InSelection);
 
-			SNew(STextBlock)
-			.Text(FText::FromString("asd"))
+					}
+
+			})
+				[
+					SAssignNew(ComboBoxTitleBlock,STextBlock).Text(LOCTEXT("ComboLabel", "Label"))
+				]
+
 
 
 
 		]
-
-	+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.MaxWidth(150)
-		[
-			SNew(SNumericEntryBox<int32>)
-			.AllowSpin(true)
-		.MinValue(0)
-		.MaxValue(12)
-		.MaxSliderValue(5)
-		.MinDesiredValueWidth(2)
-		.Value_Raw(this, &FProceduralWorldModule::GetSizeOfLandscape)
-		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetSizeOfLandscape)
-		]
+		
 
 
-		]
+
+	/*+SVerticalBox::Slot()
+	[
+		SNew(SComboBox<TSharedPtr<FString>>)
+		.OptionsSource(&ComboItems)
+		.OnSelectionChanged()
+
+
+	]*/
 					
 				
 				
@@ -289,13 +332,13 @@ FReply FProceduralWorldModule::Setup()
 
 	int32 QuadSize = LandscapeInfo->ComponentSizeQuads;
 	int32 NumOfQuads = LandscapeInfo->SubsectionSizeQuads;
-	int32 ComponentsPerProxy = LandscapeInfo->ComponentNumSubsections;
+	int32 tempComponentsPerProxy = LandscapeInfo->ComponentNumSubsections;
 	int32 gridSizePerRow = myLand.GetGridSizeOfProxies();
 
 	ProceduralAssetDistribution temp;
 	
 
-	temp.spawnActorObjects(tiles, QuadSize, ComponentsPerProxy, gridSizePerRow);
+	temp.spawnActorObjects(tiles, QuadSize, tempComponentsPerProxy, gridSizePerRow);
 
 
 
@@ -303,9 +346,34 @@ FReply FProceduralWorldModule::Setup()
 	//UTile* tempTile = new UTile(63, 1);
 	//int32 res = myLand.assignDataToTile(tempTile,0,505, 63);
 	myLand.assignDataToAllTiles(tiles,0,505,63,1);
+	UE_LOG(LogTemp, Warning, TEXT("FIRST TILE LAST VERTEX:  %d"), tiles[0]->tileHeightData[4095]);
+
+	UE_LOG(LogTemp, Warning, TEXT("LAST TILE FIRST VERTEX:  %d"), tiles[63]->tileHeightData[0]);
 	UE_LOG(LogTemp, Warning, TEXT("LAST TILE LAST VERTEX:  %d"), tiles[63]->tileHeightData[4095]);
+
+	
+	UE_LOG(LogTemp, Warning, TEXT("HeightData first vertex:  %d"),myLand.heightData[0]);
+	UE_LOG(LogTemp, Warning, TEXT("First TILE FIRST VERTEX:  %d"), tiles[0]->tileHeightData[0]);
+
+	TArray<uint16> RowData = myLand.GetColumnOfHeightData(tiles[0]->tileHeightData, 64, 0);
+
+	UE_LOG(LogTemp, Warning, TEXT("RowDataSize:  %d"),RowData.Num());
+	UE_LOG(LogTemp, Warning, TEXT("Data from getRow function, first tile, first row, first vert:  %d"), RowData[0]);
+
+	TArray<uint16> concHeightData;
+	concHeightData = myLand.concatHeightData(tiles);
+
+	UE_LOG(LogTemp, Warning, TEXT("Size of concHeightData:  %d"), concHeightData.Num());
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Second column last vertex of first tile:  %d"), tiles[0]->tileHeightData[127]);
+	UE_LOG(LogTemp, Warning, TEXT("Second column first Vertx of eighth tile:  %d"), tiles[8]->tileHeightData[64]);
+
+
 	
 
+
+	ALandscape *newLandscapePtr = myLand.generateFromTileData(tiles);
 
 	//Code for extracting heightdata values 
 	/*ULandscapeInfo* myInfo = landscapePtr->CreateLandscapeInfo();
@@ -330,34 +398,11 @@ FReply FProceduralWorldModule::Setup()
 
 FReply FProceduralWorldModule::ListTiles()
 {
-	UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
+	UE_LOG(LogTemp, Warning, TEXT("Is size changed?: %d"), SizeX);
 
-	for (auto& it: tiles)
-	{
-		if (it->streamingProxy != nullptr)
-		{
+	
 
-			UE_LOG(LogTemp, Warning, TEXT("Tile has a proxy, the id is: %d"), it->index);
-			UE_LOG(LogTemp, Warning, TEXT("Tile has asset count: %d"), it->tileAssets.Num());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Tile DO NOT have a proxy, the id is: %d"), it->index);
-		}
-
-	}
-
-	//for (int i = 0; i < tiles[11]->adjacentTiles.Num(); i++) {
-	//	if (tiles[11]->adjacentTiles[i] != nullptr)
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Adjacent tile has index : %d"), tiles[11]->adjacentTiles[i]->index);
-
-	//	}else{
-	//		UE_LOG(LogTemp, Warning, TEXT("Null tile with adjacent array index: %d"), i);
-	//	}
-		
-		
-	//}
+	
 
 	return FReply::Handled();
 }
@@ -671,8 +716,14 @@ FLandscapeTextureDataInfo* FProceduralWorldModule::GetTextureDataInfo(UTexture2D
 }
 void FProceduralWorldModule::PluginButtonClicked()
 {
+
+	//UI settings for Landscape resolution
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,63)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 4, 63)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 63)));
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldTabName);
 }
+
 
 TOptional<int32> FProceduralWorldModule::GetNumberOfTiles()
 {

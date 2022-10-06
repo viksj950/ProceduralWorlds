@@ -39,10 +39,19 @@ public:
 	int32 assignDataToTile(UTile* inTile, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent);
 	void assignDataToAllTiles(TArray<UTile*> inTiles, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent, int32 ComponentsPerProxy);
 
+	//Returns a column of heightdata, the column is index from left to right starting at index 0
+	TArray<uint16> GetColumnOfHeightData(const TArray<uint16>& inData, int32 sizeOfSquare, int32 Column);
+
+	TArray<uint16> concatHeightData(const TArray<UTile*> &inTiles);
+
+
 	void PreProcessNoise(TArray<UTile*> &inTiles);
 	ALandscape* generate();
-	
+	ALandscape* generateFromTileData(TArray<UTile*> &inTiles);
+
 	const uint32 GetGridSizeOfProxies() const;
+
+
 
 	TArray<uint16> heightData;
 

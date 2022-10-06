@@ -19,10 +19,13 @@
 
 
 //Slate things (UI)
+#include "Widgets/SWidget.h"
 #include "SlateFwd.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Misc/Optional.h"
 #include "Widgets/Input/SSpinBox.h"
+#include "Widgets/Input/SComboButton.h"
+#include "Types/SlateEnums.h"
 
 class FToolBarBuilder;
 class FMenuBuilder;
@@ -141,14 +144,55 @@ public:
 	/*UPROPERTY()*/
 	TArray<UTile*> tiles;
 
-
 	
-	//UPROPERTY()
-	//TArray<TObjectPtr<UTile>> tiles;
+	int32 SizeX;
+	int32 SizeY;
+	int32 QuadsPerComponent;
+	int32 ComponentsPerProxy;
+	int32 SectionsPerComponent;
+	
+	//UI STUFF ---------------------------------------------------------------------------------------
+
+	struct LandscapeSetting
+	{
+		LandscapeSetting(const FString &inDesc,const int32 &inSizeX,const int32 &inSizeY,const int32 & inQuadsPerComponent, const int32 &inComponentsPerProxy,
+			const int32 &inSectionsPerComponent) : 
+			Description{inDesc}, SizeX{inSizeX}, SizeY{inSizeY}, QuadsPerComponent{inQuadsPerComponent}, ComponentsPerProxy{inComponentsPerProxy}, SectionsPerComponent{inSectionsPerComponent}
+		{
+
+		};
+		FString Description;
+		int32 SizeX;
+		int32 SizeY;
+		int32 QuadsPerComponent;
+		int32 ComponentsPerProxy;
+		int32 SectionsPerComponent;
+
+
+	};
+
+	TArray< TSharedPtr< FString > > ComboItems;
+
+	TArray<TSharedPtr<LandscapeSetting>> LandscapeComboSettings;
+
+
+
+
+	TSharedPtr<STextBlock> ComboBoxTitleBlock;
 
 	///Some functions for UI, maybe move this later?
 	int32 sizeOfLandscape{ 0 };
 	TOptional<int32> GetNumberOfTiles();
+
+	void SetLandscapeSettings(TSharedPtr<LandscapeSetting>inSettings) {
+		SizeX = inSettings->SizeX;
+		SizeY = inSettings->SizeY;
+		QuadsPerComponent = inSettings->QuadsPerComponent;
+		ComponentsPerProxy = inSettings->ComponentsPerProxy;
+		SectionsPerComponent = inSettings->SectionsPerComponent;
+		UE_LOG(LogTemp, Warning, TEXT("Changed Settings for Landscape"));
+	};
+
 	void SetSizeOfLandscape(int32 inSize);
 	TOptional<int32> GetSizeOfLandscape() const;
 	
