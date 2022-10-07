@@ -12,7 +12,8 @@ CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerC
 	 ComponentsPerProxy( inComponentPerProxy ),
 	 SectionsPerComponent( inSectionsPerComponent )
 {
-	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent) * ComponentsPerProxy);
+	//Amount of components per proxy, 
+	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent));
 	//gridSizeOfProxies = 8;
 	////DEBUGGING ------------------------------------------------------
 	//heightData.Init(32768,SizeX*SizeY);
@@ -50,7 +51,15 @@ int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 in
 	
 		for (size_t i = 0; i <= inQuadsPerComponent; i++)
 		{
-			inTile->tileHeightData[tileHeightDataCounter] = heightData[vertCounter + i];
+			if (!inTile->isCity)
+			{
+				inTile->tileHeightData[tileHeightDataCounter] = heightData[vertCounter + i];
+			}
+			else
+			{
+				inTile->tileHeightData[tileHeightDataCounter] = cityHeightData[vertCounter + i];
+			}
+			
 			tileHeightDataCounter++;
 			//UE_LOG(LogTemp, Warning, TEXT("Tilearray value : %d"), heightData[vertCounter + i]);
 		}
@@ -87,6 +96,38 @@ void CreateLandscape::assignDataToAllTiles(TArray<UTile*> &inTiles, int32 startV
 
 
 }
+void CreateLandscape::generateCityNoise()
+{
+	
+
+	cityHeightData.SetNum(SizeX * SizeY);
+
+	ValueNoiseGenerator<uint16, 64> valueGen;
+	valueGen.GenerateNoiseValues();
+
+	int heightScale = 256;
+	for (size_t j = 0; j < SizeY; j++)
+	{
+		for (size_t i = 0; i < SizeX; i++)
+		{
+
+			cityHeightData[j * SizeX + i] = valueGen.processCoord(Vec2<float>(i, j) * 0.015625) * heightScale + 32768;
+			//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
+
+			//if ((j * SizeX + i) == SizeX * j * 8) {
+				//UE_LOG(LogTemp, Warning, TEXT("Value of heightdata: %d"), HeightData[j * SizeX + i]);
+			//}
+
+		}
+	}
+
+
+	
+
+
+
+
+}
 TArray<uint16> CreateLandscape::GetColumnOfHeightData(const TArray<uint16>& inData, int32 sizeOfSquare, int32 Column)
 {
 	//(sizeOfSquare = 64)
@@ -100,6 +141,26 @@ TArray<uint16> CreateLandscape::GetColumnOfHeightData(const TArray<uint16>& inDa
 	{
 		temp.Add(inData[i]);
 	}
+
+	return temp;
+}
+
+TArray<uint16> CreateLandscape::GetRowOfHeightData(const TArray<uint16>& inData, int32 sizeOfSquare, int32 Row)
+{
+
+	TArray<uint16> temp;
+	
+	
+	int32 VertexIterator = Row;
+	int32 endVertex = (sizeOfSquare * sizeOfSquare - sizeOfSquare) + Row;
+	while (VertexIterator <= endVertex)
+	{
+
+		temp.Add(inData[VertexIterator]);
+
+		VertexIterator+= sizeOfSquare;
+	}
+
 
 	return temp;
 }

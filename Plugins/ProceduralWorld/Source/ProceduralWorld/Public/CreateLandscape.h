@@ -27,7 +27,7 @@
 
 //Noise
 #include "PerlinNoiseGenerator.h"
-
+#include "ValueNoiseGenerator.h"
 
 class PROCEDURALWORLD_API CreateLandscape : public IModuleInterface
 {
@@ -39,8 +39,12 @@ public:
 	int32 assignDataToTile(UTile* inTile, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent);
 	void assignDataToAllTiles(TArray<UTile*> &inTiles, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent, int32 ComponentsPerProxy);
 
+	//Test function for assigning value noise to city tiles, more a proof of concept
+	void generateCityNoise();
+
 	//Returns a column of heightdata, the column is index from left to right starting at index 0
 	TArray<uint16> GetColumnOfHeightData(const TArray<uint16>& inData, int32 sizeOfSquare, int32 Column);
+	TArray<uint16> GetRowOfHeightData(const TArray<uint16>& inData, int32 sizeOfSquare, int32 Row);
 
 	TArray<uint16> concatHeightData(const TArray<UTile*> &inTiles);
 
@@ -54,6 +58,7 @@ public:
 
 
 	TArray<uint16> heightData;
+	TArray<uint16> cityHeightData;
 
 	int32 SizeX;
 	int32 SizeY;

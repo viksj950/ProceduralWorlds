@@ -182,7 +182,27 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 		]
 	+ SVerticalBox::Slot()
+		.MaxHeight(100)
 		[
+
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Landscape dimensions (OBS only 1 component per proxy is working)"))
+
+
+
+		]
+		+SHorizontalBox::Slot()
+			[
 			SNew(SComboBox<TSharedPtr<LandscapeSetting>>)
 			.OptionsSource(&LandscapeComboSettings)
 			.OnGenerateWidget_Lambda([](TSharedPtr<LandscapeSetting> Item)
@@ -205,7 +225,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				]
 
 
-
+			]
 
 		]
 		
@@ -312,14 +332,21 @@ FReply FProceduralWorldModule::Setup()
 
 	}
 
+	tiles[9]->isCity = true;
+	tiles[10]->isCity = true;
+	tiles[17]->isCity = true;
+	tiles[18]->isCity = true;
+	tiles[19]->isCity = true;
+	myLand.generateCityNoise();
 	//Generate Perlin Noise and assign it to all tiles
 	myLand.PreProcessNoise(tiles);
 
-	tiles[9]->tileHeightData.Empty();
-	tiles[9]->tileHeightData.Init(32500,64*64);
-	tiles[9]->isCity = true;
+	/*tiles[9]->tileHeightData.Empty();
+	tiles[9]->tileHeightData.Init(32500,64*64);*/
+	
 
-
+	myLand.GetRowOfHeightData(tiles[9]->tileHeightData,64,0);
+	UE_LOG(LogTemp, Warning, TEXT("Row of data from Tile (index 9): %d"), myLand.GetRowOfHeightData(tiles[9]->tileHeightData, 64, 0).Num());
 
 
 	//Concatinate heightData from all tiles and spawn a landscape
@@ -331,7 +358,15 @@ FReply FProceduralWorldModule::Setup()
 	for (auto& it: LandscapeInfo->Proxies)
 	{
 		tiles[i]->streamingProxy = it;
-		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+		if (tiles[i]->isCity)
+		{
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
+		}
+		else
+		{
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+		}
+		
 		i++;
 	}
 
@@ -369,8 +404,10 @@ FReply FProceduralWorldModule::DeleteLandscape()
 
 			for (auto& i: it->tileAssets )
 			{
-				i->Destroy();
-				
+				if (i.IsValid())
+				{
+					i->Destroy();
+				}
 			}
 			it->tileAssets.Empty();
 
@@ -663,6 +700,7 @@ void FProceduralWorldModule::PluginButtonClicked()
 {
 
 	//UI settings for Landscape resolution
+	LandscapeComboSettings.Empty();
 	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1)));
 	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 4, 4)));
 	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1)));
