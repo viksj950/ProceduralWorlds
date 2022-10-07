@@ -12,20 +12,21 @@ CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerC
 	 ComponentsPerProxy( inComponentPerProxy ),
 	 SectionsPerComponent( inSectionsPerComponent )
 {
+	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent) * ComponentsPerProxy);
+	//gridSizeOfProxies = 8;
+	////DEBUGGING ------------------------------------------------------
+	//heightData.Init(32768,SizeX*SizeY);
+	//heightData[58] = 58;
+	//heightData[520] = 520;
+	//heightData[62 * 505 + 0 + 505 + 63] = 0; //31878
+	//heightData[420] = 420; //31878
 
-	//DEBUGGING ------------------------------------------------------
-	heightData.Init(32768,SizeX*SizeY);
-	heightData[58] = 58;
-	heightData[520] = 520;
-	heightData[62 * 505 + 0 + 505 + 63] = 0; //31878
-	heightData[420] = 420; //31878
 
 
-
-	
-	heightData[(505 * 505 - 1) - 63*(504) - 63];
-	heightData[505 * 505 - 1] = 69;
-	heightData[0] = 7;
+	//
+	//heightData[(505 * 505 - 1) - 63*(504) - 63];
+	//heightData[505 * 505 - 1] = 69;
+	//heightData[0] = 7;
 
 }
 
@@ -38,7 +39,7 @@ int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 in
 {
 	//Add all samples between last point and first point
 	int32 middlePart = (inQuadsPerComponent - 1) * inSizeX; // (63 - 1) * 505 = 31 310
-	int32 edges = startVert + inSizeX + inQuadsPerComponent; // 0 + 505 + 1 = 506; 
+	int32 edges = startVert + inSizeX + inQuadsPerComponent; // 0 + 505 + 63 = 506; 
 	int32 endVert = middlePart + edges;	// 31 310 + 506 = 31 816
 	int32 vertCounter = startVert;	// 0
 
@@ -62,7 +63,7 @@ int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 in
 	return endVert - inQuadsPerComponent;	
 }
 
-void CreateLandscape::assignDataToAllTiles(TArray<UTile*> inTiles, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent, int32 inComponentsPerProxy)
+void CreateLandscape::assignDataToAllTiles(TArray<UTile*> &inTiles, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent, int32 inComponentsPerProxy)
 {
 	int32 rowVertCounter = startVert; //The start vertex for each row					
 	int32 tilePerRow = (inSizeX - 1) / (inQuadsPerComponent * inComponentsPerProxy);
@@ -160,6 +161,35 @@ TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 }
 void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles)
 {
+	TArray<uint16> HeightData;
+	HeightData.SetNum(SizeX * SizeY);
+
+	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
+	PerlinNoise.generateGradients();
+	//NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
+	//noise.GenerateNoiseValues(2016);
+
+	int heightScale = 4192;
+	for (size_t j = 0; j < SizeY; j++)
+	{
+		for (size_t i = 0; i < SizeX; i++)
+		{
+
+			HeightData[j * SizeX + i] = PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625) * heightScale + 32768;
+			//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
+
+			//if ((j * SizeX + i) == SizeX * j * 8) {
+				//UE_LOG(LogTemp, Warning, TEXT("Value of heightdata: %d"), HeightData[j * SizeX + i]);
+			//}
+
+		}
+	}
+
+
+
+	heightData = HeightData;
+
+	assignDataToAllTiles(inTiles,0,SizeX,QuadsPerComponent,ComponentsPerProxy);
 
 }
 
@@ -200,35 +230,9 @@ ALandscape* CreateLandscape::generate()
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
 
-	TArray<uint16> HeightData;
-	HeightData.SetNum(SizeX * SizeY);
-
-	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
-	PerlinNoise.generateGradients();
-	//NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
-	//noise.GenerateNoiseValues(2016);
-
-	int heightScale = 4192;
-	for (size_t j = 0; j < SizeY; j++)
-	{
-		for (size_t i = 0; i < SizeX; i++)
-		{
-
-			HeightData[j * SizeX + i] = PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625) * heightScale + 32768;
-			//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
-
-			//if ((j * SizeX + i) == SizeX * j * 8) {
-				//UE_LOG(LogTemp, Warning, TEXT("Value of heightdata: %d"), HeightData[j * SizeX + i]);
-			//}
-
-		}
-	}
-
 	
 
-	heightData = HeightData;
-
-	HeightDataPerLayers.Add(FGuid(), MoveTemp(HeightData));
+	HeightDataPerLayers.Add(FGuid(), MoveTemp(heightData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
 
 	UWorld* World = nullptr;
@@ -349,7 +353,7 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
 
-	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent) * ComponentsPerProxy);
+	
 	
 	//LandscapeInfo->export
 

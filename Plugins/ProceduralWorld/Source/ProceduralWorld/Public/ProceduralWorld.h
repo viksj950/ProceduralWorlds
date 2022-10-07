@@ -190,7 +190,9 @@ public:
 		QuadsPerComponent = inSettings->QuadsPerComponent;
 		ComponentsPerProxy = inSettings->ComponentsPerProxy;
 		SectionsPerComponent = inSettings->SectionsPerComponent;
-		UE_LOG(LogTemp, Warning, TEXT("Changed Settings for Landscape"));
+		
+		
+
 	};
 
 	void SetSizeOfLandscape(int32 inSize);

@@ -290,120 +290,65 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 FReply FProceduralWorldModule::Setup()
 {
 	//Call to CreateLandscape and generate its properties 
-	CreateLandscape myLand(505,505,63,1,1);
-	landscapePtr = myLand.generate();
-
-	//Reserve to not reallacoate during runtime. 
-	tiles.Reserve(myLand.GetGridSizeOfProxies()*myLand.GetGridSizeOfProxies());
-
-	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
-	//TConstIterator<ALandscapeStreamingProxy> it(LandscapeInfo->Proxies.CreateConstIterator()); //LandscapeInfo->Proxies.CreateConstIterator();
-	UE_LOG(LogTemp, Warning, TEXT("Num of proxies: %d"), LandscapeInfo->Proxies.Num());
-	UE_LOG(LogTemp, Warning, TEXT("Num of tiles: %d"), tiles.Num());
-	if (!tiles.IsEmpty())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("tiles is not empty, attempting to solve ezpz by resizing"));
-			
-	}
-	//tiles.Empty(); //Should not be needed, but for some reason tiles start of with a maxed out array, we must empty it.
-	//UE_LOG(LogTemp, Warning, TEXT("Num of tiles after being resized: %d"), tiles.Num());
-
-	uint32 index{ 0 };
-	for (auto& it : LandscapeInfo->Proxies)
-	{
+	CreateLandscape myLand(SizeX,SizeY,QuadsPerComponent,ComponentsPerProxy,SectionsPerComponent);
 	
-		UTile* temp = new UTile(it, 63, 1);
-		temp->index = index;
-		temp->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+	//DO THIS BETTER----------------
+	int32 nmbrOfTilesInARow = (SizeX -1) / (QuadsPerComponent * ComponentsPerProxy);
+
+	//tiles.Init(new UTile(QuadsPerComponent, ComponentsPerProxy), nmbrOfTilesInARow * nmbrOfTilesInARow);
+
+	for (size_t i{0}; i < nmbrOfTilesInARow*nmbrOfTilesInARow; i++)
+	{
+
+		UTile* temp = new UTile(QuadsPerComponent, ComponentsPerProxy);
+		temp->index = i;
 		tiles.Add(temp);
-		index++;
-
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Num of tiles after adding them: %d"), tiles.Num());
 
-	tiles[0]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
-	tiles[1]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
 	for (size_t i = 0; i < tiles.Num(); i++)
 	{
-	
-		tiles[i]->updateAdjacentTiles(tiles, myLand.GetGridSizeOfProxies());
+
+		tiles[i]->updateAdjacentTiles(tiles, nmbrOfTilesInARow);
 
 	}
 
-	int32 QuadSize = LandscapeInfo->ComponentSizeQuads;
-	int32 NumOfQuads = LandscapeInfo->SubsectionSizeQuads;
-	int32 tempComponentsPerProxy = LandscapeInfo->ComponentNumSubsections;
-	int32 gridSizePerRow = myLand.GetGridSizeOfProxies();
+	//Generate Perlin Noise and assign it to all tiles
+	myLand.PreProcessNoise(tiles);
 
+	tiles[9]->tileHeightData.Empty();
+	tiles[9]->tileHeightData.Init(32500,64*64);
+	tiles[9]->isCity = true;
+
+
+
+
+	//Concatinate heightData from all tiles and spawn a landscape
+	landscapePtr = myLand.generateFromTileData(tiles);
+	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
+	
+	//after the landscape has been spawned assign proxies to each tile
+	size_t i{ 0 };
+	for (auto& it: LandscapeInfo->Proxies)
+	{
+		tiles[i]->streamingProxy = it;
+		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+		i++;
+	}
+
+	//Place actors in the Landscape, (trees)
 	ProceduralAssetDistribution temp;
+	temp.spawnActorObjects(tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies());
 	
-
-	temp.spawnActorObjects(tiles, QuadSize, tempComponentsPerProxy, gridSizePerRow);
-
-
-
-	//new tile
-	//UTile* tempTile = new UTile(63, 1);
-	//int32 res = myLand.assignDataToTile(tempTile,0,505, 63);
-	myLand.assignDataToAllTiles(tiles,0,505,63,1);
-	UE_LOG(LogTemp, Warning, TEXT("FIRST TILE LAST VERTEX:  %d"), tiles[0]->tileHeightData[4095]);
-
-	UE_LOG(LogTemp, Warning, TEXT("LAST TILE FIRST VERTEX:  %d"), tiles[63]->tileHeightData[0]);
-	UE_LOG(LogTemp, Warning, TEXT("LAST TILE LAST VERTEX:  %d"), tiles[63]->tileHeightData[4095]);
-
-	
-	UE_LOG(LogTemp, Warning, TEXT("HeightData first vertex:  %d"),myLand.heightData[0]);
-	UE_LOG(LogTemp, Warning, TEXT("First TILE FIRST VERTEX:  %d"), tiles[0]->tileHeightData[0]);
-
-	TArray<uint16> RowData = myLand.GetColumnOfHeightData(tiles[0]->tileHeightData, 64, 0);
-
-	UE_LOG(LogTemp, Warning, TEXT("RowDataSize:  %d"),RowData.Num());
-	UE_LOG(LogTemp, Warning, TEXT("Data from getRow function, first tile, first row, first vert:  %d"), RowData[0]);
-
-	TArray<uint16> concHeightData;
-	concHeightData = myLand.concatHeightData(tiles);
-
-	UE_LOG(LogTemp, Warning, TEXT("Size of concHeightData:  %d"), concHeightData.Num());
-
-
-	UE_LOG(LogTemp, Warning, TEXT("Second column last vertex of first tile:  %d"), tiles[0]->tileHeightData[127]);
-	UE_LOG(LogTemp, Warning, TEXT("Second column first Vertx of eighth tile:  %d"), tiles[8]->tileHeightData[64]);
-
-
-	
-
-
-	ALandscape *newLandscapePtr = myLand.generateFromTileData(tiles);
-
-	//Code for extracting heightdata values 
-	/*ULandscapeInfo* myInfo = landscapePtr->CreateLandscapeInfo();
-	TArray<uint16> myHeightData;
-	GetHeightMapData(myInfo, 0, 0, 504, 504, myHeightData, nullptr);
-
-	UE_LOG(LogTemp, Warning, TEXT("Number of values in hetdatagihs: %d"), myHeightData.Num());
-	uint16 min = myHeightData[0];
-	uint16 max = myHeightData[0];
-
-	for(int i = 0; i < myHeightData.Num(); i++){
-		
-		if (min > myHeightData[i]) { min = myHeightData[i]; }
-		if (max < myHeightData[i]) { max = myHeightData[i]; }
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Max height data value: %d"), max);
-	UE_LOG(LogTemp, Warning, TEXT("Min height data value: %d"), min);*/
-
 	return FReply::Handled();
 }
 
 FReply FProceduralWorldModule::ListTiles()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Is size changed?: %d"), SizeX);
-
-	
-
-	
-
+	UE_LOG(LogTemp, Warning, TEXT("SizeX %d"), SizeX);
+	UE_LOG(LogTemp, Warning, TEXT("SizeY: %d"), SizeY);
+	UE_LOG(LogTemp, Warning, TEXT("QuadsPerComponent: %d"), QuadsPerComponent);
+	UE_LOG(LogTemp, Warning, TEXT("ComponentsPerProxy: %d"), ComponentsPerProxy);
+	UE_LOG(LogTemp, Warning, TEXT("SectionsPerComponent: %d"), SectionsPerComponent);
 	return FReply::Handled();
 }
 
@@ -718,9 +663,9 @@ void FProceduralWorldModule::PluginButtonClicked()
 {
 
 	//UI settings for Landscape resolution
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,63)));
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 4, 63)));
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 63)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 4, 4)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1)));
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldTabName);
 }
 

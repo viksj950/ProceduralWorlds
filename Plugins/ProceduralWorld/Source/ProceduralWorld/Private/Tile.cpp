@@ -7,6 +7,7 @@ UTile::UTile(int32 NumOfQuads, int32 ComponentsPerProxy)
 {
 	tileSize = ((NumOfQuads +1) * (NumOfQuads+1) * ComponentsPerProxy);
 	tileHeightData.Init(0,tileSize);
+	adjacentTiles.Init(nullptr, 8);
 
 }
 
