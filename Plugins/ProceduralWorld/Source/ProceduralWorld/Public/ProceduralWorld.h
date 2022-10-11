@@ -145,11 +145,11 @@ public:
 	TArray<UTile*> tiles;
 
 	
-	int32 SizeX;
-	int32 SizeY;
-	int32 QuadsPerComponent;
-	int32 ComponentsPerProxy;
-	int32 SectionsPerComponent;
+	int32 SizeX{505};
+	int32 SizeY{505};
+	int32 QuadsPerComponent{63};
+	int32 ComponentsPerProxy{1};
+	int32 SectionsPerComponent{63};
 	
 	//UI STUFF ---------------------------------------------------------------------------------------
 
@@ -175,9 +175,6 @@ public:
 
 	TArray<TSharedPtr<LandscapeSetting>> LandscapeComboSettings;
 
-
-
-
 	TSharedPtr<STextBlock> ComboBoxTitleBlock;
 
 	///Some functions for UI, maybe move this later?
@@ -190,13 +187,40 @@ public:
 		QuadsPerComponent = inSettings->QuadsPerComponent;
 		ComponentsPerProxy = inSettings->ComponentsPerProxy;
 		SectionsPerComponent = inSettings->SectionsPerComponent;
-		
-		
 
 	};
 
+
+	int heightScale{ 2050 }; //4192
+	int octaveCount{  1 };
+
+	float amplitude{ 1.0f };
+	float persistence{ 0.5f }; //Higher gives larger amplitudes of peaks and valleys 
+	float frequency{ 2.0f };
+	float lacunarity{ 1.0f }; //Higher gives more frequent holes and hills
+	
+	
+
 	void SetSizeOfLandscape(int32 inSize);
 	TOptional<int32> GetSizeOfLandscape() const;
+	//Frequency
+	TOptional<float> GetFrequency() const { return frequency; }
+	void SetFrequency(float inFreq) { frequency = inFreq; }
+	//Height
+	TOptional<int32> GetHeightScale() const { return heightScale; }
+	void SetHeightScale(int32 inScale) { heightScale = inScale; }
+	//OctaveCount
+	TOptional<int32> GetOctaveCount() const { return octaveCount; }
+	void SetOctaveCount(int32 inScale) {	octaveCount = inScale; }
+	//Persistance
+	TOptional<float> GetPersistence() const { return persistence; }	
+	void SetPersistence(float inScale) { persistence = inScale; }
+	//Lacunarity
+	void SetLacunarity(float inFreq) { lacunarity = inFreq; }
+	TOptional<float> GetLacunarity() const { return lacunarity; }
+	//Amplitude
+	void SetAmplitude(float inFreq) { amplitude = inFreq;}
+	TOptional<float> GetAmplitude() const { return amplitude; }
 	
 private:
 

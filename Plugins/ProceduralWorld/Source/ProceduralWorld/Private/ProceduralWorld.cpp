@@ -96,88 +96,222 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		.TabRole(ETabRole::NomadTab)
 		[
 			SNew(SHorizontalBox)	//Main Horizontal box, now dividing setting on one box and generation/listinging/deletion in the other
-			+SHorizontalBox::Slot()
-			[	
-				SNew(SVerticalBox)	//Vertical box to store rows(Horizontal boxes) with text / settings
-				+SVerticalBox::Slot()
-				[
-						SNew(SHorizontalBox)
-						+SHorizontalBox::Slot()
-						.AutoWidth()
-						.MaxWidth(150)
-						.Padding(0)
-						.FillWidth(1.0f)
-						.VAlign(VAlign_Center)
-						.HAlign(HAlign_Left)
-						[			
-							
-							SNew(STextBlock)
-							.Text(FText::FromString("Some settings"))
-							
-		
+			+ SHorizontalBox::Slot()
+		[
+			SNew(SVerticalBox)	//Vertical box to store rows(Horizontal boxes) with text / settings
+			+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
 
-						]
-						
-						+SHorizontalBox::Slot()
-							.AutoWidth()
-							.MaxWidth(150)
-							
-							.Padding(0)
-							.FillWidth(50.0f)
-							.VAlign(VAlign_Center)
-							.HAlign(HAlign_Left)
-						[
-							SNew(SNumericEntryBox<int32>)
-							.AllowSpin(true)
-							.MinValue(0)
-							.MaxValue(12)
-							.MaxSliderValue(5)
-							.MinDesiredValueWidth(2)
-							.Value_Raw(this,&FProceduralWorldModule::GetSizeOfLandscape)
-							.OnValueChanged_Raw(this, &FProceduralWorldModule::SetSizeOfLandscape)
-						]
-
-							
-
-
-				
+			SNew(STextBlock)
+			.Text(FText::FromString("HeightScale"))
 
 
 
+		]
 
-				]
+	+ SHorizontalBox::Slot()
+		.MaxWidth(150)
+
+		.Padding(5.0f)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SNumericEntryBox<int32>)
+			.AllowSpin(true)
+		.MinValue(1)
+		.MaxValue(4096)
+		.MaxSliderValue(4096)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetHeightScale)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetHeightScale)
+		]
+
+
+		]
 	+ SVerticalBox::Slot()
 		[
 			SNew(SHorizontalBox)
-			+SHorizontalBox::Slot()
-			.AutoWidth()
-			.MaxWidth(150)
-			.Padding(0)
-			.FillWidth(1.0f)
-			.VAlign(VAlign_Center)
-			.HAlign(HAlign_Left)
-				[
-
-					SNew(STextBlock)
-					.Text(FText::FromString("asd"))
-
-
-
-				]
-
 			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			.MaxWidth(150)
-				[
-					SNew(SNumericEntryBox<int32>)
-					.AllowSpin(true)
-					.MinValue(0)
-					.MaxValue(12)
-					.MaxSliderValue(5)
-					.MinDesiredValueWidth(2)
-					.Value_Raw(this, &FProceduralWorldModule::GetSizeOfLandscape)
-					.OnValueChanged_Raw(this, &FProceduralWorldModule::SetSizeOfLandscape)
-				]
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Octaves"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<int32>)
+			.AllowSpin(true)
+		.MinValue(1)
+		.MaxValue(16)
+		.MaxSliderValue(5)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetOctaveCount)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetOctaveCount)
+		]
+
+
+		]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Amplitude"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(0)
+		.MaxValue(12)
+		.MaxSliderValue(5)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetAmplitude)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetAmplitude)
+		]
+
+
+		]
+
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Persistence"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(0)
+		.MaxValue(1)
+		.MaxSliderValue(1)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetPersistence)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetPersistence)
+		]
+
+
+		]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Frequency"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(0)
+		.MaxValue(1)
+		.MaxSliderValue(1)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetFrequency)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetFrequency)
+		]
+
+
+		]
+
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Lacunarity"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(1)
+		.MaxValue(4)
+		.MaxSliderValue(16)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetLacunarity)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetLacunarity)
+		]
 
 
 		]
@@ -187,9 +321,9 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			.MaxWidth(150)
-			.Padding(0)
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
 		.FillWidth(1.0f)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Left)
@@ -201,109 +335,84 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 
 		]
-		+SHorizontalBox::Slot()
-			[
+	+ SHorizontalBox::Slot()
+		[
 			SNew(SComboBox<TSharedPtr<LandscapeSetting>>)
 			.OptionsSource(&LandscapeComboSettings)
-			.OnGenerateWidget_Lambda([](TSharedPtr<LandscapeSetting> Item)
+		.OnGenerateWidget_Lambda([](TSharedPtr<LandscapeSetting> Item)
 			{
-					return SNew(STextBlock).Text(FText::FromString(*Item->Description));
-					//return SNew(SButton).Text(FText::FromString(*Item->Description));
+				return SNew(STextBlock).Text(FText::FromString(*Item->Description));
+				//return SNew(SButton).Text(FText::FromString(*Item->Description));
 			})
-			.OnSelectionChanged_Lambda([this](TSharedPtr<LandscapeSetting> InSelection, ESelectInfo::Type InSelectInfo )
+		.OnSelectionChanged_Lambda([this](TSharedPtr<LandscapeSetting> InSelection, ESelectInfo::Type InSelectInfo)
 			{
-					if (InSelection.IsValid() && ComboBoxTitleBlock.IsValid())
-					{
-						ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
-						this->SetLandscapeSettings(InSelection);
+				if (InSelection.IsValid() && ComboBoxTitleBlock.IsValid())
+				{
+					ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
+					this->SetLandscapeSettings(InSelection);
 
-					}
+				}
 
 			})
 				[
-					SAssignNew(ComboBoxTitleBlock,STextBlock).Text(LOCTEXT("ComboLabel", "Label"))
+					SAssignNew(ComboBoxTitleBlock, STextBlock).Text(LOCTEXT("ComboLabel", "Label"))
 				]
 
 
-			]
+		]
 
 		]
-		
+
+		]
 
 
-
-	/*+SVerticalBox::Slot()
-	[
-		SNew(SComboBox<TSharedPtr<FString>>)
-		.OptionsSource(&ComboItems)
-		.OnSelectionChanged()
-
-
-	]*/
-					
-				
-				
-				
-					
-					
-					
-			]
-			
-		
-				
-				
-
-				
-				
-
-			
-			+SHorizontalBox::Slot()
-			[
+	+ SHorizontalBox::Slot()
+		[
 
 			SNew(SVerticalBox)
-			+SVerticalBox::Slot()
-			.Padding(1.0f)
+			+ SVerticalBox::Slot()
+		.Padding(1.0f)
+		.HAlign(HAlign_Center)
+		[
+			SNew(SBox)
 			.HAlign(HAlign_Center)
-			[
-				SNew(SBox)
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				[
-					SNew(SButton)
-					.Text(FText::FromString("Generate landscape"))
-					.OnClicked_Raw(this, &FProceduralWorldModule::Setup)
-				]
-			]
-
-			+SVerticalBox::Slot()
-			[
-				SNew(SBox)
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				[
-					SNew(SButton)
-					.Text(FText::FromString("List tiles"))
-					.OnClicked_Raw(this, &FProceduralWorldModule::ListTiles)
-				]
-			]
-
-			+SVerticalBox::Slot()
-				[
-					SNew(SBox)
-					.HAlign(HAlign_Center)
-					.VAlign(VAlign_Center)
-					[
-						SNew(SButton)
-						.Text(FText::FromString("Delete Landscape"))
-						.OnClicked_Raw(this, &FProceduralWorldModule::DeleteLandscape)
-					]
-				]
+		.VAlign(VAlign_Center)
+		[
+			SNew(SButton)
+			.Text(FText::FromString("Generate landscape"))
+		.OnClicked_Raw(this, &FProceduralWorldModule::Setup)
+		]
 		]
 
-			
+	+ SVerticalBox::Slot()
+		[
+			SNew(SBox)
+			.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SButton)
+			.Text(FText::FromString("List tiles"))
+		.OnClicked_Raw(this, &FProceduralWorldModule::ListTiles)
+		]
+		]
 
-			
-			
+	+ SVerticalBox::Slot()
+		[
+			SNew(SBox)
+			.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SButton)
+			.Text(FText::FromString("Delete Landscape"))
+		.OnClicked_Raw(this, &FProceduralWorldModule::DeleteLandscape)
+		]
+		]
+		]
+
+
+
+
+
 		];
 }
 
@@ -339,7 +448,7 @@ FReply FProceduralWorldModule::Setup()
 	tiles[19]->isCity = true;
 	myLand.generateCityNoise();
 	//Generate Perlin Noise and assign it to all tiles
-	myLand.PreProcessNoise(tiles);
+	myLand.PreProcessNoise(tiles,heightScale,octaveCount,amplitude,persistence,frequency,lacunarity);
 
 	/*tiles[9]->tileHeightData.Empty();
 	tiles[9]->tileHeightData.Init(32500,64*64);*/
@@ -379,11 +488,27 @@ FReply FProceduralWorldModule::Setup()
 
 FReply FProceduralWorldModule::ListTiles()
 {
-	UE_LOG(LogTemp, Warning, TEXT("SizeX %d"), SizeX);
+	UE_LOG(LogTemp, Warning, TEXT("heightScale %d"), SizeX);
 	UE_LOG(LogTemp, Warning, TEXT("SizeY: %d"), SizeY);
 	UE_LOG(LogTemp, Warning, TEXT("QuadsPerComponent: %d"), QuadsPerComponent);
 	UE_LOG(LogTemp, Warning, TEXT("ComponentsPerProxy: %d"), ComponentsPerProxy);
 	UE_LOG(LogTemp, Warning, TEXT("SectionsPerComponent: %d"), SectionsPerComponent);
+
+
+
+	UE_LOG(LogTemp, Warning, TEXT("heightScale %d"), heightScale);
+	UE_LOG(LogTemp, Warning, TEXT("octaveCount: %d"), octaveCount);
+	UE_LOG(LogTemp, Warning, TEXT("Amplitude: %f"), amplitude);
+	UE_LOG(LogTemp, Warning, TEXT("persistence: %f"), persistence);
+	UE_LOG(LogTemp, Warning, TEXT("frequency: %f"), frequency);
+	UE_LOG(LogTemp, Warning, TEXT("Lacuanarity: %f"), lacunarity);
+
+
+
+
+
+
+
 	return FReply::Handled();
 }
 

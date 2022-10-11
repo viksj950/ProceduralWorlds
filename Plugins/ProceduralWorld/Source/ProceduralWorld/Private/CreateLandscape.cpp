@@ -165,6 +165,24 @@ TArray<uint16> CreateLandscape::GetRowOfHeightData(const TArray<uint16>& inData,
 	return temp;
 }
 
+uint32 CreateLandscape::GetVertexIndex(const TArray<uint16>& inData, int32 dataDimension, int32 inX, int32 inY)
+{
+	if (inX <= dataDimension && inY <= dataDimension)
+	{
+		
+		return inX * dataDimension + inY;
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Coordinates do not fit"));
+		return 0;
+	}
+	
+
+	
+}
+
 TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 {
 	TArray<uint16> outHeightData;
@@ -220,7 +238,7 @@ TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 
 	return outHeightData;
 }
-void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles)
+void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles, int const heightScale, int const octaveCount, float amplitude, float persistence, float frequency, float lacunarity)
 {
 	TArray<uint16> HeightData;
 	HeightData.SetNum(SizeX * SizeY);
@@ -230,25 +248,46 @@ void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles)
 	//NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
 	//noise.GenerateNoiseValues(2016);
 
-	int heightScale = 4192;
+	//int heightScale = 2050; //4192
+	//int octaveCount = 1;
+	
+	//float persistence = 0.5; //Higher gives larger amplitudes of peaks and valleys 
+	//float Lacunarity = 1.0; //Higher gives more frequent holes and hills
+	//float frequency;
+	//float Amplitude;
+	
+
+	float sum = 0.0f;
+	int averageHeight = 32768;
 	for (size_t j = 0; j < SizeY; j++)
 	{
 		for (size_t i = 0; i < SizeX; i++)
 		{
+			float amplitudeLoc = amplitude;
+			float frequencyLoc = frequency;  //For rass 0.005625 is kinda good, rockieer biome: 0.015625 
+			for (int k = 0; k < octaveCount; k++) {
+				 sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * heightScale;
+				 //sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625 * frequency) * Amplitude * heightScale;
+				 //HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
 
-			HeightData[j * SizeX + i] = PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625) * heightScale + 32768;
-			//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
+				amplitudeLoc *= persistence;
+				frequencyLoc *= lacunarity;
+				
+			}
 
-			//if ((j * SizeX + i) == SizeX * j * 8) {
-				//UE_LOG(LogTemp, Warning, TEXT("Value of heightdata: %d"), HeightData[j * SizeX + i]);
-			//}
-
+			if ((sum)+averageHeight < averageHeight) {
+				HeightData[j * SizeX + i] = averageHeight;
+			}
+			else{
+				HeightData[j * SizeX + i] = (sum)+averageHeight;
+			}
+			sum = 0;
 		}
 	}
 
 
-
 	heightData = HeightData;
+	UE_LOG(LogTemp, Warning, TEXT("Heigthdata value: %d"), heightData[200000]);
 
 	assignDataToAllTiles(inTiles,0,SizeX,QuadsPerComponent,ComponentsPerProxy);
 
@@ -363,6 +402,7 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
 
+	concatedHeightData[GetVertexIndex(concatedHeightData, 505, 64, 64)] += 1000;
 	
 
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(concatedHeightData));

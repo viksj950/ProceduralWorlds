@@ -18,7 +18,7 @@ public:
 	float length() {
 		return sqrt(x * x + y * y);
 	}
-	Vec2 operator * (const T& r) const { return Vec2(x * r, y * r); }
+	Vec2 operator* (const T& r) const { return Vec2(x * r, y * r); }
 
 	Vec2& operator /= (T scalar) {
 		x = x / scalar;
