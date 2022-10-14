@@ -50,7 +50,7 @@ public:
 	//Returns the index of a vertex's height, given coordinates
 	uint32 GetVertexIndex(const TArray<uint16> &inData,int32 dataDimension, int32 inX, int32 inY);
 
-	TArray<uint16> concatHeightData(const TArray<UTile*> &inTiles);
+	void concatHeightData(const TArray<UTile*> &inTiles, TArray<uint16>& data);
 
 	void lerpAllAdjTiles(TArray<UTile*>& inTiles);
 

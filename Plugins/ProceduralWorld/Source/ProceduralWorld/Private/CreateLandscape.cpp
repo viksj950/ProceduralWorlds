@@ -16,6 +16,12 @@ CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerC
 	//Amount of components per proxy, 
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent));
 
+	heightData.SetNum(SizeX * SizeY);
+	cityHeightData.SetNum(SizeX * SizeY);
+	//heightData.Reserve(inSizeX * inSizeY);
+	////Currently city has the same size, not optimized, have to redo alot to improve it
+	//cityHeightData.Reserve(inSizeX * inSizeY);
+
 }
 
 CreateLandscape::~CreateLandscape()
@@ -77,14 +83,13 @@ void CreateLandscape::assignDataToAllTiles(TArray<UTile*> &inTiles, int32 startV
 		}		
 
 	}
+	heightData.Empty();
+	cityHeightData.Empty();
 	
 }
 void CreateLandscape::generateCityNoise()
 {
 	
-
-	cityHeightData.SetNum(SizeX * SizeY);
-
 	ValueNoiseGenerator<uint16, 64> valueGen;
 	valueGen.GenerateNoiseValues();
 
@@ -103,12 +108,6 @@ void CreateLandscape::generateCityNoise()
 
 		}
 	}
-
-
-	
-
-
-
 
 }
 TArray<uint16> CreateLandscape::GetColumnOfHeightData(const TArray<uint16>& inData, int32 sizeOfSquare, int32 Column)
@@ -182,9 +181,8 @@ uint32 CreateLandscape::GetVertexIndex(const TArray<uint16>& inData, int32 dataD
 	
 }
 
-TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
+void CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles, TArray<uint16>& data)
 {
-	TArray<uint16> outHeightData;
 	int32 heightDataIndex{ 0 };
 	//iterera från tile index 0 till adjacent[6] och för varje tile lägg till en kolumn med data.  
 	//(inSizeX - 1) / (inQuadsPerComponent * inComponentsPerProxy);
@@ -207,11 +205,11 @@ TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 			{
 				if ( !IsStart)	//Om det är första tilen, då tar man inte bort
 				{
-					outHeightData.RemoveAt(heightDataIndex,1,true);
+					data.RemoveAt(heightDataIndex,1,true);
 					
 				}
 
-				outHeightData.Append(GetColumnOfHeightData(tilePtr->tileHeightData,TileSize,i));
+				data.Append(GetColumnOfHeightData(tilePtr->tileHeightData,TileSize,i));
 				//UE_LOG(LogTemp, Warning, TEXT("Num of vertices added to outHeightData: %d"), outHeightData.Num());
 
 				heightDataIndex += (TileSize - 1);
@@ -227,13 +225,12 @@ TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 		
 	}
 
-
-	return outHeightData;
 }
 void CreateLandscape::lerpAllAdjTiles(TArray<UTile*>& inTiles)
 {
 	int rowLength = GetGridSizeOfProxies();
 	int rowCount = 0;
+	int int_steps = 6;
 	for (auto& t : inTiles) {
 
 		for (int i = 0; i < 8; i++) {
@@ -255,14 +252,90 @@ void CreateLandscape::lerpAllAdjTiles(TArray<UTile*>& inTiles)
 
 					TArray<uint16> adjRowHeight = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, 64, 63);
 					TArray<uint16> currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, 0);
-					TArray<uint16>temp;
+					TArray<uint16> MiddleRowData;
+					float mu = 0.5;
 
 					for (int k = 0; k < 64; k++) {
-						temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
+						float mu2 = (1 - cos(mu * PI)) / 2;
+						//This is for cosine interpolation
+						MiddleRowData.Add(adjRowHeight[k] * (1 - mu2) + currentRowHeight[k] * mu2);
+						//This is for linear interpolation
+						//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
 					}
-					SetRowHeightData(t->tileHeightData, temp, 64, 0);
-					SetRowHeightData(t->adjacentTiles[i]->tileHeightData, temp, 64, 63);
+					SetRowHeightData(t->tileHeightData, MiddleRowData, 64, 0);
+					SetRowHeightData(t->adjacentTiles[i]->tileHeightData, MiddleRowData, 64, 63);
 
+					// currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, 0 + int_steps);
+					// adjRowHeight = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, 64, 63 - int_steps);
+
+					//TArray<uint16> interpArray;
+					//mu = 1.0;
+					//for (int k = int_steps -1; k > 0; k--) {	//looping rows 6-1
+					//	//mu = mu / k;
+					//	//for (int j = 0; j < 64; j++) {
+					//	//	float mu2 = (1 - cos(mu * PI)) / 2;
+					//	//	//This is for cosine interpolation
+					//	//	interpArray.Add(currentRowHeight[j] * (1 - mu2) + temp[j] * mu2);
+					//	//	//This is for linear interpolation
+					//	//	//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
+					//	//}
+					//	//SetRowHeightData(t->tileHeightData, temp, 64, 0 + k);
+
+
+					//	currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, int_steps - k);
+					//	for (int j = 0; j < 64; j++) {
+					//		float mu2 = (1 - cos(mu * PI)) / 2;
+					//		//This is for cosine interpolation
+					//		interpArray.Add((currentRowHeight[j] + temp[j]) / 2);
+					//		//This is for linear interpolation
+					//		//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
+					//	}
+					//	SetRowHeightData(t->tileHeightData, temp, 64, 0 + k);
+					//	interpArray.Empty();
+					//}
+					TArray<uint16> currentMiddle = MiddleRowData;
+					int rowCounter = 1;
+					do
+					{
+						currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, rowCounter);
+						TArray<uint16> temp2;
+						
+						for (int j = 0; j < 64; j++) {
+							float mu2 = (1 - cos(mu * PI)) / 2;
+							
+							temp2.Add((currentMiddle[j] + currentRowHeight[j]) / 2);
+						}
+
+						currentMiddle = temp2;
+
+						SetRowHeightData(t->tileHeightData, temp2, 64, rowCounter);
+
+						temp2.Empty();
+						rowCounter++;
+					} while (rowCounter <= 5);
+
+
+					
+					rowCounter = TileSize -1;
+					do
+					{
+						adjRowHeight = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, 64, rowCounter);
+
+						TArray<uint16> temp2;
+
+						for (int j = 0; j < 64; j++) {
+							float mu2 = (1 - cos(mu * PI)) / 2;
+
+							temp2.Add((MiddleRowData[j] + adjRowHeight[j]) / 2);
+						}
+
+						MiddleRowData = temp2;
+
+						SetRowHeightData(t->adjacentTiles[i]->tileHeightData, temp2, 64, rowCounter);
+
+						temp2.Empty();
+						rowCounter--;
+					} while (rowCounter >= TileSize - 5);
 				}
 			}
 		}
@@ -285,21 +358,13 @@ void CreateLandscape::lerpAllAdjTiles(TArray<UTile*>& inTiles)
 
 void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles, int const heightScale, int const octaveCount, float amplitude, float persistence, float frequency, float lacunarity)
 {
-	TArray<uint16> HeightData;
-	HeightData.SetNum(SizeX * SizeY);
+	//TArray<uint16> HeightData;
+	//HeightData.SetNum(SizeX * SizeY);
 
 	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
 	PerlinNoise.generateGradients();
 	//NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
 	//noise.GenerateNoiseValues(2016);
-
-	//int heightScale = 2050; //4192
-	//int octaveCount = 1;
-	
-	//float persistence = 0.5; //Higher gives larger amplitudes of peaks and valleys 
-	//float Lacunarity = 1.0; //Higher gives more frequent holes and hills
-	//float frequency;
-	//float Amplitude;
 	
 
 	float sum = 0.0f;
@@ -321,17 +386,15 @@ void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles, int const heightS
 			}
 
 			if ((sum)+averageHeight < averageHeight) {
-				HeightData[j * SizeX + i] = averageHeight;
+				heightData[j * SizeX + i] = averageHeight;
 			}
 			else{
-				HeightData[j * SizeX + i] = (sum)+averageHeight;
+				heightData[j * SizeX + i] = (sum)+averageHeight;
 			}
 			sum = 0;
 		}
 	}
 
-
-	heightData = HeightData;
 	UE_LOG(LogTemp, Warning, TEXT("Heigthdata value: %d"), heightData[200000]);
 
 	assignDataToAllTiles(inTiles,0,SizeX,QuadsPerComponent,ComponentsPerProxy);
@@ -441,7 +504,9 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	FVector InScale{ 100,100,100 };
 	FTransform LandscapeTransform{ InRotation, InTranslation, InScale };
 
-	TArray<uint16> concatedHeightData = concatHeightData(inTiles);
+	TArray<uint16> concatedHeightData;
+	//concatedHeightData.SetNum(SizeX * SizeY);
+	concatHeightData(inTiles, concatedHeightData);
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
