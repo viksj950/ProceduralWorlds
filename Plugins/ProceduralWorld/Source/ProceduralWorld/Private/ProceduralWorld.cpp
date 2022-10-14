@@ -453,6 +453,7 @@ FReply FProceduralWorldModule::Setup()
 	/*tiles[9]->tileHeightData.Empty();
 	tiles[9]->tileHeightData.Init(32500,64*64);*/
 	
+	myLand.lerpAllAdjTiles(tiles);
 
 	myLand.GetRowOfHeightData(tiles[9]->tileHeightData,64,0);
 	UE_LOG(LogTemp, Warning, TEXT("Row of data from Tile (index 9): %d"), myLand.GetRowOfHeightData(tiles[9]->tileHeightData, 64, 0).Num());
@@ -467,7 +468,7 @@ FReply FProceduralWorldModule::Setup()
 	for (auto& it: LandscapeInfo->Proxies)
 	{
 		tiles[i]->streamingProxy = it;
-		if (tiles[i]->isCity)
+		if (tiles[i]->biotope == 0)
 		{
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
 		}
