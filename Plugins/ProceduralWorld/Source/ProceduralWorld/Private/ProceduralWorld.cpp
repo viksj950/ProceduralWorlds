@@ -441,11 +441,11 @@ FReply FProceduralWorldModule::Setup()
 
 	}
 
-	tiles[9]->isCity = true;
-	tiles[10]->isCity = true;
-	tiles[17]->isCity = true;
-	tiles[18]->isCity = true;
-	tiles[19]->isCity = true;
+	tiles[9]->biotope = 0;
+	tiles[10]->biotope = 0;
+	tiles[17]->biotope = 0;
+	tiles[18]->biotope = 0;
+	tiles[19]->biotope = 0;
 	myLand.generateCityNoise();
 	//Generate Perlin Noise and assign it to all tiles
 	myLand.PreProcessNoise(tiles,heightScale,octaveCount,amplitude,persistence,frequency,lacunarity);

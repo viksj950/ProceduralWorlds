@@ -196,7 +196,7 @@ public:
 
 	float amplitude{ 1.0f };
 	float persistence{ 0.5f }; //Higher gives larger amplitudes of peaks and valleys 
-	float frequency{ 2.0f };
+	float frequency{ 0.0015f };
 	float lacunarity{ 1.0f }; //Higher gives more frequent holes and hills
 	
 	

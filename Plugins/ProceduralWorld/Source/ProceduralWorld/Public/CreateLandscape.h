@@ -45,10 +45,14 @@ public:
 	//Returns a column of heightdata, the column is index from left to right starting at index 0
 	TArray<uint16> GetColumnOfHeightData(const TArray<uint16>& inData, int32 sizeOfSquare, int32 Column);
 	TArray<uint16> GetRowOfHeightData(const TArray<uint16>& inData, int32 sizeOfSquare, int32 Row);
+
+	void SetRowHeightData(TArray<uint16>& inData, const TArray<uint16>& inRowData, int32 sizeOfSquare, int32 Row);
 	//Returns the index of a vertex's height, given coordinates
 	uint32 GetVertexIndex(const TArray<uint16> &inData,int32 dataDimension, int32 inX, int32 inY);
 
 	TArray<uint16> concatHeightData(const TArray<UTile*> &inTiles);
+
+	void lerpAllAdjTiles(TArray<UTile*>& inTiles);
 
 	//For now creating Perlin Noise and assigning it to the internal variable heightData asdwell as divide it among tiles
 	void PreProcessNoise(TArray<UTile*> &inTiles, int const heightScale, int const octaveCount, float Amplitude, float persistence, float frequency, float lacunarity);

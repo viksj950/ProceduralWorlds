@@ -51,11 +51,11 @@ int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 in
 	
 		for (size_t i = 0; i <= inQuadsPerComponent; i++)
 		{
-			if (!inTile->isCity)
+			if (inTile->biotope == 1)
 			{
 				inTile->tileHeightData[tileHeightDataCounter] = heightData[vertCounter + i];
 			}
-			else
+			else if (inTile->biotope == 0)
 			{
 				inTile->tileHeightData[tileHeightDataCounter] = cityHeightData[vertCounter + i];
 			}
@@ -165,6 +165,22 @@ TArray<uint16> CreateLandscape::GetRowOfHeightData(const TArray<uint16>& inData,
 	return temp;
 }
 
+void CreateLandscape::SetRowHeightData(TArray<uint16>& inData, const TArray<uint16>& inRowData, int32 sizeOfSquare, int32 Row)
+{
+	int32 VertexIterator = Row;
+	int32 endVertex = (sizeOfSquare * sizeOfSquare - sizeOfSquare) + Row;
+	int32 rowIndex{ 0 };
+	while (VertexIterator <= endVertex)
+	{
+
+		inData[VertexIterator] = inRowData[rowIndex];
+
+		VertexIterator += sizeOfSquare;
+		rowIndex++;
+	}
+
+}
+
 uint32 CreateLandscape::GetVertexIndex(const TArray<uint16>& inData, int32 dataDimension, int32 inX, int32 inY)
 {
 	if (inX <= dataDimension && inY <= dataDimension)
@@ -238,6 +254,59 @@ TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 
 	return outHeightData;
 }
+void CreateLandscape::lerpAllAdjTiles(TArray<UTile*>& inTiles)
+{
+	int rowLength = GetGridSizeOfProxies();
+	int rowCount = 0;
+	for (auto& t : inTiles) {
+
+		for (int i = 0; i < 8; i++) {
+			if (t->adjacentTiles[i] != nullptr && t->biotope != t->adjacentTiles[i]->biotope) { //adjacent is other biome
+				//if (i == 0) {//top right adjacent tile
+				//
+				//	uint16 adjVertHeight = t->adjacentTiles[i]->tileHeightData[t->tileHeightData.Num() - 1];
+				//	uint16 currentVertHeight = t->tileHeightData[0];
+
+				//	uint16 avgHeight = (adjVertHeight + currentVertHeight) / 2;
+				//	UE_LOG(LogTemp, Warning, TEXT("adjVertHeight: %d"), adjVertHeight);
+				//	UE_LOG(LogTemp, Warning, TEXT("currentVertHeight : %d"), currentVertHeight);
+				//	UE_LOG(LogTemp, Warning, TEXT("New height is: %d"), avgHeight);
+				//	t->adjacentTiles[i]->tileHeightData[t->tileHeightData.Num() - 1] = avgHeight;
+				//	t->tileHeightData[0] = avgHeight;
+
+				//}
+				if (i == 1) {//top adjacent tile
+
+					TArray<uint16> adjRowHeight = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, 64, 63);
+					TArray<uint16> currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, 0);
+					TArray<uint16>temp;
+
+					for (int k = 0; k < 64; k++) {
+						temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
+					}
+					SetRowHeightData(t->tileHeightData, temp, 64, 0);
+					SetRowHeightData(t->adjacentTiles[i]->tileHeightData, temp, 64, 63);
+
+				}
+			}
+		}
+
+
+		if (t->index % rowLength == 0) { //next row
+			rowCount++;
+			if (rowCount % 2 == 0) { //even row
+
+			}
+			else { // odd row
+
+			}
+
+		}
+
+
+	}
+}
+
 void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles, int const heightScale, int const octaveCount, float amplitude, float persistence, float frequency, float lacunarity)
 {
 	TArray<uint16> HeightData;
@@ -401,8 +470,6 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
-
-	concatedHeightData[GetVertexIndex(concatedHeightData, 505, 64, 64)] += 1000;
 	
 
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(concatedHeightData));
