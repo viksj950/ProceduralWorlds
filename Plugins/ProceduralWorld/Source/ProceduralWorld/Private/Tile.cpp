@@ -3,10 +3,10 @@
 
 #include "Tile.h"
 
-UTile::UTile(int32 NumOfQuads, int32 ComponentsPerProxy)
+UTile::UTile(int32 NumOfQuads, int32 ComponentsPerProxy, int32 inTileSize)
 {
-	tileSize = ((NumOfQuads +1) * (NumOfQuads+1) * ComponentsPerProxy);
-	tileHeightData.Init(0,tileSize);
+	tileSize = inTileSize; 
+	tileHeightData.Init(0,inTileSize * inTileSize);
 	adjacentTiles.Init(nullptr, 8);
 
 }

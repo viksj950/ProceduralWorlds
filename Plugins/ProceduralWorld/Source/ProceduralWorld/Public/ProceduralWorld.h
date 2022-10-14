@@ -150,14 +150,16 @@ public:
 	int32 QuadsPerComponent{63};
 	int32 ComponentsPerProxy{1};
 	int32 SectionsPerComponent{63};
+	int32 TileSize{ 64 };
 	
 	//UI STUFF ---------------------------------------------------------------------------------------
 
 	struct LandscapeSetting
 	{
 		LandscapeSetting(const FString &inDesc,const int32 &inSizeX,const int32 &inSizeY,const int32 & inQuadsPerComponent, const int32 &inComponentsPerProxy,
-			const int32 &inSectionsPerComponent) : 
-			Description{inDesc}, SizeX{inSizeX}, SizeY{inSizeY}, QuadsPerComponent{inQuadsPerComponent}, ComponentsPerProxy{inComponentsPerProxy}, SectionsPerComponent{inSectionsPerComponent}
+			const int32 &inSectionsPerComponent, const int32 &inTileSize) : 
+			Description{inDesc}, SizeX{inSizeX}, SizeY{inSizeY}, QuadsPerComponent{inQuadsPerComponent}, ComponentsPerProxy{inComponentsPerProxy}, SectionsPerComponent{inSectionsPerComponent,},
+			TileSize{inTileSize}
 		{
 
 		};
@@ -167,7 +169,7 @@ public:
 		int32 QuadsPerComponent;
 		int32 ComponentsPerProxy;
 		int32 SectionsPerComponent;
-
+		int32 TileSize;
 
 	};
 
@@ -187,9 +189,9 @@ public:
 		QuadsPerComponent = inSettings->QuadsPerComponent;
 		ComponentsPerProxy = inSettings->ComponentsPerProxy;
 		SectionsPerComponent = inSettings->SectionsPerComponent;
+		TileSize = inSettings->TileSize;
 
 	};
-
 
 	int heightScale{ 2050 }; //4192
 	int octaveCount{  1 };

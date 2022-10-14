@@ -4,30 +4,17 @@
 #include "CreateLandscape.h"
 
 
-CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerComponent, int32 inComponentPerProxy, int32 inSectionsPerComponent)
+CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerComponent, int32 inComponentPerProxy, int32 inSectionsPerComponent, int32 inTileSize)
 	:
 	 SizeX( inSizeX ),
 	 SizeY( inSizeY ),
 	 QuadsPerComponent( inQuadsPerComponent ),
 	 ComponentsPerProxy( inComponentPerProxy ),
-	 SectionsPerComponent( inSectionsPerComponent )
+	 SectionsPerComponent( inSectionsPerComponent ),
+	 TileSize(inTileSize)
 {
 	//Amount of components per proxy, 
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent));
-	//gridSizeOfProxies = 8;
-	////DEBUGGING ------------------------------------------------------
-	//heightData.Init(32768,SizeX*SizeY);
-	//heightData[58] = 58;
-	//heightData[520] = 520;
-	//heightData[62 * 505 + 0 + 505 + 63] = 0; //31878
-	//heightData[420] = 420; //31878
-
-
-
-	//
-	//heightData[(505 * 505 - 1) - 63*(504) - 63];
-	//heightData[505 * 505 - 1] = 69;
-	//heightData[0] = 7;
 
 }
 
@@ -39,8 +26,8 @@ CreateLandscape::~CreateLandscape()
 int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent)
 {
 	//Add all samples between last point and first point
-	int32 middlePart = (inQuadsPerComponent - 1) * inSizeX; // (63 - 1) * 505 = 31 310
-	int32 edges = startVert + inSizeX + inQuadsPerComponent; // 0 + 505 + 63 = 506; 
+	int32 middlePart = (TileSize - 2) * inSizeX; // (64 - 2) * 505 = 31 310
+	int32 edges = startVert + inSizeX + (TileSize -1); // 0 + 505 + 63 = 506; 
 	int32 endVert = middlePart + edges;	// 31 310 + 506 = 31 816
 	int32 vertCounter = startVert;	// 0
 
@@ -49,7 +36,7 @@ int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 in
 	do
 	{
 	
-		for (size_t i = 0; i <= inQuadsPerComponent; i++)
+		for (size_t i = 0; i < TileSize; i++)
 		{
 			if (inTile->biotope == 1)
 			{
@@ -63,13 +50,11 @@ int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 in
 			tileHeightDataCounter++;
 			//UE_LOG(LogTemp, Warning, TEXT("Tilearray value : %d"), heightData[vertCounter + i]);
 		}
-		
-
 
 		vertCounter += inSizeX;
 	} while (vertCounter <= endVert);
 
-	return endVert - inQuadsPerComponent;	
+	return endVert - TileSize +1;	
 }
 
 void CreateLandscape::assignDataToAllTiles(TArray<UTile*> &inTiles, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent, int32 inComponentsPerProxy)
@@ -86,15 +71,13 @@ void CreateLandscape::assignDataToAllTiles(TArray<UTile*> &inTiles, int32 startV
 		}
 		else
 		{
-			rowVertCounter += inQuadsPerComponent;
+			rowVertCounter += (TileSize-1);
 			//currentStartVert = rowVertCounter;
 			currentStartVert = assignDataToTile(it, rowVertCounter, inSizeX, inQuadsPerComponent);
 		}		
 
 	}
 	
-
-
 }
 void CreateLandscape::generateCityNoise()
 {
@@ -205,10 +188,10 @@ TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 	int32 heightDataIndex{ 0 };
 	//iterera från tile index 0 till adjacent[6] och för varje tile lägg till en kolumn med data.  
 	//(inSizeX - 1) / (inQuadsPerComponent * inComponentsPerProxy);
-	int32 tileSize = (SizeX - 1) / (QuadsPerComponent * ComponentsPerProxy); //Ger 8 för 1 component per proxy 505size och 63 quadsPerComponent.
+	int32 nmbrOfTilesPerRow = (SizeX - 1) / (QuadsPerComponent * ComponentsPerProxy); //Ger 8 för 1 component per proxy 505size och 63 quadsPerComponent.
 
 
-	for (size_t j = 0; j < tileSize; j++) //yttre löper igenom översta raden med tiles 0-7
+	for (size_t j = 0; j < nmbrOfTilesPerRow; j++) //yttre löper igenom översta raden med tiles 0-7
 	{
 		size_t i = 1;
 		if (j == 0)
@@ -217,7 +200,7 @@ TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 		}
 
 		bool IsStart = true;
-		for (;i <= QuadsPerComponent; i++)	//löper igenom index för columner i varje tile.
+		for (;i < TileSize; i++)	//löper igenom index för columner i varje tile.
 		{
 			UTile* tilePtr = inTiles[j];
 			while (tilePtr != nullptr)		//löper igenom tiles i en column med hjälp av adjacentTiles
@@ -226,18 +209,12 @@ TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 				{
 					outHeightData.RemoveAt(heightDataIndex,1,true);
 					
-					//outHeightData.Shrink();
-					
 				}
-				/*else
-				{
-					heightDataIndex += 1;
-				}*/
 
-				outHeightData.Append(GetColumnOfHeightData(tilePtr->tileHeightData,QuadsPerComponent +1,i));
+				outHeightData.Append(GetColumnOfHeightData(tilePtr->tileHeightData,TileSize,i));
 				//UE_LOG(LogTemp, Warning, TEXT("Num of vertices added to outHeightData: %d"), outHeightData.Num());
 
-				heightDataIndex += QuadsPerComponent;
+				heightDataIndex += (TileSize - 1);
 
 				tilePtr = tilePtr->adjacentTiles[6];
 				IsStart = false;
@@ -245,7 +222,6 @@ TArray<uint16> CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 			}
 			IsStart = true;
 			heightDataIndex += 1;
-			//inTiles[j]->adjacentTiles[6];
 		}
 		//After all tiles in the first column has added its data, the remaining columns of data do not add their first column of heightdata.
 		

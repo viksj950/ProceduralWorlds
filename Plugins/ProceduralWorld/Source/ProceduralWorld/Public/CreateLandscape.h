@@ -32,7 +32,7 @@
 class PROCEDURALWORLD_API CreateLandscape : public IModuleInterface
 {
 public:
-	CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerComponent, int32 inComponentPerProxy, int32 inSectionsPerComponent);
+	CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerComponent, int32 inComponentPerProxy, int32 inSectionsPerComponent, int32 inTileSize);
 	~CreateLandscape();
 
 	//Assign data from heightData to a tile, given a startVert for the tile
@@ -71,6 +71,7 @@ public:
 	int32 QuadsPerComponent;
 	int32 ComponentsPerProxy;
 	int32 SectionsPerComponent;
+	int32 TileSize;
 
 	
 private:

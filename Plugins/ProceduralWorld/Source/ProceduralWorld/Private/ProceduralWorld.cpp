@@ -419,7 +419,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 FReply FProceduralWorldModule::Setup()
 {
 	//Call to CreateLandscape and generate its properties 
-	CreateLandscape myLand(SizeX,SizeY,QuadsPerComponent,ComponentsPerProxy,SectionsPerComponent);
+	CreateLandscape myLand(SizeX,SizeY,QuadsPerComponent,ComponentsPerProxy,SectionsPerComponent,TileSize);
 	
 	//DO THIS BETTER----------------
 	int32 nmbrOfTilesInARow = (SizeX -1) / (QuadsPerComponent * ComponentsPerProxy);
@@ -429,7 +429,7 @@ FReply FProceduralWorldModule::Setup()
 	for (size_t i{0}; i < nmbrOfTilesInARow*nmbrOfTilesInARow; i++)
 	{
 
-		UTile* temp = new UTile(QuadsPerComponent, ComponentsPerProxy);
+		UTile* temp = new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize);
 		temp->index = i;
 		tiles.Add(temp);
 	}
@@ -443,9 +443,9 @@ FReply FProceduralWorldModule::Setup()
 
 	tiles[9]->biotope = 0;
 	tiles[10]->biotope = 0;
-	tiles[17]->biotope = 0;
-	tiles[18]->biotope = 0;
-	tiles[19]->biotope = 0;
+	//tiles[17]->biotope = 0;
+	//tiles[18]->biotope = 0;
+	//tiles[19]->biotope = 0;
 	myLand.generateCityNoise();
 	//Generate Perlin Noise and assign it to all tiles
 	myLand.PreProcessNoise(tiles,heightScale,octaveCount,amplitude,persistence,frequency,lacunarity);
@@ -453,7 +453,7 @@ FReply FProceduralWorldModule::Setup()
 	/*tiles[9]->tileHeightData.Empty();
 	tiles[9]->tileHeightData.Init(32500,64*64);*/
 	
-	myLand.lerpAllAdjTiles(tiles);
+	//myLand.lerpAllAdjTiles(tiles);
 
 	myLand.GetRowOfHeightData(tiles[9]->tileHeightData,64,0);
 	UE_LOG(LogTemp, Warning, TEXT("Row of data from Tile (index 9): %d"), myLand.GetRowOfHeightData(tiles[9]->tileHeightData, 64, 0).Num());
@@ -503,12 +503,6 @@ FReply FProceduralWorldModule::ListTiles()
 	UE_LOG(LogTemp, Warning, TEXT("persistence: %f"), persistence);
 	UE_LOG(LogTemp, Warning, TEXT("frequency: %f"), frequency);
 	UE_LOG(LogTemp, Warning, TEXT("Lacuanarity: %f"), lacunarity);
-
-
-
-
-
-
 
 	return FReply::Handled();
 }
@@ -827,9 +821,14 @@ void FProceduralWorldModule::PluginButtonClicked()
 
 	//UI settings for Landscape resolution
 	LandscapeComboSettings.Empty();
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1)));
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 4, 4)));
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1,64)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 2, 1, 127)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1, 64)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 4(2x2) : 126x126 256(16x16)", 1009, 1009, 63, 2, 1, 127)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("2017 x 2017 : 63 : 4(2x2) : 126x126 256(16x16)", 2017, 2017, 63, 2, 1, 127)));
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(NEED MORE VRAM) 4033 x 4033 : 63 : 4(2x2) : 126x126 1024(32x32)", 4033, 4033, 63, 2, 1, 127)));
+
+	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(NEED MORE vRAM) 8129 x 8129 : 127 : 4(2x2) : 254x254 1024(32x32)", 8129, 8129, 127, 2, 1, 255)));
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldTabName);
 }
 
