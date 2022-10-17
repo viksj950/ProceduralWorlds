@@ -83,7 +83,7 @@ void ProceduralAssetDistribution::spawnActorObjects(TArray<UTile*> &inTiles, con
 		AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Quat.Rotator(), SpawnInfo);
 
 		UStaticMesh* Mesh;
-		if (t->isCity) {
+		if (t->biotope == 0) {
 			Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
 		}
 		else { //tree

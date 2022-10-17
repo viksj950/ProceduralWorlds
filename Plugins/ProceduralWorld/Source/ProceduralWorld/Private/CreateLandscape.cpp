@@ -14,7 +14,7 @@ CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerC
 	 TileSize(inTileSize)
 {
 	//Amount of components per proxy, 
-	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent));
+	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * ComponentsPerProxy));
 
 	heightData.SetNum(SizeX * SizeY);
 	cityHeightData.SetNum(SizeX * SizeY);
@@ -163,6 +163,22 @@ void CreateLandscape::SetRowHeightData(TArray<uint16>& inData, const TArray<uint
 
 }
 
+void CreateLandscape::SetColumnHeightData(TArray<uint16>& inData, const TArray<uint16>& inColumnData, int32 sizeOfSquare, int32 Column)
+{
+
+	//(sizeOfSquare = 64)
+	int32 VertexIterator = Column * sizeOfSquare; //63 * 64 = 4032
+	//int32 endVertex = VertexIterator + sizeOfSquare - 1; // -1 since array index start at 0    //4032 + 64 - 1
+	int32 columnIndex{ 0 };
+	while(columnIndex < sizeOfSquare)
+	{
+		inData[VertexIterator] = inColumnData[columnIndex];
+		VertexIterator++;
+		columnIndex++;
+	}
+	
+}
+
 uint32 CreateLandscape::GetVertexIndex(const TArray<uint16>& inData, int32 dataDimension, int32 inX, int32 inY)
 {
 	if (inX <= dataDimension && inY <= dataDimension)
@@ -226,13 +242,45 @@ void CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles, TArray<uin
 	}
 
 }
-void CreateLandscape::lerpAllAdjTiles(TArray<UTile*>& inTiles)
+void CreateLandscape::lerpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount)
 {
 	int rowLength = GetGridSizeOfProxies();
+	UE_LOG(LogTemp, Warning, TEXT("rowlenght is = %d"), rowLength);
 	int rowCount = 0;
-	int int_steps = 6;
 	for (auto& t : inTiles) {
+		
+		//Do interpolation for everyother tile ish (checkerboard)
+		if (t->index != 0 && t->index % rowLength == 0) {
+			rowCount++;
+			UE_LOG(LogTemp, Warning, TEXT("rowCount increased: %d"), rowCount);
+		}
 
+		if (rowCount % 2 == 0) { //even row
+			
+			if (t->index % 2 != 0) {
+				UE_LOG(LogTemp, Warning, TEXT("SKIPPING tile with index: %d"), t->index);
+				continue;
+			}
+			UE_LOG(LogTemp, Warning, TEXT("DOING tile with index: %d"), t->index);
+		}
+		else { //odd row
+			if (t->index % 2 == 0) {
+				UE_LOG(LogTemp, Warning, TEXT("SKIPPING tile with index: %d"), t->index);
+				continue;
+			}
+			UE_LOG(LogTemp, Warning, TEXT("DOING tile with index: %d"), t->index);
+		}
+		TArray<uint16> currentStartPoint;
+		TArray<uint16> adjacentEndPoint;
+		TArray<uint16> interpDataArray;
+
+		int32 nmbrOfIterations;//needs to be even
+		float stepSize;//stepSize of interpolation
+		float step;
+		int currentCounter ;
+		int adjCounter;
+
+		//All cases for the 8-adjacency tiles
 		for (int i = 0; i < 8; i++) {
 			if (t->adjacentTiles[i] != nullptr && t->biotope != t->adjacentTiles[i]->biotope) { //adjacent is other biome
 				//if (i == 0) {//top right adjacent tile
@@ -249,108 +297,152 @@ void CreateLandscape::lerpAllAdjTiles(TArray<UTile*>& inTiles)
 
 				//}
 				if (i == 1) {//top adjacent tile
-
-					TArray<uint16> adjRowHeight = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, 64, 63);
-					TArray<uint16> currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, 0);
-					TArray<uint16> MiddleRowData;
-					float mu = 0.5;
-
-					for (int k = 0; k < 64; k++) {
-						float mu2 = (1 - cos(mu * PI)) / 2;
-						//This is for cosine interpolation
-						MiddleRowData.Add(adjRowHeight[k] * (1 - mu2) + currentRowHeight[k] * mu2);
-						//This is for linear interpolation
-						//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
-					}
-					SetRowHeightData(t->tileHeightData, MiddleRowData, 64, 0);
-					SetRowHeightData(t->adjacentTiles[i]->tileHeightData, MiddleRowData, 64, 63);
-
-					// currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, 0 + int_steps);
-					// adjRowHeight = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, 64, 63 - int_steps);
-
-					//TArray<uint16> interpArray;
-					//mu = 1.0;
-					//for (int k = int_steps -1; k > 0; k--) {	//looping rows 6-1
-					//	//mu = mu / k;
-					//	//for (int j = 0; j < 64; j++) {
-					//	//	float mu2 = (1 - cos(mu * PI)) / 2;
-					//	//	//This is for cosine interpolation
-					//	//	interpArray.Add(currentRowHeight[j] * (1 - mu2) + temp[j] * mu2);
-					//	//	//This is for linear interpolation
-					//	//	//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
-					//	//}
-					//	//SetRowHeightData(t->tileHeightData, temp, 64, 0 + k);
-
-
-					//	currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, int_steps - k);
-					//	for (int j = 0; j < 64; j++) {
-					//		float mu2 = (1 - cos(mu * PI)) / 2;
-					//		//This is for cosine interpolation
-					//		interpArray.Add((currentRowHeight[j] + temp[j]) / 2);
-					//		//This is for linear interpolation
-					//		//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
-					//	}
-					//	SetRowHeightData(t->tileHeightData, temp, 64, 0 + k);
-					//	interpArray.Empty();
-					//}
-					TArray<uint16> currentMiddle = MiddleRowData;
-					int rowCounter = 1;
-					do
-					{
-						currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, rowCounter);
-						TArray<uint16> temp2;
-						
-						for (int j = 0; j < 64; j++) {
-							float mu2 = (1 - cos(mu * PI)) / 2;
-							
-							temp2.Add((currentMiddle[j] + currentRowHeight[j]) / 2);
-						}
-
-						currentMiddle = temp2;
-
-						SetRowHeightData(t->tileHeightData, temp2, 64, rowCounter);
-
-						temp2.Empty();
-						rowCounter++;
-					} while (rowCounter <= 5);
-
-
 					
-					rowCounter = TileSize -1;
-					do
-					{
-						adjRowHeight = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, 64, rowCounter);
+					nmbrOfIterations = (stepAmount * 2);
+					stepSize = 1.0f / nmbrOfIterations;	
+					step = stepSize;
+					currentCounter = stepAmount - 1;
+					adjCounter = 0;
 
-						TArray<uint16> temp2;
+					currentStartPoint = GetRowOfHeightData(t->tileHeightData, TileSize, stepAmount);	//Start point and MiddlerowData is end point
+					adjacentEndPoint = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, TileSize, (TileSize - 1) - stepAmount);
 
-						for (int j = 0; j < 64; j++) {
-							float mu2 = (1 - cos(mu * PI)) / 2;
+					nmbrOfIterations--;
+					do {
 
-							temp2.Add((MiddleRowData[j] + adjRowHeight[j]) / 2);
+						for (int j = 0; j < TileSize; j++) { //create array of interpolated data
+
+							interpDataArray.Add(currentStartPoint[j] * (1.0f - smoothstep(step)) + adjacentEndPoint[j] * smoothstep(step));
 						}
 
-						MiddleRowData = temp2;
+						if(nmbrOfIterations >= stepAmount){ //CURRENT
+							SetRowHeightData(t->tileHeightData, interpDataArray, TileSize, currentCounter);
+							currentCounter--;
+						}
 
-						SetRowHeightData(t->adjacentTiles[i]->tileHeightData, temp2, 64, rowCounter);
+						if(nmbrOfIterations <= stepAmount){ //ADJACENT
+							SetRowHeightData(t->adjacentTiles[i]->tileHeightData, interpDataArray, TileSize, (TileSize - 1) - adjCounter);
+							adjCounter++;
+						}
+						interpDataArray.Empty();
+						step += stepSize;
+						
+						nmbrOfIterations--;
 
-						temp2.Empty();
-						rowCounter--;
-					} while (rowCounter >= TileSize - 5);
+					} while (nmbrOfIterations > 0);
+
+				}
+				//Right adjacent tile
+				if (i == 3) {
+
+					nmbrOfIterations = (stepAmount * 2);
+					stepSize = 1.0f / nmbrOfIterations;
+					step = stepSize;
+					currentCounter = stepAmount - 1;
+					adjCounter = 0;
+
+					currentStartPoint = GetColumnOfHeightData(t->tileHeightData, TileSize, stepAmount);	//Start point and MiddlerowData is end point
+					adjacentEndPoint = GetColumnOfHeightData(t->adjacentTiles[i]->tileHeightData, TileSize, (TileSize - 1) - stepAmount);
+
+					nmbrOfIterations--;
+					do {
+
+						for (int j = 0; j < TileSize; j++) { //create array of interpolated data
+
+							interpDataArray.Add(currentStartPoint[j] * (1.0f - smoothstep(step)) + adjacentEndPoint[j] * smoothstep(step));
+						}
+
+						if (nmbrOfIterations >= stepAmount) { //CURRENT
+							SetColumnHeightData(t->tileHeightData, interpDataArray, TileSize, currentCounter);
+							currentCounter--;
+						}
+
+						if (nmbrOfIterations <= stepAmount) { //ADJACENT
+							SetColumnHeightData(t->adjacentTiles[i]->tileHeightData, interpDataArray, TileSize, (TileSize - 1) - adjCounter);
+							adjCounter++;
+						}
+						interpDataArray.Empty();
+						step += stepSize;
+
+						nmbrOfIterations--;
+
+					} while (nmbrOfIterations > 0);
+				}
+				//Left adjacent tile
+				if (i == 4) {
+					nmbrOfIterations = (stepAmount * 2);
+					stepSize = 1.0f / nmbrOfIterations;
+					step = stepSize;
+					currentCounter = stepAmount - 1;
+					adjCounter = 0;
+
+					currentStartPoint = GetColumnOfHeightData(t->tileHeightData, TileSize, (TileSize - 1) - stepAmount);	//Start point and MiddlerowData is end point
+					adjacentEndPoint = GetColumnOfHeightData(t->adjacentTiles[i]->tileHeightData, TileSize, stepAmount);
+
+					nmbrOfIterations--;
+					do {
+
+						for (int j = 0; j < TileSize; j++) { //create array of interpolated data
+
+							interpDataArray.Add(currentStartPoint[j] * (1.0f - smoothstep(step)) + adjacentEndPoint[j] * smoothstep(step));
+						}
+
+						if (nmbrOfIterations >= stepAmount) { //CURRENT
+							SetColumnHeightData(t->tileHeightData, interpDataArray, TileSize, (TileSize - 1) - currentCounter);
+							currentCounter--;
+						}
+
+						if (nmbrOfIterations <= stepAmount) { //ADJACENT
+							SetColumnHeightData(t->adjacentTiles[i]->tileHeightData, interpDataArray,TileSize, adjCounter);
+							adjCounter++;
+						}
+						interpDataArray.Empty();
+						step += stepSize;
+
+						nmbrOfIterations--;
+
+					} while (nmbrOfIterations > 0);
+				}
+				//Bottom adjacent tile
+				if (i == 6) {
+					nmbrOfIterations = (stepAmount * 2);
+					stepSize = 1.0f / nmbrOfIterations;
+					step = stepSize;
+					currentCounter = stepAmount - 1;
+					adjCounter = 0;
+
+					currentStartPoint = GetRowOfHeightData(t->tileHeightData, TileSize, (TileSize - 1) - stepAmount);	//Start point and MiddlerowData is end point
+					adjacentEndPoint = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, TileSize, stepAmount);
+
+					nmbrOfIterations--;
+					do {
+
+						for (int j = 0; j < TileSize; j++) { //create array of interpolated data
+
+							interpDataArray.Add(currentStartPoint[j] * (1.0f - smoothstep(step)) + adjacentEndPoint[j] * smoothstep(step));
+						}
+
+						if (nmbrOfIterations >= stepAmount) { //CURRENT
+							SetRowHeightData(t->tileHeightData, interpDataArray, TileSize, (TileSize - 1) - currentCounter);
+							currentCounter--;
+						}
+
+						if (nmbrOfIterations <= stepAmount) { //ADJACENT
+							SetRowHeightData(t->adjacentTiles[i]->tileHeightData, interpDataArray, TileSize, adjCounter);
+							adjCounter++;
+						}
+						interpDataArray.Empty();
+						step += stepSize;
+
+						nmbrOfIterations--;
+
+					} while (nmbrOfIterations > 0);
 				}
 			}
 		}
 
 
-		if (t->index % rowLength == 0) { //next row
-			rowCount++;
-			if (rowCount % 2 == 0) { //even row
-
-			}
-			else { // odd row
-
-			}
-
-		}
+		
 
 
 	}
@@ -591,6 +683,37 @@ const uint32 CreateLandscape::GetGridSizeOfProxies() const
 
 	return gridSizeOfProxies;
 }
+
+
+//OLD COSINE INTERP CODE
+					// currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, 0 + int_steps);
+					// adjRowHeight = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, 64, 63 - int_steps);
+
+					//TArray<uint16> interpArray;
+					//mu = 1.0;
+					//for (int k = int_steps -1; k > 0; k--) {	//looping rows 6-1
+					//	//mu = mu / k;
+					//	//for (int j = 0; j < 64; j++) {
+					//	//	float mu2 = (1 - cos(mu * PI)) / 2;
+					//	//	//This is for cosine interpolation
+					//	//	interpArray.Add(currentRowHeight[j] * (1 - mu2) + temp[j] * mu2);
+					//	//	//This is for linear interpolation
+					//	//	//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
+					//	//}
+					//	//SetRowHeightData(t->tileHeightData, temp, 64, 0 + k);
+
+
+					//	currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, int_steps - k);
+					//	for (int j = 0; j < 64; j++) {
+					//		float mu2 = (1 - cos(mu * PI)) / 2;
+					//		//This is for cosine interpolation
+					//		interpArray.Add((currentRowHeight[j] + temp[j]) / 2);
+					//		//This is for linear interpolation
+					//		//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
+					//	}
+					//	SetRowHeightData(t->tileHeightData, temp, 64, 0 + k);
+					//	interpArray.Empty();
+					//}
 
 //OLD ASS CODE
 
