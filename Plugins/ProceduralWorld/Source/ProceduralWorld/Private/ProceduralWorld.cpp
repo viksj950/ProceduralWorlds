@@ -443,6 +443,8 @@ FReply FProceduralWorldModule::Setup()
 
 	tiles[9]->biotope = 0;
 	tiles[10]->biotope = 0;
+	//tiles[5]->biotope = 2;
+	//tiles[6]->biotope = 2;
 	//tiles[17]->biotope = 0;
 	//tiles[18]->biotope = 0;
 	//tiles[19]->biotope = 0;
@@ -481,9 +483,11 @@ FReply FProceduralWorldModule::Setup()
 		i++;
 	}
 
-	//Place actors in the Landscape, (trees)
+	//Place actors in the Landscape, (Foliage is the focus for now)
 	ProceduralAssetDistribution temp;
-	temp.spawnActorObjects(tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies());
+	int32 assetCount = 5;
+	float scaleVar = 0.5;
+	temp.spawnActorObjects(tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), assetCount, scaleVar);
 	
 	return FReply::Handled();
 }

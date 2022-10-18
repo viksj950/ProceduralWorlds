@@ -23,8 +23,6 @@ struct Triangle
 
 	FVector normal;
 
-	
-
 };
 
 class PROCEDURALWORLD_API ProceduralAssetDistribution
@@ -34,7 +32,9 @@ public:
 	~ProceduralAssetDistribution();
 
 	//Function for spawning object within a tile, objectType is tree/house
-	void spawnActorObjects(TArray<UTile*> &inTiles, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy,const int32 GridSizeOfProxies);
+	void spawnActorObjects(TArray<UTile*> &inTiles, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy,const int32 GridSizeOfProxies, int32 assetCount, float scaleVar);
+
+	/*float getRandomVal(float min, float max);*/
 	
 
 };

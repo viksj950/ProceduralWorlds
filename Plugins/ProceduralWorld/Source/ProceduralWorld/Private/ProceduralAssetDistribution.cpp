@@ -12,7 +12,7 @@ ProceduralAssetDistribution::~ProceduralAssetDistribution()
 }
 
 
-void ProceduralAssetDistribution::spawnActorObjects(TArray<UTile*> &inTiles, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies) {
+void ProceduralAssetDistribution::spawnActorObjects(TArray<UTile*> &inTiles, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar) {
 
 	UWorld* World = nullptr;
 
@@ -21,14 +21,14 @@ void ProceduralAssetDistribution::spawnActorObjects(TArray<UTile*> &inTiles, con
 	FVector proxyLocation;
 	FVector proxyScale;
 	FVector Location;
-	/*if (inTiles[0]->streamingProxy != nullptr)
-	{
-		proxyLocation = inTiles[0]->streamingProxy->GetActorLocation();
-		proxyScale = inTiles[0]->streamingProxy->GetActorScale();
-		
-	}*/
-	//UE_LOG(LogTemp, Warning, TEXT("ComponentNumSubsections %d"), ComponentNumSubsections);
-	//UE_LOG(LogTemp, Warning, TEXT("ComponentSizeQuads %d"), ComponentSizeQuads);
+
+	//Asset specific
+	FVector assetScale;
+	FMath mathInstance;
+	float minPos = 0.0f;
+	float maxPos = 1.0f;
+	float minScale;
+	float maxScale;
 	
 	for(auto& t: inTiles){
 
@@ -39,65 +39,80 @@ void ProceduralAssetDistribution::spawnActorObjects(TArray<UTile*> &inTiles, con
 
 		}
 
-		FMath mathInstance;
-		float min = 0.0f;
-		float max = 1.0f;
+		for (int i = 0; i < assetCount; i++) {
 
-		float randomValX = mathInstance.FRandRange(min, max);
-		float randomValY = mathInstance.FRandRange(min, max);
+			//For position
+			float randomValX = mathInstance.FRandRange(minPos, maxPos);
+			float randomValY = mathInstance.FRandRange(minPos, maxPos);
 
-		//find positoin in tile
-		Location = proxyLocation + (ComponentSizeQuads * proxyScale) * (ComponentsPerProxy/2.0); //scales based on perProxy
+			//Find position in tile
+			Location = proxyLocation + (ComponentSizeQuads * proxyScale) * (ComponentsPerProxy / 2.0); //scales based on perProxy
 
-		Location.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValX);
-		Location.Y = proxyLocation.Y+ (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValY);
-		
-		//Create triangle for normal calculations
-		Triangle tri(t, Location.X, Location.Y);	
+			Location.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValX);
+			Location.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValY);
 
-		TOptional<float> height = t->streamingProxy->GetHeightAtLocation(Location);
-		//UE_LOG(LogTemp, Warning, TEXT("height at location : %f"), height.GetValue());
+			//Create triangle for normal calculations
+			Triangle tri(t, Location.X, Location.Y);
 
-		Location.Z = height.GetValue();
-		
-		//this is where it goes downhill
-		FVector UpVector = FVector(0, 0, 1);
+			TOptional<float> height = t->streamingProxy->GetHeightAtLocation(Location);
+			//UE_LOG(LogTemp, Warning, TEXT("height at location : %f"), height.GetValue());
 
+			Location.Z = height.GetValue();
 
-		float dotProd = FVector::DotProduct(UpVector, tri.normal);
-		float RotationAngle = acosf(dotProd);
+			FVector UpVector = FVector(0, 0, 1);
 
-		FVector RotationAxis = FVector::CrossProduct(UpVector, tri.normal);
-		RotationAxis.Normalize();
+			float dotProd = FVector::DotProduct(UpVector, tri.normal);
+			float RotationAngle = acosf(dotProd);
 
-		FQuat Quat = FQuat(RotationAxis, RotationAngle);
+			if (RotationAngle > 0.5) {
+				UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for asset was to steep with id: %d"), i);
+				continue;
+			}
 
-		FRotator Rotation(tri.normal.Rotation());
-	
-		//UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
+			FVector RotationAxis = FVector::CrossProduct(UpVector, tri.normal);
+			RotationAxis.Normalize();
 
-		FActorSpawnParameters SpawnInfo;
-		//SpawnInfo.Name = "Tile_asset";
+			FQuat Quat = FQuat(RotationAxis, RotationAngle);
 
-		//Specify where in the world it will spawn, using ground tilt
-		AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Quat.Rotator(), SpawnInfo);
+			FRotator Rotation(tri.normal.Rotation());
 
-		UStaticMesh* Mesh;
-		if (t->biotope == 0) {
-			Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
+			//UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
+			UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine, spawns actor in tile: %d"), i);
+
+			FActorSpawnParameters SpawnInfo;
+
+			//Specify where in the world it will spawn, using ground tilt
+			AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Quat.Rotator(), SpawnInfo);
+
+			//For scale variance (Super ugly implementation, assumes uniform scale on all axises)
+			FVector defaultScale = MyNewActor->GetActorScale3D();
+			minScale = defaultScale.X - scaleVar;
+			maxScale = defaultScale.X + scaleVar;
+			
+			float scaleValue = mathInstance.FRandRange(minScale, maxScale);
+
+			assetScale = { scaleValue ,scaleValue ,scaleValue };
+
+			MyNewActor->SetActorScale3D(assetScale);
+
+			UStaticMesh* Mesh1;
+
+			if (t->biotope == 0) {
+				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
+			}
+			else { //tree + grass
+				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Tree.Tree'"));
+
+			}
+
+			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+			if (MeshComponent)
+			{
+				MeshComponent->SetStaticMesh(Mesh1);
+			}
+
+			t->tileAssets.Add(MyNewActor);
 		}
-		else { //tree
-			Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cylinder_Tree.Cylinder_Tree'"));
-		}
-
-		UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
-		if (MeshComponent)
-		{
-			MeshComponent->SetStaticMesh(Mesh);
-		}
-
-		t->tileAssets.Add(MyNewActor);
-
 	}
 
 }

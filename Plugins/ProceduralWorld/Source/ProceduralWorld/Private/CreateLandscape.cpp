@@ -252,23 +252,23 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 		//Do interpolation for everyother tile ish (checkerboard)
 		if (t->index != 0 && t->index % rowLength == 0) {
 			rowCount++;
-			UE_LOG(LogTemp, Warning, TEXT("rowCount increased: %d"), rowCount);
+			
 		}
 
 		if (rowCount % 2 == 0) { //even row
 			
 			if (t->index % 2 != 0) {
-				UE_LOG(LogTemp, Warning, TEXT("SKIPPING tile with index: %d"), t->index);
+				
 				continue;
 			}
-			UE_LOG(LogTemp, Warning, TEXT("DOING tile with index: %d"), t->index);
+			
 		}
 		else { //odd row
 			if (t->index % 2 == 0) {
-				UE_LOG(LogTemp, Warning, TEXT("SKIPPING tile with index: %d"), t->index);
+				
 				continue;
 			}
-			UE_LOG(LogTemp, Warning, TEXT("DOING tile with index: %d"), t->index);
+			
 		}
 		TArray<uint16> currentStartPoint;
 		TArray<uint16> adjacentEndPoint;
