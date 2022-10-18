@@ -453,7 +453,7 @@ FReply FProceduralWorldModule::Setup()
 	/*tiles[9]->tileHeightData.Empty();
 	tiles[9]->tileHeightData.Init(32500,64*64);*/
 	
-	myLand.lerpAllAdjTiles(tiles, 5);
+	myLand.interpAllAdjTiles(tiles, 5);
 
 	//myLand.GetRowOfHeightData(tiles[9]->tileHeightData,64,0);
 	//UE_LOG(LogTemp, Warning, TEXT("Row of data from Tile (index 9): %d"), myLand.GetRowOfHeightData(tiles[9]->tileHeightData, 64, 0).Num());

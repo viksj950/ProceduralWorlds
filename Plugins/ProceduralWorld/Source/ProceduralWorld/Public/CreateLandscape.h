@@ -53,7 +53,7 @@ public:
 
 	void concatHeightData(const TArray<UTile*> &inTiles, TArray<uint16>& data);
 
-	void lerpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount);
+	void interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount);
 
 	//For now creating Perlin Noise and assigning it to the internal variable heightData asdwell as divide it among tiles
 	void PreProcessNoise(TArray<UTile*> &inTiles, int const heightScale, int const octaveCount, float Amplitude, float persistence, float frequency, float lacunarity);

@@ -242,7 +242,7 @@ void CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles, TArray<uin
 	}
 
 }
-void CreateLandscape::lerpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount)
+void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount)
 {
 	int rowLength = GetGridSizeOfProxies();
 	UE_LOG(LogTemp, Warning, TEXT("rowlenght is = %d"), rowLength);
