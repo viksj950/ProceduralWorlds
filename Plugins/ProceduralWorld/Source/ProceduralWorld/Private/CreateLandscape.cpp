@@ -453,7 +453,7 @@ void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles, int const heightS
 	//TArray<uint16> HeightData;
 	//HeightData.SetNum(SizeX * SizeY);
 
-	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
+	PerlinNoiseGenerator<uint16, 1024> PerlinNoise{};
 	PerlinNoise.generateGradients();
 	//NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
 	//noise.GenerateNoiseValues(2016);

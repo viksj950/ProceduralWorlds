@@ -193,6 +193,26 @@ public:
 
 	};
 
+	struct BiotopePerlinNoiseSettings
+	{
+		BiotopePerlinNoiseSettings(const int& inHeightScale, const int& inOctaveCount, const float& inAmplitude, const float& inPersistance,
+			const float& inFrequency, const float& inLacunarity) :
+			HeightScale{ inHeightScale }, OctaveCount{ inOctaveCount }, Amplitude{ inAmplitude },
+			Frequency{ inFrequency }, Lacunarity{ inLacunarity } {};
+				
+		int HeightScale{ 2050 }; //4192
+		int OctaveCount{ 1 };
+
+		float Amplitude{ 1.0f };
+		float Persistence{ 0.5f }; //Higher gives larger amplitudes of peaks and valleys 
+		float Frequency{ 0.0015f };
+		float Lacunarity{ 1.0f }; //Higher gives more frequent holes and hills
+
+
+
+
+	};
+
 	int heightScale{ 2050 }; //4192
 	int octaveCount{  1 };
 
