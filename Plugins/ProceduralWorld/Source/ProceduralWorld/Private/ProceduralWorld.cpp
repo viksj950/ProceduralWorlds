@@ -448,7 +448,7 @@ FReply FProceduralWorldModule::Setup()
 	//tiles[19]->biotope = 0;
 	myLand.generateCityNoise();
 	//Generate Perlin Noise and assign it to all tiles
-	myLand.PreProcessNoise(tiles,heightScale,octaveCount,amplitude,persistence,frequency,lacunarity);
+	myLand.PreProcessNoise(tiles,BiotopeSettings[0]);
 
 	/*tiles[9]->tileHeightData.Empty();
 	tiles[9]->tileHeightData.Init(32500,64*64);*/
@@ -819,6 +819,8 @@ FLandscapeTextureDataInfo* FProceduralWorldModule::GetTextureDataInfo(UTexture2D
 }
 void FProceduralWorldModule::PluginButtonClicked()
 {
+
+	
 
 	//UI settings for Landscape resolution
 	LandscapeComboSettings.Empty();

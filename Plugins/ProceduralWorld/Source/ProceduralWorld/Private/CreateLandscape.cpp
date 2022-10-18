@@ -448,44 +448,21 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 	}
 }
 
-void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles, int const heightScale, int const octaveCount, float amplitude, float persistence, float frequency, float lacunarity)
+void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles, const BiotopePerlinNoiseSetting &Settings)
 {
 	//TArray<uint16> HeightData;
 	//HeightData.SetNum(SizeX * SizeY);
 
-	PerlinNoiseGenerator<uint16, 1024> PerlinNoise{};
+	//CANT CHANGE CellSize as template?
+	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
 	PerlinNoise.generateGradients();
 	//NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
 	//noise.GenerateNoiseValues(2016);
 	
 
-	float sum = 0.0f;
-	int averageHeight = 32768;
-	for (size_t j = 0; j < SizeY; j++)
-	{
-		for (size_t i = 0; i < SizeX; i++)
-		{
-			float amplitudeLoc = amplitude;
-			float frequencyLoc = frequency;  //For rass 0.005625 is kinda good, rockieer biome: 0.015625 
-			for (int k = 0; k < octaveCount; k++) {
-				 sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * heightScale;
-				 //sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625 * frequency) * Amplitude * heightScale;
-				 //HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
+	
 
-				amplitudeLoc *= persistence;
-				frequencyLoc *= lacunarity;
-				
-			}
-
-			if ((sum)+averageHeight < averageHeight) {
-				heightData[j * SizeX + i] = averageHeight;
-			}
-			else{
-				heightData[j * SizeX + i] = (sum)+averageHeight;
-			}
-			sum = 0;
-		}
-	}
+	PerlinNoise.generateBiotopeNoise(heightData, SizeX,Settings);
 
 	UE_LOG(LogTemp, Warning, TEXT("Heigthdata value: %d"), heightData[200000]);
 

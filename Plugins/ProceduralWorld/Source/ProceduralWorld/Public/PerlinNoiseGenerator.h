@@ -30,7 +30,7 @@ public:
 
 	//Function to generate noise values from gradient
 	float generateNoiseVal(const Vec2<float> p);
-
+	void generateBiotopeNoise(TArray<uint16>& Data, const int& DataSideSize, const BiotopePerlinNoiseSetting& settings);
 	//Generates random vectors and inserts them into gradients array + sets up and randiomizes pe tablerm
 	void generateGradients();
 
@@ -136,7 +136,45 @@ int PerlinNoiseGenerator<T, N>::hash(const int& x, const int& y) const {
 	return permutationTable[permutationTable[x] + y];
 }
 
+template<typename T, unsigned N>
+void PerlinNoiseGenerator<T, N>::generateBiotopeNoise(TArray<uint16>& Data, const int &DataSideSize , const BiotopePerlinNoiseSetting &settings)
+{
+	//check if data is empty:
+	if (Data.IsEmpty())
+	{
+		Data.Reserve(DataSideSize*DataSideSize);
+	}
+	else if(!(Data.Num() == (DataSideSize * DataSideSize)))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Data input have wrong dimension, check call of generateBiotopeNoise"));
+	}
 
 
+	float sum = 0.0f;
+	int averageHeight = 32768;
+	for (size_t j = 0; j < DataSideSize; j++)
+	{
+		for (size_t i = 0; i < DataSideSize; i++)
+		{
+			float amplitudeLoc = settings.Amplitude;
+			float frequencyLoc = settings.Frequency;  //For rass 0.005625 is kinda good, rockieer biome: 0.015625 
+			for (int k = 0; k < settings.OctaveCount; k++) {
+				sum += generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * settings.HeightScale;
+				//sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625 * frequency) * Amplitude * heightScale;
+				//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
 
+				amplitudeLoc *= settings.Persistence;
+				frequencyLoc *= settings.Lacunarity;
 
+			}
+
+			if ((sum)+averageHeight < averageHeight) {
+				Data[j * DataSideSize + i] = averageHeight;
+			}
+			else {
+				Data[j * DataSideSize + i] = (sum)+averageHeight;
+			}
+			sum = 0;
+		}
+	}
+}

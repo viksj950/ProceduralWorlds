@@ -56,7 +56,7 @@ public:
 	void interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount);
 
 	//For now creating Perlin Noise and assigning it to the internal variable heightData asdwell as divide it among tiles
-	void PreProcessNoise(TArray<UTile*> &inTiles, int const heightScale, int const octaveCount, float Amplitude, float persistence, float frequency, float lacunarity);
+	void PreProcessNoise(TArray<UTile*>& inTiles, const BiotopePerlinNoiseSetting& Settings);
 	ALandscape* generate();
 	ALandscape* generateFromTileData(TArray<UTile*> &inTiles);
 
