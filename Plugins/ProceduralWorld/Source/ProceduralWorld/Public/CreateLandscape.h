@@ -21,6 +21,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "Modules/ModuleManager.h"
+#include "GenericPlatform/GenericPlatformMath.h"
 
 //Tile system
 #include"Tile.h" 
@@ -55,12 +56,22 @@ public:
 
 	void interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount);
 
+	void AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>&BiotopeSettings) const;
+
 	//For now creating Perlin Noise and assigning it to the internal variable heightData asdwell as divide it among tiles
 	void GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);
 	ALandscape* generate();
 	ALandscape* generateFromTileData(TArray<UTile*> &inTiles);
 
 	const uint32 GetGridSizeOfProxies() const;
+	struct BiomeOriginInformation {
+		
+		BiomeOriginInformation(int inBiomeType, Vec2<int32> inCoordinates) : biomeType{ inBiomeType }, coordinates{ inCoordinates } {};
+
+		int biomeType;
+		Vec2<int32> coordinates;
+
+	};
 
 
 

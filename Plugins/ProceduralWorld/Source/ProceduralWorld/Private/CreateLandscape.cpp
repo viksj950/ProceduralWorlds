@@ -245,30 +245,30 @@ void CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles, TArray<uin
 void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount)
 {
 	int rowLength = GetGridSizeOfProxies();
-	UE_LOG(LogTemp, Warning, TEXT("rowlenght is = %d"), rowLength);
+	//UE_LOG(LogTemp, Warning, TEXT("rowlenght is = %d"), rowLength);
 	int rowCount = 0;
 	for (auto& t : inTiles) {
 		
 		//Do interpolation for everyother tile ish (checkerboard)
 		if (t->index != 0 && t->index % rowLength == 0) {
 			rowCount++;
-			UE_LOG(LogTemp, Warning, TEXT("rowCount increased: %d"), rowCount);
+			//UE_LOG(LogTemp, Warning, TEXT("rowCount increased: %d"), rowCount);
 		}
 
 		if (rowCount % 2 == 0) { //even row
 			
 			if (t->index % 2 != 0) {
-				UE_LOG(LogTemp, Warning, TEXT("SKIPPING tile with index: %d"), t->index);
+				//UE_LOG(LogTemp, Warning, TEXT("SKIPPING tile with index: %d"), t->index);
 				continue;
 			}
-			UE_LOG(LogTemp, Warning, TEXT("DOING tile with index: %d"), t->index);
+			//UE_LOG(LogTemp, Warning, TEXT("DOING tile with index: %d"), t->index);
 		}
 		else { //odd row
 			if (t->index % 2 == 0) {
-				UE_LOG(LogTemp, Warning, TEXT("SKIPPING tile with index: %d"), t->index);
+				//UE_LOG(LogTemp, Warning, TEXT("SKIPPING tile with index: %d"), t->index);
 				continue;
 			}
-			UE_LOG(LogTemp, Warning, TEXT("DOING tile with index: %d"), t->index);
+			//UE_LOG(LogTemp, Warning, TEXT("DOING tile with index: %d"), t->index);
 		}
 		TArray<uint16> currentStartPoint;
 		TArray<uint16> adjacentEndPoint;
@@ -446,6 +446,26 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 
 
 	}
+}
+
+void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings) const
+{
+
+	//3 default: city,plains,mountains
+	float nmbrOfDifferentBiotopes = BiotopeSettings.Num();
+	float nmbrOfTiles = inTiles.Num();
+	
+	TArray<BiomeOriginInformation> biomes;
+	FMath mathInstance;
+	for (size_t i = 0; i < nmbrOfBiomes; i++)
+	{
+		int32 biotope = FGenericPlatformMath::RoundToInt32(mathInstance.FRandRange(0.0f, nmbrOfDifferentBiotopes - 1));	//random type of biotope (0-2)
+		int32 tileIndex = FGenericPlatformMath::RoundToInt32(mathInstance.FRandRange(0.0f, nmbrOfTiles)); //Random tile as origin (0-7)
+
+
+		UE_LOG(LogTemp, Warning, TEXT("RANDOM Biomes: %d"), biotope);
+	}
+
 }
 
 void CreateLandscape::GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)

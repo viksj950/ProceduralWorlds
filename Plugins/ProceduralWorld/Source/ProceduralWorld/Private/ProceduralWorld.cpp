@@ -501,6 +501,8 @@ FReply FProceduralWorldModule::Setup()
 	//tiles[18]->biotope = 0;
 	//tiles[19]->biotope = 0;
 
+
+	myLand.AssignBiotopesToTiles(tiles,5,BiotopeSettings);
 	//Generate Perlin Noise and assign it to all tiles
 	myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
 
