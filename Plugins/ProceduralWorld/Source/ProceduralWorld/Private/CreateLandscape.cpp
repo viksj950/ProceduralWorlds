@@ -448,21 +448,22 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 	}
 }
 
-void CreateLandscape::PreProcessNoise(TArray<UTile*>& inTiles, const BiotopePerlinNoiseSetting &Settings)
+void CreateLandscape::GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
 {
-	//TArray<uint16> HeightData;
-	//HeightData.SetNum(SizeX * SizeY);
-
-	//CANT CHANGE CellSize as template?
-	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
-	PerlinNoise.generateGradients();
 	//NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
 	//noise.GenerateNoiseValues(2016);
+	// 
+	//CANT CHANGE CellSize as template?
+	//Plains noise
+	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
+	PerlinNoise.generateGradients();
+	PerlinNoise.generateBiotopeNoise(heightData, SizeX,*BiotopeSettings[1]);
 	
+	//City noise
+	PerlinNoiseGenerator<uint16, 64> PerlinNoisePlains{};
+	PerlinNoisePlains.generateGradients();
+	PerlinNoise.generateBiotopeNoise(cityHeightData, SizeX, *BiotopeSettings[0]);
 
-	
-
-	PerlinNoise.generateBiotopeNoise(heightData, SizeX,Settings);
 
 	UE_LOG(LogTemp, Warning, TEXT("Heigthdata value: %d"), heightData[200000]);
 

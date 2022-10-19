@@ -195,7 +195,7 @@ public:
 
 	
 	
-	TArray<BiotopePerlinNoiseSetting> BiotopeSettings = { {64, 2050,1,1.0f,0.5f,0.0015f,1.0f} , {64, 2050,1,1.0f,0.5f,0.0015f,1.0f} ,{64, 2050,1,1.0f,0.5f,0.0015f,1.0f} };
+	
 	int heightScale{ 2050 }; //4192
 	int octaveCount{  1 };
 
@@ -208,24 +208,37 @@ public:
 
 	void SetSizeOfLandscape(int32 inSize);
 	TOptional<int32> GetSizeOfLandscape() const;
+	//0 = city, 1 = plains, 2 = mountains
+	/*TArray<BiotopePerlinNoiseSetting> BiotopeSettings = { {"City",0,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} ,
+		{"Plains",1,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} ,
+		{"Mountains",2,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} };*/
+
+	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64, 2050,1,1.0f,0.5f,0.0015f,1.0f)) ,
+		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64, 2050,1,1.0f,0.5f,0.0015f,1.0f)) ,
+		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64, 2050,1,1.0f,0.5f,0.0015f,1.0f)) };
+	
+	TSharedPtr<STextBlock> ComboBoxTitleBlockNoise;
+	int BiomeSettingSelection{ 0 };
+
 	//Frequency
-	TOptional<float> GetFrequency() const { return frequency; }
-	void SetFrequency(float inFreq) { frequency = inFreq; }
+	TOptional<float> GetFrequency() const { return BiotopeSettings[BiomeSettingSelection]->Frequency; }
+	void SetFrequency(float inFreq) { BiotopeSettings[BiomeSettingSelection]->Frequency = inFreq; }
 	//Height
-	TOptional<int32> GetHeightScale() const { return heightScale; }
-	void SetHeightScale(int32 inScale) { heightScale = inScale; }
+	TOptional<int32> GetHeightScale() const { return BiotopeSettings[BiomeSettingSelection]->HeightScale; }
+	void SetHeightScale(int32 inScale) { BiotopeSettings[BiomeSettingSelection]->HeightScale = inScale; }
 	//OctaveCount
-	TOptional<int32> GetOctaveCount() const { return octaveCount; }
-	void SetOctaveCount(int32 inScale) {	octaveCount = inScale; }
+	TOptional<int32> GetOctaveCount() const { return BiotopeSettings[BiomeSettingSelection]->OctaveCount; }
+	void SetOctaveCount(int32 inOct) { BiotopeSettings[BiomeSettingSelection]->OctaveCount= inOct; }
 	//Persistance
-	TOptional<float> GetPersistence() const { return persistence; }	
-	void SetPersistence(float inScale) { persistence = inScale; }
+	TOptional<float> GetPersistence() const { return BiotopeSettings[BiomeSettingSelection]->Persistence; }
+	void SetPersistence(float inPers) { BiotopeSettings[BiomeSettingSelection]->Persistence = inPers; }
 	//Lacunarity
-	void SetLacunarity(float inFreq) { lacunarity = inFreq; }
-	TOptional<float> GetLacunarity() const { return lacunarity; }
+	TOptional<float> GetLacunarity() const { return BiotopeSettings[BiomeSettingSelection]->Lacunarity; }
+	void SetLacunarity(float inLac) { BiotopeSettings[BiomeSettingSelection]->Lacunarity = inLac; }
 	//Amplitude
-	void SetAmplitude(float inFreq) { amplitude = inFreq;}
-	TOptional<float> GetAmplitude() const { return amplitude; }
+	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
+	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
+	
 	
 private:
 

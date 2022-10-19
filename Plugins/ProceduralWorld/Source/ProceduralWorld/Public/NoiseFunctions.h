@@ -45,17 +45,20 @@ float dot(const Vec2<float>& v1, const Vec2<float>& v2) {
 
 struct BiotopePerlinNoiseSetting
 {
-	BiotopePerlinNoiseSetting(const int inCellSize, const int inHeightScale, const int inOctaveCount, const float inAmplitude, const float inPersistance,
+	BiotopePerlinNoiseSetting(const FString inBiotope, const int inBiotopeIndex, const int inCellSize, const int inHeightScale, const int inOctaveCount, const float inAmplitude, const float inPersistance,
 		const float inFrequency, const float inLacunarity) :
-		CellSize{ inCellSize }, HeightScale{
+		Biotope{inBiotope}, BiotopeIndex{inBiotopeIndex}, CellSize{
+		inCellSize
+	}, HeightScale{
 		inHeightScale}, OctaveCount{ inOctaveCount }, Amplitude{ inAmplitude }, Persistence{inPersistance},
 		Frequency{ inFrequency }, Lacunarity{ inLacunarity } {};
 
 	BiotopePerlinNoiseSetting(const BiotopePerlinNoiseSetting &inCopy):
-		CellSize{ inCopy.CellSize }, HeightScale{ inCopy .HeightScale}, OctaveCount{ inCopy.OctaveCount}, Amplitude{ inCopy.Amplitude}, Persistence{ inCopy.Persistence},
+		Biotope{ inCopy.Biotope }, BiotopeIndex{ inCopy.BiotopeIndex }, CellSize{ inCopy.CellSize }, HeightScale{ inCopy .HeightScale}, OctaveCount{ inCopy.OctaveCount}, Amplitude{ inCopy.Amplitude}, Persistence{ inCopy.Persistence},
 			Frequency{ inCopy.Frequency }, Lacunarity{ inCopy.Lacunarity } {};
 	
-	
+	FString Biotope;
+	int BiotopeIndex;
 
 	int CellSize;
 	int HeightScale; //4192

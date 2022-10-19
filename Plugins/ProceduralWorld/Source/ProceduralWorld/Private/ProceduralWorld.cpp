@@ -98,7 +98,61 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			SNew(SHorizontalBox)	//Main Horizontal box, now dividing setting on one box and generation/listinging/deletion in the other
 			+ SHorizontalBox::Slot()
 		[
+
+
+
+
 			SNew(SVerticalBox)	//Vertical box to store rows(Horizontal boxes) with text / settings
+
+
+
+			+SVerticalBox::Slot()
+		.MaxHeight(100)
+		[
+
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Biotope:"))
+
+
+
+		]
+	+ SHorizontalBox::Slot()
+		[
+			SNew(SComboBox<TSharedPtr<BiotopePerlinNoiseSetting>>)
+			.OptionsSource(&BiotopeSettings)
+		.OnGenerateWidget_Lambda([](TSharedPtr<BiotopePerlinNoiseSetting> Item)
+			{
+				return SNew(STextBlock).Text(FText::FromString(*Item->Biotope));
+				//return SNew(SButton).Text(FText::FromString(*Item->Description));
+			})
+		.OnSelectionChanged_Lambda([this](TSharedPtr<BiotopePerlinNoiseSetting> InSelection, ESelectInfo::Type InSelectInfo)
+			{
+				if (InSelection.IsValid() && ComboBoxTitleBlockNoise.IsValid())
+				{
+					ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
+					this->BiomeSettingSelection = InSelection->BiotopeIndex;
+
+				}
+
+			})
+				[
+					SAssignNew(ComboBoxTitleBlockNoise, STextBlock).Text(LOCTEXT("ComboLabel", "Biotope"))
+				]
+
+
+		]
+
+		]
 			+ SVerticalBox::Slot()
 		[
 			SNew(SHorizontalBox)
@@ -446,18 +500,12 @@ FReply FProceduralWorldModule::Setup()
 	//tiles[17]->biotope = 0;
 	//tiles[18]->biotope = 0;
 	//tiles[19]->biotope = 0;
-	myLand.generateCityNoise();
-	//Generate Perlin Noise and assign it to all tiles
-	myLand.PreProcessNoise(tiles,BiotopeSettings[0]);
 
-	/*tiles[9]->tileHeightData.Empty();
-	tiles[9]->tileHeightData.Init(32500,64*64);*/
+	//Generate Perlin Noise and assign it to all tiles
+	myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
+
 	
 	myLand.interpAllAdjTiles(tiles, 5);
-
-	//myLand.GetRowOfHeightData(tiles[9]->tileHeightData,64,0);
-	//UE_LOG(LogTemp, Warning, TEXT("Row of data from Tile (index 9): %d"), myLand.GetRowOfHeightData(tiles[9]->tileHeightData, 64, 0).Num());
-
 
 	//Concatinate heightData from all tiles and spawn a landscape
 	landscapePtr = myLand.generateFromTileData(tiles);
@@ -475,7 +523,7 @@ FReply FProceduralWorldModule::Setup()
 		}
 		else
 		{
-			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
 		}
 		
 		i++;
@@ -498,12 +546,12 @@ FReply FProceduralWorldModule::ListTiles()
 
 
 
-	UE_LOG(LogTemp, Warning, TEXT("heightScale %d"), heightScale);
-	UE_LOG(LogTemp, Warning, TEXT("octaveCount: %d"), octaveCount);
-	UE_LOG(LogTemp, Warning, TEXT("Amplitude: %f"), amplitude);
-	UE_LOG(LogTemp, Warning, TEXT("persistence: %f"), persistence);
-	UE_LOG(LogTemp, Warning, TEXT("frequency: %f"), frequency);
-	UE_LOG(LogTemp, Warning, TEXT("Lacuanarity: %f"), lacunarity);
+	/*UE_LOG(LogTemp, Warning, TEXT("heightScale %d"), BiotopeSettings[BiomeSettingSelection].HeightScale);
+	UE_LOG(LogTemp, Warning, TEXT("octaveCount: %d"), BiotopeSettings[BiomeSettingSelection].OctaveCount);
+	UE_LOG(LogTemp, Warning, TEXT("Amplitude: %f"), BiotopeSettings[BiomeSettingSelection].Amplitude);
+	UE_LOG(LogTemp, Warning, TEXT("persistence: %f"), BiotopeSettings[BiomeSettingSelection].Persistence);
+	UE_LOG(LogTemp, Warning, TEXT("frequency: %f"), BiotopeSettings[BiomeSettingSelection].Frequency);
+	UE_LOG(LogTemp, Warning, TEXT("Lacuanarity: %f"), BiotopeSettings[BiomeSettingSelection].Lacunarity);*/
 
 	return FReply::Handled();
 }
