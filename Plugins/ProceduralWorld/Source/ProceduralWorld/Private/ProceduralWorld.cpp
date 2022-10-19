@@ -495,8 +495,8 @@ FReply FProceduralWorldModule::Setup()
 
 	}
 
-	tiles[9]->biotope = 0;
-	tiles[10]->biotope = 0;
+	/*tiles[9]->biotope = 0;
+	tiles[10]->biotope = 0;*/
 	//tiles[17]->biotope = 0;
 	//tiles[18]->biotope = 0;
 	//tiles[19]->biotope = 0;

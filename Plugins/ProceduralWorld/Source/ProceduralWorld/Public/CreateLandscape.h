@@ -22,7 +22,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Modules/ModuleManager.h"
 #include "GenericPlatform/GenericPlatformMath.h"
-
+#include "Math/Vector2D.h"
 //Tile system
 #include"Tile.h" 
 
@@ -64,12 +64,13 @@ public:
 	ALandscape* generateFromTileData(TArray<UTile*> &inTiles);
 
 	const uint32 GetGridSizeOfProxies() const;
+
 	struct BiomeOriginInformation {
 		
-		BiomeOriginInformation(int inBiomeType, Vec2<int32> inCoordinates) : biomeType{ inBiomeType }, coordinates{ inCoordinates } {};
+		BiomeOriginInformation(int inBiomeType, FVector2D inCoordinates) : biomeType{ inBiomeType }, coordinates{ inCoordinates } {};
 
 		int biomeType;
-		Vec2<int32> coordinates;
+		FVector2D coordinates;
 
 	};
 
@@ -77,6 +78,7 @@ public:
 
 	TArray<uint16> heightData;
 	TArray<uint16> cityHeightData;
+	TArray<uint16> mountainHeightData;
 
 	int32 SizeX;
 	int32 SizeY;

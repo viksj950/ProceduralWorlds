@@ -18,6 +18,7 @@ CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerC
 
 	heightData.SetNum(SizeX * SizeY);
 	cityHeightData.SetNum(SizeX * SizeY);
+	mountainHeightData.SetNum(SizeX * SizeY);
 	//heightData.Reserve(inSizeX * inSizeY);
 	////Currently city has the same size, not optimized, have to redo alot to improve it
 	//cityHeightData.Reserve(inSizeX * inSizeY);
@@ -51,6 +52,9 @@ int32 CreateLandscape::assignDataToTile(UTile* inTile, int32 startVert, int32 in
 			else if (inTile->biotope == 0)
 			{
 				inTile->tileHeightData[tileHeightDataCounter] = cityHeightData[vertCounter + i];
+			}
+			else if (inTile->biotope == 2) {
+				inTile->tileHeightData[tileHeightDataCounter] = mountainHeightData[vertCounter + i];
 			}
 			
 			tileHeightDataCounter++;
@@ -448,24 +452,54 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 	}
 }
 
+
+
 void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings) const
 {
 
 	//3 default: city,plains,mountains
 	float nmbrOfDifferentBiotopes = BiotopeSettings.Num();
 	float nmbrOfTiles = inTiles.Num();
+	float X;
+	float Y;
 	
 	TArray<BiomeOriginInformation> biomes;
 	FMath mathInstance;
 	for (size_t i = 0; i < nmbrOfBiomes; i++)
 	{
 		int32 biotope = FGenericPlatformMath::RoundToInt32(mathInstance.FRandRange(0.0f, nmbrOfDifferentBiotopes - 1));	//random type of biotope (0-2)
-		int32 tileIndex = FGenericPlatformMath::RoundToInt32(mathInstance.FRandRange(0.0f, nmbrOfTiles)); //Random tile as origin (0-7)
+		int32 tileIndex = FGenericPlatformMath::RoundToInt32(mathInstance.FRandRange(0.0f, nmbrOfTiles - 1)); //Random tile as origin (0-7)
 
+		//convert tile index to X Y coordinates used for range computation
+		X = tileIndex % gridSizeOfProxies;
+		Y = FMath::Floor(tileIndex / gridSizeOfProxies);
 
+		biomes.Add(BiomeOriginInformation(biotope,FVector2D(X,Y)));
+
+		//translate tile index to X Y coordinates
+
+		
+		UE_LOG(LogTemp, Warning, TEXT("RANDOM tileIndex: %d"), tileIndex);
 		UE_LOG(LogTemp, Warning, TEXT("RANDOM Biomes: %d"), biotope);
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Tile coordinates: %s"), *biomes[0].coordinates.ToString());
 
+	for (auto& it : inTiles)
+	{
+		FVector2D currTileCoords(X = it->index % gridSizeOfProxies, FMath::Floor(it->index / gridSizeOfProxies));
+		float distance = 200000; //Just a large number 
+
+		for (auto& b: biomes)
+		{
+			float temp = FVector2D::Distance(currTileCoords, b.coordinates);
+			if (distance >= temp)
+			{
+				it->biotope = b.biomeType;
+				distance = temp;
+			}
+			
+		}
+	}
 }
 
 void CreateLandscape::GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
@@ -482,7 +516,12 @@ void CreateLandscape::GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, con
 	//City noise
 	PerlinNoiseGenerator<uint16, 64> PerlinNoisePlains{};
 	PerlinNoisePlains.generateGradients();
-	PerlinNoise.generateBiotopeNoise(cityHeightData, SizeX, *BiotopeSettings[0]);
+	PerlinNoisePlains.generateBiotopeNoise(cityHeightData, SizeX, *BiotopeSettings[0]);
+
+	//Mountain noise
+	PerlinNoiseGenerator<uint16, 64> PerlinNoiseMountains{};
+	PerlinNoiseMountains.generateGradients();
+	PerlinNoiseMountains.generateBiotopeNoise(mountainHeightData, SizeX, *BiotopeSettings[2]);
 
 
 	UE_LOG(LogTemp, Warning, TEXT("Heigthdata value: %d"), heightData[200000]);
