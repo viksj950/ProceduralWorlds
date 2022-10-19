@@ -464,6 +464,12 @@ FReply FProceduralWorldModule::Setup()
 	//Concatinate heightData from all tiles and spawn a landscape
 	landscapePtr = myLand.generateFromTileData(tiles);
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
+
+	ProceduralAssetDistribution temp;
+	int32 assetCountF = 5;
+	int32 assetCountC = 1;
+	float scaleVarF = 0.7;
+	float scaleVarC = 1.0;
 	
 	//after the landscape has been spawned assign proxies to each tile
 	size_t i{ 0 };
@@ -472,22 +478,27 @@ FReply FProceduralWorldModule::Setup()
 		tiles[i]->streamingProxy = it;
 		if (tiles[i]->biotope == 0)
 		{
+			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), assetCountC, scaleVarC);
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
 			/*tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));*/
 		}
-		else
+		else if(tiles[i]->biotope == 1)
 		{
+			//temp.spawnActorObjectsForest(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), assetCountF, scaleVarF);
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+		}
+		else {
+
 		}
 		
 		i++;
 	}
 
 	//Place actors in the Landscape, (Foliage is the focus for now)
-	ProceduralAssetDistribution temp;
-	int32 assetCount = 5;
-	float scaleVar = 0.5;
-	temp.spawnActorObjects(tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), assetCount, scaleVar);
+	//ProceduralAssetDistribution temp;
+	//int32 assetCount = 5;
+	//float scaleVar = 0.5;
+	//temp.spawnActorObjects(tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), assetCount, scaleVar);
 	
 	return FReply::Handled();
 }
