@@ -91,6 +91,28 @@ void CreateLandscape::assignDataToAllTiles(TArray<UTile*> &inTiles, int32 startV
 	cityHeightData.Empty();
 	
 }
+void CreateLandscape::GenerateAndAssignHeightData(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
+{
+
+	PerlinNoiseGenerator<uint16, 64> PerlinNoise;
+	PerlinNoise.generateGradients();
+	
+
+
+	for (auto& it: inTiles)
+	{
+
+
+		PerlinNoise.GenerateAndAssignTileData(it->tileHeightData,it->tileSize,it->index,gridSizeOfProxies,SizeX,*BiotopeSettings[it->biotope]);
+
+		//assign correct noise values depending on tile index and biotope 
+		//Also need to have biotopeSettings
+		//void func(tile, BiotopeSettings)
+
+	}
+
+
+}
 void CreateLandscape::generateCityNoise()
 {
 	

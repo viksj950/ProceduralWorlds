@@ -40,6 +40,8 @@ public:
 	int32 assignDataToTile(UTile* inTile, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent);
 	void assignDataToAllTiles(TArray<UTile*> &inTiles, int32 startVert, int32 inSizeX, int32 inQuadsPerComponent, int32 ComponentsPerProxy);
 
+	void GenerateAndAssignHeightData(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>> &BiotopeSettings);
+
 	//Test function for assigning value noise to city tiles, more a proof of concept
 	void generateCityNoise();
 

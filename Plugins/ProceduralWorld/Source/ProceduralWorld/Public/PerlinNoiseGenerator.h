@@ -34,6 +34,9 @@ public:
 	//Generates random vectors and inserts them into gradients array + sets up and randiomizes pe tablerm
 	void generateGradients();
 
+
+	void GenerateAndAssignTileData(TArray<uint16>& Data, const int& DataSideSize,const int &TileIndex, const uint32 &inGridSizeOfProxies, const int& mapSize, const BiotopePerlinNoiseSetting& settings);
+
 	int hash(const int& x, const int& y) const;
 
 	T size;
@@ -177,4 +180,59 @@ void PerlinNoiseGenerator<T, N>::generateBiotopeNoise(TArray<uint16>& Data, cons
 			sum = 0;
 		}
 	}
+}
+
+template<typename T, unsigned N>
+void PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data, const int& DataSideSize, const int& TileIndex, const uint32& inGridSizeOfProxies, const int& mapSize, const BiotopePerlinNoiseSetting& settings)
+{
+
+	
+
+	//wrong
+	/*int ColumnStartIndex = TileIndex% inGridSizeOfProxies;
+	int RowStartIndex = FMath::Floor(tileIndex / gridSizeOfProxies);*/
+
+	int ColumnStartIndex = (TileIndex % inGridSizeOfProxies) * DataSideSize;//not done yet...... () 
+	int RowStartIndex = FMath::Floor(TileIndex / inGridSizeOfProxies) * DataSideSize;
+
+	UE_LOG(LogTemp, Warning, TEXT("ColumnStartIndex %d"), ColumnStartIndex);
+	UE_LOG(LogTemp, Warning, TEXT("RowStartIndex %d"), RowStartIndex);
+
+	float sum = 0.0f;
+	int averageHeight = 32768;
+	int column = 0;
+	for (size_t j = ColumnStartIndex; j < (ColumnStartIndex + DataSideSize); j++)
+	{
+		int row = 0;
+		for (size_t i = RowStartIndex; i < (RowStartIndex + DataSideSize); i++)
+		{
+			
+
+			float amplitudeLoc = settings.Amplitude;
+			float frequencyLoc = settings.Frequency;  //For rass 0.005625 is kinda good, rockieer biome: 0.015625 
+			for (int k = 0; k < settings.OctaveCount; k++) {
+				sum += generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * settings.HeightScale;
+				//sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625 * frequency) * Amplitude * heightScale;
+				//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
+
+				amplitudeLoc *= settings.Persistence;
+				frequencyLoc *= settings.Lacunarity;
+
+			}
+
+			if ((sum)+averageHeight < averageHeight) {
+				Data[column * DataSideSize + row] = averageHeight;
+			}
+			else {
+				Data[column * DataSideSize + row] = (sum)+averageHeight;
+			}
+			sum = 0;
+			row++;
+		}
+		column++;
+	}
+
+	
+
+
 }

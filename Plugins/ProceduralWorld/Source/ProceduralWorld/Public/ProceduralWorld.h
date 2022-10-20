@@ -215,7 +215,7 @@ public:
 
 	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64, 2050,1,1.0f,0.5f,0.0015f,1.0f)) ,
 		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64, 2050,1,1.0f,0.5f,0.0015f,1.0f)) ,
-		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64, 2050,1,1.0f,0.5f,0.0015f,1.0f)) };
+		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64, 4096,5,2.3f,0.92f,0.0015f,1.96f)) };
 	
 	TSharedPtr<STextBlock> ComboBoxTitleBlockNoise;
 	int BiomeSettingSelection{ 0 };
