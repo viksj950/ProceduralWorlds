@@ -71,7 +71,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		FRotator Rotation(tri.normal.Rotation());
 
 		//UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine, spawns actor in tile: %d"), i);
+		UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine for house id : %d"), i);
 
 		FActorSpawnParameters SpawnInfo;
 
@@ -92,39 +92,59 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		UStaticMesh* Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
 
 		//Check if location is suitable and not inside existing house
-		FVector newSize = scaleValue * Mesh1->GetBounds().GetBox().GetSize();
+		FVector newSize =  3 * scaleValue * Mesh1->GetBounds().GetBox().GetSize();
 		/*UE_LOG(LogTemp, Warning, TEXT("Size of house : %s"), *newSize.ToString());*/
 	
-		Point2D currentHouseTL = { Location.X - newSize.X, Location.Y + newSize.Y };
+		Point2D currentHouseTL = { Location.X - (newSize.X/2), Location.Y + (newSize.Y/2) };
 		//UE_LOG(LogTemp, Warning, TEXT("TL.x : %f"), currentHouseTL.x);
 		//UE_LOG(LogTemp, Warning, TEXT("TL.y : %f"), currentHouseTL.y);
-		Point2D currentHouseBR = { Location.X + newSize.X, Location.Y - newSize.Y };
+		Point2D currentHouseBR = { Location.X + (newSize.X/2), Location.Y - (newSize.Y/2) };
 	/*	UE_LOG(LogTemp, Warning, TEXT("BR.x : %f"), currentHouseBR.x);
 		UE_LOG(LogTemp, Warning, TEXT("BR.y : %f"), currentHouseBR.y);*/
 		Point2D prevHouseTL;
 		Point2D prevHouseBL; 
 
-		for (int k = 0; k < t->tileAssets.Num(); k++) {
-			prevHouseTL = { t->tileAssets[k]->GetActorLocation().X , t->tileAssets[k]->GetActorLocation().Y};
-		/*	if (Intersecting()) {
+		if(t->tileAssets.IsEmpty()){ //first house in tile, no need to check intersect
+			UE_LOG(LogTemp, Warning, TEXT("House should spawn, no other house spawned in yet in this tile"));
+			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+			if (MeshComponent)
+			{
+				MeshComponent->SetStaticMesh(Mesh1);
+			}
 
-			}*/
-			//Use this
-			//+t->tileAssets[k]->GetStaticMeshComponent()->GetStaticMesh()->GetBounds()->GetSize().X
-
+			t->tileAssets.Add(MyNewActor);
 		}
+		else { //need to check intersect between other houses, as there is houses already in the tile
+			for (int k = 0; k < t->tileAssets.Num(); k++) {
+				FVector scale = t->tileAssets[0].Get()->GetStaticMeshComponent()->GetRelativeScale3D();
+				/*	UE_LOG(LogTemp, Warning, TEXT("SCALE OF ACTOR : %s"), *scale.ToString());
+					UE_LOG(LogTemp, Warning, TEXT("Size of prevHouse : %s"), *(scale*t->tileAssets[0].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize()).ToString());*/
+				FVector prevSize = 3 * scale * t->tileAssets[0].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize();
+				prevHouseTL = { t->tileAssets[k]->GetActorLocation().X - (prevSize.X/2) , t->tileAssets[k]->GetActorLocation().Y + (prevSize.Y/2) };
+				prevHouseBL = { t->tileAssets[k]->GetActorLocation().X + (prevSize.X/2) , t->tileAssets[k]->GetActorLocation().Y - (prevSize.Y/2) };
+				if (Intersecting(currentHouseTL, currentHouseBR, prevHouseTL, prevHouseBL)) {
+					UE_LOG(LogTemp, Warning, TEXT("WILL NOT SPAWN HOUSE, IT IS WITHIN BOUNDS OF OTHER"));
+					continue;
+				}
+				else {
+					UE_LOG(LogTemp, Warning, TEXT("House should spawn, no other house in bounds"));
+					UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+					if (MeshComponent)
+					{
+						MeshComponent->SetStaticMesh(Mesh1);
+					}
 
-		UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
-		if (MeshComponent)
-		{
-			MeshComponent->SetStaticMesh(Mesh1);
+					t->tileAssets.Add(MyNewActor);
+					break;
+					/*	FVector locationHouse = t->tileAssets[t->tileAssets.Num() - 1].Get()->GetActorLocation();
+				UE_LOG(LogTemp, Warning, TEXT("Position of last house : %s"), *locationHouse.ToString());*/
+			
+				}
+
+			}
 		}
-
-		t->tileAssets.Add(MyNewActor);
-
 		
-			FVector locationHouse = t->tileAssets[t->tileAssets.Num()-1].Get()->GetActorLocation();
-			UE_LOG(LogTemp, Warning, TEXT("Position of house : %s"), *locationHouse.ToString());
+		
 		
 	}
 }
@@ -215,8 +235,6 @@ void ProceduralAssetDistribution::spawnActorObjectsForest(UTile* t, const int32 
 			}*/
 			 //tree + grass
 				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Tree.Tree'"));
-
-			
 
 			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
 			if (MeshComponent)

@@ -467,9 +467,9 @@ FReply FProceduralWorldModule::Setup()
 
 	ProceduralAssetDistribution temp;
 	int32 assetCountF = 5;
-	int32 assetCountC = 1;
+	int32 assetCountC = 15;
 	float scaleVarF = 0.7;
-	float scaleVarC = 1.0;
+	float scaleVarC = 0.2;
 	
 	//after the landscape has been spawned assign proxies to each tile
 	size_t i{ 0 };
