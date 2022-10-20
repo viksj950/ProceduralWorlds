@@ -462,6 +462,7 @@ void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &
 	float nmbrOfTiles = inTiles.Num();
 	float X;
 	float Y;
+	float maxDistance;
 	
 	TArray<BiomeOriginInformation> biomes;
 	FMath mathInstance;
@@ -473,8 +474,15 @@ void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &
 		//convert tile index to X Y coordinates used for range computation
 		X = tileIndex % gridSizeOfProxies;
 		Y = FMath::Floor(tileIndex / gridSizeOfProxies);
-
-		biomes.Add(BiomeOriginInformation(biotope,FVector2D(X,Y)));
+		if (biotope == 0) //city
+		{
+			maxDistance = 3;
+		}
+		else
+		{
+			maxDistance = gridSizeOfProxies * gridSizeOfProxies;
+		}
+		biomes.Add(BiomeOriginInformation(biotope,FVector2D(X,Y),maxDistance));
 
 		//translate tile index to X Y coordinates
 
@@ -492,7 +500,7 @@ void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &
 		for (auto& b: biomes)
 		{
 			float temp = FVector2D::Distance(currTileCoords, b.coordinates);
-			if (distance >= temp)
+			if (distance >= temp && temp <= b.maxBiomeSize)
 			{
 				it->biotope = b.biomeType;
 				distance = temp;

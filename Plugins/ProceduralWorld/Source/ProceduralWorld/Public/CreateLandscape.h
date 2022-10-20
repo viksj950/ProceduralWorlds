@@ -67,10 +67,12 @@ public:
 
 	struct BiomeOriginInformation {
 		
-		BiomeOriginInformation(int inBiomeType, FVector2D inCoordinates) : biomeType{ inBiomeType }, coordinates{ inCoordinates } {};
+		BiomeOriginInformation(int inBiomeType, FVector2D inCoordinates, float inMaxBiomeSize) : biomeType{ inBiomeType }, coordinates{ inCoordinates },
+			maxBiomeSize{ inMaxBiomeSize } {};
 
 		int biomeType;
 		FVector2D coordinates;
+		float maxBiomeSize;
 
 	};
 

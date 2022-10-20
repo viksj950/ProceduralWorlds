@@ -417,8 +417,44 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 		]
 
+
 		]
 
+		+SHorizontalBox::Slot()
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Left)
+			[
+
+				SNew(STextBlock)
+				.Text(FText::FromString("Amount of biomes"))
+
+
+
+			]
+
+		+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			[
+				SNew(SNumericEntryBox<int32>)
+				.AllowSpin(true)
+			.MinValue(0)
+			.MaxValue(20)
+			.MaxSliderValue(20)
+			.MinDesiredValueWidth(2)
+			.Value_Lambda([this]() {return this->nmbrOfBiomes; })
+			.OnValueChanged_Lambda([&](auto newValue) {this->nmbrOfBiomes = newValue; })
+			]
+
+			]
+		
 
 	+ SHorizontalBox::Slot()
 		[
@@ -502,7 +538,7 @@ FReply FProceduralWorldModule::Setup()
 	//tiles[19]->biotope = 0;
 
 
-	myLand.AssignBiotopesToTiles(tiles,5,BiotopeSettings);
+	myLand.AssignBiotopesToTiles(tiles,nmbrOfBiomes,BiotopeSettings);
 	//Generate Perlin Noise and assign it to all tiles
 	myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
 
@@ -546,6 +582,7 @@ FReply FProceduralWorldModule::ListTiles()
 	UE_LOG(LogTemp, Warning, TEXT("ComponentsPerProxy: %d"), ComponentsPerProxy);
 	UE_LOG(LogTemp, Warning, TEXT("SectionsPerComponent: %d"), SectionsPerComponent);
 
+	UE_LOG(LogTemp, Warning, TEXT("Have amount of biomes changed?: %d"), nmbrOfBiomes);
 
 
 	/*UE_LOG(LogTemp, Warning, TEXT("heightScale %d"), BiotopeSettings[BiomeSettingSelection].HeightScale);
@@ -562,7 +599,10 @@ FReply FProceduralWorldModule::DeleteLandscape()
 {
 
 	UE_LOG(LogTemp, Warning, TEXT("Removal of tiles was called, number of tiles to remove:  %d"), tiles.Num());
-
+	if (tiles.Num() == 0)
+	{
+		return FReply::Handled();
+	}
 	for (auto& it : tiles) {
 		bool isDestroyed{ false };
 		if (it) {

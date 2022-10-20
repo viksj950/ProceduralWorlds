@@ -220,6 +220,8 @@ public:
 	TSharedPtr<STextBlock> ComboBoxTitleBlockNoise;
 	int BiomeSettingSelection{ 0 };
 
+	int nmbrOfBiomes{ 5 };
+
 	//Frequency
 	TOptional<float> GetFrequency() const { return BiotopeSettings[BiomeSettingSelection]->Frequency; }
 	void SetFrequency(float inFreq) { BiotopeSettings[BiomeSettingSelection]->Frequency = inFreq; }
