@@ -548,29 +548,43 @@ FReply FProceduralWorldModule::Setup()
 	//Concatinate heightData from all tiles and spawn a landscape
 	landscapePtr = myLand.generateFromTileData(tiles);
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
+
+	ProceduralAssetDistribution temp;
+	int32 maxTress = 18;
+	int32 maxHouses = 20;
+	float scaleVarF = 0.7;
+	float scaleVarC = 0.2;
+	float houseSpread = 1.3; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall)
 	
 	//after the landscape has been spawned assign proxies to each tile
 	size_t i{ 0 };
 	for (auto& it: LandscapeInfo->Proxies)
 	{
 		tiles[i]->streamingProxy = it;
-		//if (tiles[i]->biotope == 0)
-		//{
-		//	tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
-		//	/*tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));*/
-		//}
-		//else
-		//{
-		//	tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
-		//}
+		if (tiles[i]->biotope == 0)
+		{
+			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC);
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+			/*tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));*/
+		}
+		else if(tiles[i]->biotope == 1)
+		{
+			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTress, scaleVarF);
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+		}
+		else {
+
+		}
 		
 		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
 		i++;
 	}
 
-	//Place actors in the Landscape, (trees)
-	ProceduralAssetDistribution temp;
-	temp.spawnActorObjects(tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies());
+	//Place actors in the Landscape, (Foliage is the focus for now)
+	//ProceduralAssetDistribution temp;
+	//int32 assetCount = 5;
+	//float scaleVar = 0.5;
+	//temp.spawnActorObjects(tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), assetCount, scaleVar);
 	
 	return FReply::Handled();
 }
