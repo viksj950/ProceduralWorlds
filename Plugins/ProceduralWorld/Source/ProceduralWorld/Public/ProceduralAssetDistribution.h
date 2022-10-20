@@ -37,9 +37,9 @@ public:
 	ProceduralAssetDistribution();
 	~ProceduralAssetDistribution();
 
-	void spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar);
+	void spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float spread, float scaleVar);
 	//Function for spawning object within a tile, objectType is tree/house
-	void spawnActorObjectsForest(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar);
+	void spawnActorObjectsPlains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar);
 
 	bool Intersecting(Point2D tl1, Point2D br1, Point2D tl2, Point2D br2);
 

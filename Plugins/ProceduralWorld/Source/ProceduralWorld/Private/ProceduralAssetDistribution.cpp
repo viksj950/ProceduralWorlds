@@ -11,7 +11,7 @@ ProceduralAssetDistribution::~ProceduralAssetDistribution()
 {
 }
 
-void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar) {
+void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float spread, float scaleVar) {
 	UWorld* World = nullptr;
 
 	FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
@@ -84,25 +84,28 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		maxScale = defaultScale.X + scaleVar;
 
 		float scaleValue = mathInstance.FRandRange(minScale, maxScale);
-
+		
 		assetScale = { scaleValue ,scaleValue ,scaleValue };
-
+		
 		MyNewActor->SetActorScale3D(assetScale);
 		
 		UStaticMesh* Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
+		//temp mesh to identify culled houses
+	/*	UStaticMesh* Mesh2 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_Ghost.Cube_Ghost'"));*/
 
 		//Check if location is suitable and not inside existing house
-		FVector newSize =  3 * scaleValue * Mesh1->GetBounds().GetBox().GetSize();
-		/*UE_LOG(LogTemp, Warning, TEXT("Size of house : %s"), *newSize.ToString());*/
+		FVector newSize =  spread*scaleValue * Mesh1->GetBounds().GetBox().GetSize();
+		UE_LOG(LogTemp, Warning, TEXT("Size of house : %s"), *newSize.ToString());
 	
 		Point2D currentHouseTL = { Location.X - (newSize.X/2), Location.Y + (newSize.Y/2) };
 		//UE_LOG(LogTemp, Warning, TEXT("TL.x : %f"), currentHouseTL.x);
 		//UE_LOG(LogTemp, Warning, TEXT("TL.y : %f"), currentHouseTL.y);
 		Point2D currentHouseBR = { Location.X + (newSize.X/2), Location.Y - (newSize.Y/2) };
-	/*	UE_LOG(LogTemp, Warning, TEXT("BR.x : %f"), currentHouseBR.x);
-		UE_LOG(LogTemp, Warning, TEXT("BR.y : %f"), currentHouseBR.y);*/
+		//UE_LOG(LogTemp, Warning, TEXT("BR.x : %f"), currentHouseBR.x);
+		//UE_LOG(LogTemp, Warning, TEXT("BR.y : %f"), currentHouseBR.y);
 		Point2D prevHouseTL;
 		Point2D prevHouseBL; 
+		bool shouldSpawn = true;
 
 		if(t->tileAssets.IsEmpty()){ //first house in tile, no need to check intersect
 			UE_LOG(LogTemp, Warning, TEXT("House should spawn, no other house spawned in yet in this tile"));
@@ -116,32 +119,45 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		}
 		else { //need to check intersect between other houses, as there is houses already in the tile
 			for (int k = 0; k < t->tileAssets.Num(); k++) {
-				FVector scale = t->tileAssets[0].Get()->GetStaticMeshComponent()->GetRelativeScale3D();
-				/*	UE_LOG(LogTemp, Warning, TEXT("SCALE OF ACTOR : %s"), *scale.ToString());
-					UE_LOG(LogTemp, Warning, TEXT("Size of prevHouse : %s"), *(scale*t->tileAssets[0].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize()).ToString());*/
-				FVector prevSize = 3 * scale * t->tileAssets[0].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize();
+				FVector scale = t->tileAssets[k].Get()->GetStaticMeshComponent()->GetRelativeScale3D();
+					/*UE_LOG(LogTemp, Warning, TEXT("SCALE OF ACTOR : %s"), *scale.ToString());
+					UE_LOG(LogTemp, Warning, TEXT("Size of prevHouse : %s"), *(scale*t->tileAssets[k].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize()).ToString());*/
+				FVector prevSize = spread * scale * t->tileAssets[k].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize();
 				prevHouseTL = { t->tileAssets[k]->GetActorLocation().X - (prevSize.X/2) , t->tileAssets[k]->GetActorLocation().Y + (prevSize.Y/2) };
+				//UE_LOG(LogTemp, Warning, TEXT("pTL.x : %f"), prevHouseTL.x);
+				//UE_LOG(LogTemp, Warning, TEXT("pTL.y : %f"), prevHouseTL.y);
 				prevHouseBL = { t->tileAssets[k]->GetActorLocation().X + (prevSize.X/2) , t->tileAssets[k]->GetActorLocation().Y - (prevSize.Y/2) };
+		/*		UE_LOG(LogTemp, Warning, TEXT("pBL.x : %f"), prevHouseBL.x);
+				UE_LOG(LogTemp, Warning, TEXT("pBL.y : %f"), prevHouseBL.y);*/
 				if (Intersecting(currentHouseTL, currentHouseBR, prevHouseTL, prevHouseBL)) {
 					UE_LOG(LogTemp, Warning, TEXT("WILL NOT SPAWN HOUSE, IT IS WITHIN BOUNDS OF OTHER"));
-					continue;
-				}
-				else {
-					UE_LOG(LogTemp, Warning, TEXT("House should spawn, no other house in bounds"));
-					UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
-					if (MeshComponent)
-					{
-						MeshComponent->SetStaticMesh(Mesh1);
-					}
-
-					t->tileAssets.Add(MyNewActor);
+					shouldSpawn = false;
 					break;
-					/*	FVector locationHouse = t->tileAssets[t->tileAssets.Num() - 1].Get()->GetActorLocation();
-				UE_LOG(LogTemp, Warning, TEXT("Position of last house : %s"), *locationHouse.ToString());*/
-			
 				}
+				//else {
+				//	UE_LOG(LogTemp, Warning, TEXT("House didnt spawn, other house in bounds [SHOWING GHOST HOUSE]"));
+				//	UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+				//	if (MeshComponent)
+				//	{
+				//		MeshComponent->SetStaticMesh(Mesh2);
+				//	}
+
+				//	//t->tileAssets.Add(MyNewActor);
+				//}
+				
 
 			}
+			if (shouldSpawn) {
+				UE_LOG(LogTemp, Warning, TEXT("House should spawn, no other house in bounds"));
+				UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+				if (MeshComponent)
+				{
+					MeshComponent->SetStaticMesh(Mesh1);
+				}
+
+				t->tileAssets.Add(MyNewActor);
+			}
+		
 		}
 		
 		
@@ -150,7 +166,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 }
 
 
-void ProceduralAssetDistribution::spawnActorObjectsForest(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar) {
+void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar) {
 
 	UWorld* World = nullptr;
 
@@ -250,10 +266,6 @@ void ProceduralAssetDistribution::spawnActorObjectsForest(UTile* t, const int32 
 
 bool ProceduralAssetDistribution::Intersecting(Point2D tl1, Point2D br1, Point2D tl2, Point2D br2)
 {
-	// if rectangle has area 0, no overlap
-	if (tl1.x == br1.x || tl1.y == br1.y || br2.x == tl2.x || tl2.y == br2.y)
-		return false;
-
 	// If one rectangle is on left side of other
 	if (tl1.x > br2.x || tl2.x > br1.x)
 		return false;

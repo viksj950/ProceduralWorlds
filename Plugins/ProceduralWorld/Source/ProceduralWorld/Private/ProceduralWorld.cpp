@@ -440,7 +440,7 @@ FReply FProceduralWorldModule::Setup()
 		tiles[i]->updateAdjacentTiles(tiles, nmbrOfTilesInARow);
 
 	}
-
+	tiles[4]->biotope = 0;
 	tiles[9]->biotope = 0;
 	tiles[10]->biotope = 0;
 	//tiles[5]->biotope = 2;
@@ -466,10 +466,11 @@ FReply FProceduralWorldModule::Setup()
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
 
 	ProceduralAssetDistribution temp;
-	int32 assetCountF = 5;
-	int32 assetCountC = 15;
+	int32 maxTress = 18;
+	int32 maxHouses = 20;
 	float scaleVarF = 0.7;
 	float scaleVarC = 0.2;
+	float houseSpread = 1.3; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall)
 	
 	//after the landscape has been spawned assign proxies to each tile
 	size_t i{ 0 };
@@ -478,13 +479,13 @@ FReply FProceduralWorldModule::Setup()
 		tiles[i]->streamingProxy = it;
 		if (tiles[i]->biotope == 0)
 		{
-			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), assetCountC, scaleVarC);
+			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC);
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
 			/*tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));*/
 		}
 		else if(tiles[i]->biotope == 1)
 		{
-			//temp.spawnActorObjectsForest(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), assetCountF, scaleVarF);
+			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTress, scaleVarF);
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
 		}
 		else {
