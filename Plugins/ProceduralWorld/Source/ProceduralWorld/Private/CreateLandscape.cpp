@@ -476,7 +476,7 @@ void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &
 		Y = FMath::Floor(tileIndex / gridSizeOfProxies);
 		if (biotope == 0) //city
 		{
-			maxDistance = 3;
+			maxDistance = 2;
 		}
 		else
 		{
