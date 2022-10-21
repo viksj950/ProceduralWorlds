@@ -23,6 +23,7 @@
 #include "Modules/ModuleManager.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Math/Vector2D.h"
+#include "math.h"
 //Tile system
 #include"Tile.h" 
 
@@ -56,7 +57,11 @@ public:
 
 	void concatHeightData(const TArray<UTile*> &inTiles, TArray<uint16>& data);
 
+	//Perlin interpolation (smoothstep)
 	void interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount);
+
+	//new and improved gaussian blur 
+	void interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>& inConcData, int kernelSize, float sigma, int32 interpWidth);
 
 	void AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>&BiotopeSettings) const;
 
@@ -75,6 +80,17 @@ public:
 		int biomeType;
 		FVector2D coordinates;
 		float maxBiomeSize;
+
+	};
+
+	struct kernelElement {
+
+		kernelElement() : coords{ 0,0 }, weight{ -1 } {};
+
+		kernelElement(float inWeight, FVector2D inCoords = FVector2D(-100, -100)) : coords{ inCoords }, weight{inWeight} {};
+
+		FVector2D coords;
+		float weight;
 
 	};
 

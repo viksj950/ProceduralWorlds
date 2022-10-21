@@ -234,7 +234,7 @@ uint32 CreateLandscape::GetVertexIndex(const TArray<uint16>& inData, int32 dataD
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Coordinates do not fit"));
-		return 0;
+		return -1;
 	}
 	
 
@@ -493,6 +493,96 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 }
 
 
+//sigma (deviation)
+void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>& inConcData, int kernelSize, float sigma, int32 interpWidth)
+{
+	TArray<kernelElement> kernel;
+	kernel.SetNum(kernelSize * kernelSize);
+
+	int firstIndex = floor(kernelSize / 2);
+
+	//create weights
+	float weight;
+	int index = 0;
+	float sumWeights = 0;
+
+	for (int x = -firstIndex; x <= firstIndex; x++) {
+
+		for (int y = -firstIndex; y <= firstIndex; y++) {
+			
+			weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2));
+			kernel[index] = kernelElement(weight,FVector2D(x,y));
+			sumWeights += weight;
+		}
+
+	} 
+
+
+
+	//(Only check every other tile)
+	int rowLength = GetGridSizeOfProxies();
+	int rowCount = 0;
+	
+	for (auto& t : inTiles) {
+
+		//Do interpolation for everyother tile ish (checkerboard)
+		if (t->index != 0 && t->index % rowLength == 0) {
+			rowCount++;
+
+		}
+
+		if (rowCount % 2 == 0) { //even row
+
+			if (t->index % 2 != 0) {
+
+				continue;
+			}
+
+		}
+		else { //odd row
+			if (t->index % 2 == 0) {
+
+				continue;
+			}
+
+		}
+		int X;
+		int Y;
+		int yStart;
+		//int xStart;
+		int32 weightedKernelVertex;
+
+		//Find biomes edges that needs interpolation 
+		for (int i = 0; i < 8; i++) {
+			if (t->adjacentTiles[i] != nullptr && t->biotope != t->adjacentTiles[i]->biotope) {
+
+				if(i == 1){ //top 
+					X = t->index % gridSizeOfProxies * (TileSize -1);
+					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
+					//Iteratethrough all interpolation points columns/rows 
+					yStart = Y - interpWidth;
+
+					for (int c = X; c <= X + (TileSize -1); c++) {	//Iterate X (Rolumn)
+						for (int r = Y; r <= yStart + (interpWidth*2) ; r++) { //Iterate Y (Row)
+							weightedKernelVertex = 0;
+							for (int j = 0; i < kernelSize * kernelSize; i++) {
+
+								//kernel[j].coords.X = X;
+								//kernel[j].coords.Y = yStart;
+								weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+
+							}
+							inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+						}
+					}
+
+				}
+
+			}
+		}
+	}
+
+}
 
 void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings) const
 {
@@ -684,6 +774,8 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	TArray<uint16> concatedHeightData;
 	//concatedHeightData.SetNum(SizeX * SizeY);
 	concatHeightData(inTiles, concatedHeightData);
+
+	interpGaussianBlur(inTiles, concatedHeightData, 3, 1.5, 5);
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;

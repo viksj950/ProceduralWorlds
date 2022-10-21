@@ -545,7 +545,8 @@ FReply FProceduralWorldModule::Setup()
 	myLand.GenerateAndAssignHeightData(tiles,BiotopeSettings);
 
 	
-	myLand.interpAllAdjTiles(tiles, 5);
+	//myLand.interpAllAdjTiles(tiles, 5);
+
 
 	//Concatinate heightData from all tiles and spawn a landscape
 	landscapePtr = myLand.generateFromTileData(tiles);
