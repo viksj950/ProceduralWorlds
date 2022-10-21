@@ -552,8 +552,8 @@ FReply FProceduralWorldModule::Setup()
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
 
 	ProceduralAssetDistribution temp;
-	int32 maxTress = 18;
-	int32 maxHouses = 20;
+	int32 maxTress = 9;
+	int32 maxHouses = 10;
 	float scaleVarF = 0.7;
 	float scaleVarC = 0.2;
 	float houseSpread = 1.3; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall)

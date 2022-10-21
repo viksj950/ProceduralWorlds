@@ -35,7 +35,7 @@ public:
 	void generateGradients();
 
 
-	void GenerateAndAssignTileData(TArray<uint16>& Data, const int& DataSideSize,const int &TileIndex, const uint32 &inGridSizeOfProxies, const int& mapSize, const BiotopePerlinNoiseSetting& settings);
+	int32 GenerateAndAssignTileData(TArray<uint16>& Data, const int& DataSideSize,const int &TileIndex, const uint32 &inGridSizeOfProxies, const int& inStartColumn, const int& inStartRow, const BiotopePerlinNoiseSetting& settings);
 
 	int hash(const int& x, const int& y) const;
 
@@ -183,7 +183,7 @@ void PerlinNoiseGenerator<T, N>::generateBiotopeNoise(TArray<uint16>& Data, cons
 }
 
 template<typename T, unsigned N>
-void PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data, const int& DataSideSize, const int& TileIndex, const uint32& inGridSizeOfProxies, const int& mapSize, const BiotopePerlinNoiseSetting& settings)
+int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data, const int& DataSideSize, const int& TileIndex, const uint32& inGridSizeOfProxies, const int& inStartColumn, const int& inStartRow, const BiotopePerlinNoiseSetting& settings)
 {
 
 	
@@ -192,15 +192,24 @@ void PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data,
 	/*int ColumnStartIndex = TileIndex% inGridSizeOfProxies;
 	int RowStartIndex = FMath::Floor(tileIndex / gridSizeOfProxies);*/
 
-	int ColumnStartIndex = (TileIndex % inGridSizeOfProxies) * DataSideSize;//not done yet...... () 
-	int RowStartIndex = FMath::Floor(TileIndex / inGridSizeOfProxies) * DataSideSize;
-
+	//int ColumnStartIndex = (TileIndex % inGridSizeOfProxies) * DataSideSize;
+	int ColumnStartIndex = inStartColumn;
+	//int RowStartIndex = FMath::Floor(TileIndex / inGridSizeOfProxies) * DataSideSize;
+	int RowStartIndex = inStartRow;
 	UE_LOG(LogTemp, Warning, TEXT("ColumnStartIndex %d"), ColumnStartIndex);
 	UE_LOG(LogTemp, Warning, TEXT("RowStartIndex %d"), RowStartIndex);
 
 	float sum = 0.0f;
 	int averageHeight = 32768;
 	int column = 0;
+
+	/*if (ColumnStartIndex != 0)
+	{
+		ColumnStartIndex--;
+	}*/
+
+
+	int32 endVert;
 	for (size_t j = ColumnStartIndex; j < (ColumnStartIndex + DataSideSize); j++)
 	{
 		int row = 0;
@@ -230,8 +239,9 @@ void PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data,
 			row++;
 		}
 		column++;
+		endVert = ColumnStartIndex;
 	}
-
+	return ColumnStartIndex - DataSideSize - 1;
 	
 
 

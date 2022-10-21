@@ -16,9 +16,9 @@ CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerC
 	//Amount of components per proxy, 
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * ComponentsPerProxy));
 
-	heightData.SetNum(SizeX * SizeY);
+	/*heightData.SetNum(SizeX * SizeY);
 	cityHeightData.SetNum(SizeX * SizeY);
-	mountainHeightData.SetNum(SizeX * SizeY);
+	mountainHeightData.SetNum(SizeX * SizeY);*/
 	//heightData.Reserve(inSizeX * inSizeY);
 	////Currently city has the same size, not optimized, have to redo alot to improve it
 	//cityHeightData.Reserve(inSizeX * inSizeY);
@@ -94,17 +94,35 @@ void CreateLandscape::assignDataToAllTiles(TArray<UTile*> &inTiles, int32 startV
 void CreateLandscape::GenerateAndAssignHeightData(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
 {
 
+
+	/*X = tileIndex % gridSizeOfProxies;
+	Y = FMath::Floor(tileIndex / gridSizeOfProxies);*/
+
 	PerlinNoiseGenerator<uint16, 64> PerlinNoise;
 	PerlinNoise.generateGradients();
 	
-
+	int X{ 0 };
+	int Y{ 0 };
+	int32 currentStartVert = 0;
 
 	for (auto& it: inTiles)
 	{
+		if (it->index % gridSizeOfProxies == 0 && it->index != 0) //we have reached a new row
+		{
+			X = 0;
+			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize-1);
+		}
+		else if(it->index != 0)
+		{
+			X += (TileSize - 1);
+			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+		}
 
 
-		PerlinNoise.GenerateAndAssignTileData(it->tileHeightData,it->tileSize,it->index,gridSizeOfProxies,SizeX,*BiotopeSettings[it->biotope]);
 
+		currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *BiotopeSettings[it->biotope]);
+
+		
 		//assign correct noise values depending on tile index and biotope 
 		//Also need to have biotopeSettings
 		//void func(tile, BiotopeSettings)

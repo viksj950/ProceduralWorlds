@@ -59,7 +59,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 
 		//Check if angle is acceptable to spawn the object within
 		if (RotationAngle > 0.3) {
-			UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for asset was to steep with id: %d"), i);
+			//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for asset was to steep with id: %d"), i);
 			continue;
 		}
 
@@ -71,7 +71,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		FRotator Rotation(tri.normal.Rotation());
 
 		//UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine for house id : %d"), i);
+		//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine for house id : %d"), i);
 
 		FActorSpawnParameters SpawnInfo;
 
@@ -95,7 +95,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 
 		//Check if location is suitable and not inside existing house
 		FVector newSize =  spread*scaleValue * Mesh1->GetBounds().GetBox().GetSize();
-		UE_LOG(LogTemp, Warning, TEXT("Size of house : %s"), *newSize.ToString());
+		//UE_LOG(LogTemp, Warning, TEXT("Size of house : %s"), *newSize.ToString());
 	
 		Point2D currentHouseTL = { Location.X - (newSize.X/2), Location.Y + (newSize.Y/2) };
 		//UE_LOG(LogTemp, Warning, TEXT("TL.x : %f"), currentHouseTL.x);
@@ -108,7 +108,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		bool shouldSpawn = true;
 
 		if(t->tileAssets.IsEmpty()){ //first house in tile, no need to check intersect
-			UE_LOG(LogTemp, Warning, TEXT("House should spawn, no other house spawned in yet in this tile"));
+			//UE_LOG(LogTemp, Warning, TEXT("House should spawn, no other house spawned in yet in this tile"));
 			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
 			if (MeshComponent)
 			{
@@ -130,7 +130,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		/*		UE_LOG(LogTemp, Warning, TEXT("pBL.x : %f"), prevHouseBL.x);
 				UE_LOG(LogTemp, Warning, TEXT("pBL.y : %f"), prevHouseBL.y);*/
 				if (Intersecting(currentHouseTL, currentHouseBR, prevHouseTL, prevHouseBL)) {
-					UE_LOG(LogTemp, Warning, TEXT("WILL NOT SPAWN HOUSE, IT IS WITHIN BOUNDS OF OTHER"));
+					//UE_LOG(LogTemp, Warning, TEXT("WILL NOT SPAWN HOUSE, IT IS WITHIN BOUNDS OF OTHER"));
 					shouldSpawn = false;
 					break;
 				}
@@ -148,7 +148,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 
 			}
 			if (shouldSpawn) {
-				UE_LOG(LogTemp, Warning, TEXT("House should spawn, no other house in bounds"));
+				//UE_LOG(LogTemp, Warning, TEXT("House should spawn, no other house in bounds"));
 				UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
 				if (MeshComponent)
 				{
@@ -214,7 +214,7 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 			RotationAngle = acosf(FVector::DotProduct(UpVector, tri.normal));
 
 			if (RotationAngle > 0.5) {
-				UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for asset was to steep with id: %d"), i);
+				//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for asset was to steep with id: %d"), i);
 				continue;
 			}
 
@@ -226,7 +226,7 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 			FRotator Rotation(tri.normal.Rotation());
 
 			//UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
-			UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine, spawns actor in tile: %d"), i);
+			//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine, spawns actor in tile: %d"), i);
 
 			FActorSpawnParameters SpawnInfo;
 
