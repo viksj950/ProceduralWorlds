@@ -558,6 +558,8 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 			if (t->adjacentTiles[i] != nullptr && t->biotope != t->adjacentTiles[i]->biotope) {
 
 				if(i == 1){ //top 
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i); 
 					X = t->index % gridSizeOfProxies * (TileSize -1);
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 					/*UE_LOG(LogTemp, Warning, TEXT("Gauss X: %d"), X);
@@ -590,13 +592,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 				}
 				if (i == 3) { //right
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i);
 					X = t->index % gridSizeOfProxies * (TileSize - 1);
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 					
 					//Iteratethrough all interpolation points columns/rows 
 					yStart = Y;
 					xStart = X - interpWidth;
-					for (int c = xStart; c <= X + (interpWidth *2); c++) {	//Iterate X (Rolumn)
+					for (int c = xStart; c <= xStart + (interpWidth *2); c++) {	//Iterate X (Rolumn)
 						for (int r = Y; r <= Y + (TileSize - 1); r++) { //Iterate Y (Row)
 							weightedKernelVertex = 0;
 
@@ -620,13 +624,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 				}
 				if (i == 4) { //left
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i);
 					X = t->index % gridSizeOfProxies * (TileSize - 1);
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
 					//Iteratethrough all interpolation points columns/rows 
 					yStart = Y;
 					xStart = X - interpWidth + TileSize - 1;
-					for (int c = xStart; c <= X + TileSize - 1 + (interpWidth * 2); c++) {	//Iterate X (Rolumn)
+					for (int c = xStart; c <= X + TileSize - 1 + interpWidth; c++) {	//Iterate X (Rolumn)
 						for (int r = yStart; r <= Y + (TileSize - 1); r++) { //Iterate Y (Row)
 							weightedKernelVertex = 0;
 
@@ -650,6 +656,8 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 				}
 				if (i == 6) { //bottom
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i);
 					X = t->index % gridSizeOfProxies * (TileSize - 1);
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -877,8 +885,13 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	//concatedHeightData.SetNum(SizeX * SizeY);
 	concatHeightData(inTiles, concatedHeightData);
 
-	/*interpGaussianBlur(inTiles, concatedHeightData, 7,0.1, 5);*/
-	interpGaussianBlur(inTiles, concatedHeightData, 7, 0.1, 15);
+	int passes = 10;
+	int dynamicStep = 30;
+	for (int i = 0; i < passes; i++) {
+		
+		interpGaussianBlur(inTiles, concatedHeightData, 5, 0.3, dynamicStep);
+		dynamicStep -= dynamicStep / passes;
+	}
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
