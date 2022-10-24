@@ -519,9 +519,6 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 	} 
 
-
-	UE_LOG(LogTemp, Warning, TEXT("sumWeights: %f"), sumWeights);
-
 	//(Only check every other tile)
 	int rowLength = GetGridSizeOfProxies();
 	int rowCount = 0;
@@ -579,14 +576,14 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * 32768;
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
 								}
 								else
 								{
 									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
-							UE_LOG(LogTemp, Warning, TEXT("weightedKernelVertex: %f"), weightedKernelVertex);
+							
 							inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
@@ -597,7 +594,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 					
 					//Iteratethrough all interpolation points columns/rows 
-					yStart = Y - interpWidth;
+					yStart = Y;
 					xStart = X - interpWidth;
 					for (int c = xStart; c <= X + (interpWidth *2); c++) {	//Iterate X (Rolumn)
 						for (int r = Y; r <= Y + (TileSize - 1); r++) { //Iterate Y (Row)
@@ -609,14 +606,14 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * 32768;
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
 								}
 								else
 								{
 									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
-							UE_LOG(LogTemp, Warning, TEXT("weightedKernelVertex: %f"), weightedKernelVertex);
+
 							inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
@@ -627,7 +624,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
 					//Iteratethrough all interpolation points columns/rows 
-					yStart = Y - interpWidth;
+					yStart = Y;
 					xStart = X - interpWidth + TileSize - 1;
 					for (int c = xStart; c <= X + TileSize - 1 + (interpWidth * 2); c++) {	//Iterate X (Rolumn)
 						for (int r = yStart; r <= Y + (TileSize - 1); r++) { //Iterate Y (Row)
@@ -639,14 +636,14 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * 32768;
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX,  c, r)];
 								}
 								else
 								{
 									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
-							UE_LOG(LogTemp, Warning, TEXT("weightedKernelVertex: %f"), weightedKernelVertex);
+
 							inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
@@ -669,14 +666,14 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * 32768;
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
 								}
 								else
 								{
 									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
-							UE_LOG(LogTemp, Warning, TEXT("weightedKernelVertex: %f"), weightedKernelVertex);
+
 							inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
@@ -880,7 +877,8 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	//concatedHeightData.SetNum(SizeX * SizeY);
 	concatHeightData(inTiles, concatedHeightData);
 
-	interpGaussianBlur(inTiles, concatedHeightData, 7,1, 5);
+	/*interpGaussianBlur(inTiles, concatedHeightData, 7,0.1, 5);*/
+	interpGaussianBlur(inTiles, concatedHeightData, 7, 0.1, 15);
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
