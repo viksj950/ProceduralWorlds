@@ -72,6 +72,8 @@ public:
 
 	const uint32 GetGridSizeOfProxies() const;
 
+	TArray<uint16> rawConcatData;
+
 	struct BiomeOriginInformation {
 		
 		BiomeOriginInformation(int inBiomeType, FVector2D inCoordinates, float inMaxBiomeSize) : biomeType{ inBiomeType }, coordinates{ inCoordinates },

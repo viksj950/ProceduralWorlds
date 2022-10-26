@@ -522,6 +522,11 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 	//(Only check every other tile)
 	int rowLength = GetGridSizeOfProxies();
 	int rowCount = 0;
+	int X;
+	int Y;
+	int yStart;
+	int xStart;
+	float weightedKernelVertex;
 	
 	for (auto& t : inTiles) {
 
@@ -546,16 +551,40 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 			}
 
 		}
-		int X;
-		int Y;
-		int yStart;
-		int xStart;
-		//int xStart;
-		float weightedKernelVertex;
+		
 
 		//Find biomes edges that needs interpolation 
 		for (int i = 0; i < 8; i++) {
 			if (t->adjacentTiles[i] != nullptr && t->biotope != t->adjacentTiles[i]->biotope) {
+
+				//if (i == 0 && t->adjacentTiles[0]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[0]->biotope == t->adjacentTiles[3]->biotope ) { //top right corner (all 3 other biotopes are different to t but of same different type) 
+				//	UE_LOG(LogTemp, Warning, TEXT("Interpolating top corner of tile : %d"), t->index);
+				//	X = t->index % gridSizeOfProxies * (TileSize - 1);
+				//	Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
+
+				//	//Iteratethrough all interpolation points columns/rows 
+				//	yStart = Y - interpWidth;
+				//	xStart = X - interpWidth;
+				//	for (int c = xStart; c < X; c++) {	//Iterate X (Rolumn)
+				//		for (int r = yStart; r < Y; r++) { //Iterate Y (Row)
+				//			weightedKernelVertex = 0;
+
+				//			for (int j = 0; j < kernelSize * kernelSize; j++) {
+
+				//				if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
+				//				{
+				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+				//				}
+				//				else
+				//				{
+				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+				//				}
+				//			}
+
+				//			inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+				//		}
+				//	}
+				//}
 
 				if(i == 1){ //top 
 					UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
@@ -692,6 +721,137 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 		}
 	}
 
+	//New loop for all corner tiles
+	for (auto& t : inTiles)
+	{
+		//Top right adjacent corner
+		if (t->adjacentTiles[0] != nullptr && t->biotope != t->adjacentTiles[0]->biotope && t->adjacentTiles[0]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[0]->biotope == t->adjacentTiles[3]->biotope) {
+
+			UE_LOG(LogTemp, Warning, TEXT("Interpolating top right corner of tile : %d"), t->index);
+			X = t->index % gridSizeOfProxies * (TileSize - 1);
+			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
+
+			//Iteratethrough all interpolation points columns/rows 
+			yStart = Y - interpWidth;
+			xStart = X - interpWidth;
+			for (int c = xStart; c < X; c++) {	//Iterate X (Rolumn)
+				for (int r = yStart; r < Y; r++) { //Iterate Y (Row)
+					weightedKernelVertex = 0;
+
+					for (int j = 0; j < kernelSize * kernelSize; j++) {
+
+						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
+						{
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+						}
+						else
+						{
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+						}
+					}
+
+					inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+				}
+			}
+
+		}
+		//top left adjacent corner
+		if (t->adjacentTiles[2] != nullptr && t->biotope != t->adjacentTiles[2]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[4]->biotope) {
+
+			UE_LOG(LogTemp, Warning, TEXT("Interpolating top left corner of tile : %d"), t->index);
+			X = t->index % gridSizeOfProxies * (TileSize - 1);
+			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
+
+			//Iteratethrough all interpolation points columns/rows 
+			yStart = Y - interpWidth;
+			xStart = X + TileSize;
+			for (int c = xStart + interpWidth; c < X; c++) {	//Iterate X (Rolumn)
+				for (int r = yStart; r < Y; r++) { //Iterate Y (Row)
+					weightedKernelVertex = 0;
+
+					for (int j = 0; j < kernelSize * kernelSize; j++) {
+
+						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
+						{
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+						}
+						else
+						{
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+						}
+					}
+
+					inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+				}
+			}
+
+		}
+		//Bottom right adjacent corner
+		if (t->adjacentTiles[5] != nullptr && t->biotope != t->adjacentTiles[5]->biotope && t->adjacentTiles[5]->biotope == t->adjacentTiles[3]->biotope && t->adjacentTiles[5]->biotope == t->adjacentTiles[6]->biotope) {
+
+			UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom right corner of tile : %d"), t->index);
+			X = t->index % gridSizeOfProxies * (TileSize - 1);
+			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
+
+			//Iteratethrough all interpolation points columns/rows 
+			yStart = Y + TileSize;
+			xStart = X - interpWidth;
+			for (int c = xStart; c < X; c++) {	//Iterate X (Rolumn)
+				for (int r = yStart; r < yStart + interpWidth; r++) { //Iterate Y (Row)
+					weightedKernelVertex = 0;
+
+					for (int j = 0; j < kernelSize * kernelSize; j++) {
+
+						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
+						{
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+						}
+						else
+						{
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+						}
+					}
+
+					inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+				}
+			}
+
+		}
+		//Bottom left adjacent corner
+		if (t->adjacentTiles[7] != nullptr && t->biotope != t->adjacentTiles[7]->biotope && t->adjacentTiles[7]->biotope == t->adjacentTiles[4]->biotope && t->adjacentTiles[7]->biotope == t->adjacentTiles[6]->biotope) {
+
+			UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom left corner of tile : %d"), t->index);
+			X = t->index % gridSizeOfProxies * (TileSize - 1);
+			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
+
+			//Iteratethrough all interpolation points columns/rows 
+			yStart = Y + TileSize;
+			xStart = X + TileSize;
+			for (int c = xStart; c < xStart + interpWidth; c++) {	//Iterate X (Rolumn)
+				for (int r = yStart; r < yStart + interpWidth; r++) { //Iterate Y (Row)
+					weightedKernelVertex = 0;
+
+					for (int j = 0; j < kernelSize * kernelSize; j++) {
+
+						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
+						{
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+						}
+						else
+						{
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+						}
+					}
+
+					inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+				}
+			}
+
+		}
+
+
+		
+	}
 }
 
 void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings) const
@@ -817,7 +977,7 @@ ALandscape* CreateLandscape::generate()
 
 	
 
-	HeightDataPerLayers.Add(FGuid(), MoveTemp(heightData));
+	HeightDataPerLayers.Add(FGuid(), MoveTemp(rawConcatData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
 
 	UWorld* World = nullptr;
@@ -885,13 +1045,22 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	//concatedHeightData.SetNum(SizeX * SizeY);
 	concatHeightData(inTiles, concatedHeightData);
 
-	int passes = 10;
-	int dynamicStep = 30;
+	//For debugging (creates a copy of the landscape without interpolation)
+	/*rawConcatData = concatedHeightData;
+	generate();*/
+
+	int passes = 20;
+	int dynamicStep = 10;
 	for (int i = 0; i < passes; i++) {
+			
+			interpGaussianBlur(inTiles, concatedHeightData, 3, 1.0 / (i + 1), dynamicStep);
+			dynamicStep -= dynamicStep / passes;
 		
-		interpGaussianBlur(inTiles, concatedHeightData, 5, 0.3, dynamicStep);
-		dynamicStep -= dynamicStep / passes;
+	/*	UE_LOG(LogTemp, Warning, TEXT("DynamicStep = %d"), dynamicStep);*/
+		
 	}
+	
+	interpGaussianBlur(inTiles, concatedHeightData, 3, 0.1, 31);
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;

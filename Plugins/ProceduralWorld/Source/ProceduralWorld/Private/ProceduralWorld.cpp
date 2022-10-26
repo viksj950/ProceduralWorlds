@@ -12,7 +12,7 @@
 
 //We added this
 #include "Widgets/Input/SButton.h" //sbutton for UI
-#include "CreateLandscape.h" //includes setup for landscape properties
+
 
 
 
@@ -497,6 +497,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		.OnClicked_Raw(this, &FProceduralWorldModule::DeleteLandscape)
 		]
 		]
+
 		]
 
 
@@ -510,6 +511,7 @@ FReply FProceduralWorldModule::Setup()
 {
 	//Call to CreateLandscape and generate its properties 
 	CreateLandscape myLand(SizeX,SizeY,QuadsPerComponent,ComponentsPerProxy,SectionsPerComponent,TileSize);
+	
 	
 	//DO THIS BETTER----------------
 	int32 nmbrOfTilesInARow = (SizeX -1) / (QuadsPerComponent * ComponentsPerProxy);
@@ -531,8 +533,10 @@ FReply FProceduralWorldModule::Setup()
 
 	}
 
-	//tiles[9]->biotope = 2;
-	//tiles[10]->biotope = 2;
+	/*tiles[9]->biotope = 0;
+	tiles[1]->biotope = 2;
+	tiles[0]->biotope = 2;
+	tiles[8]->biotope = 2;*/
 	//tiles[17]->biotope = 2;
 	//tiles[18]->biotope = 2;
 	//tiles[17]->biotope = 0;
@@ -555,11 +559,11 @@ FReply FProceduralWorldModule::Setup()
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
 
 	ProceduralAssetDistribution temp;
-	int32 maxTress = 9;
+	int32 maxTress = 5;
 	int32 maxHouses = 10;
 	float scaleVarF = 0.7;
 	float scaleVarC = 0.2;
-	float houseSpread = 1.3; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall)
+	float houseSpread = 1.3; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall in order to fit)
 	
 	//after the landscape has been spawned assign proxies to each tile
 	size_t i{ 0 };
@@ -574,7 +578,8 @@ FReply FProceduralWorldModule::Setup()
 		}
 		else if(tiles[i]->biotope == 1)
 		{
-			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTress, scaleVarF);
+			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTress, scaleVarF);
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
 		}
 		else {

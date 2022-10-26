@@ -11,6 +11,7 @@
 
 #include "Tile.h"
 #include "ProceduralAssetDistribution.h"
+#include "CreateLandscape.h" //includes setup for landscape properties
 
 #include "AssetRegistry/AssetRegistryModule.h"
 //utility to create UTexture2D
@@ -143,7 +144,6 @@ public:
 	bool bShouldDirtyPackage;
 	/*UPROPERTY()*/
 	TArray<UTile*> tiles;
-
 	
 	int32 SizeX{505};
 	int32 SizeY{505};
