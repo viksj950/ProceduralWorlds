@@ -559,8 +559,8 @@ FReply FProceduralWorldModule::Setup()
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
 
 	ProceduralAssetDistribution temp;
-	int32 maxTress = 5;
-	int32 maxHouses = 10;
+	int32 maxTress = 7;
+	int32 maxHouses = 6;
 	float scaleVarF = 0.7;
 	float scaleVarC = 0.2;
 	float houseSpread = 1.3; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall in order to fit)
@@ -590,11 +590,7 @@ FReply FProceduralWorldModule::Setup()
 		i++;
 	}
 
-	//Place actors in the Landscape, (Foliage is the focus for now)
-	//ProceduralAssetDistribution temp;
-	//int32 assetCount = 5;
-	//float scaleVar = 0.5;
-	//temp.spawnActorObjects(tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), assetCount, scaleVar);
+
 	
 	return FReply::Handled();
 }

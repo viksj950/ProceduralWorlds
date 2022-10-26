@@ -223,7 +223,7 @@ void CreateLandscape::SetColumnHeightData(TArray<uint16>& inData, const TArray<u
 	
 }
 
-uint32 CreateLandscape::GetVertexIndex(const TArray<uint16>& inData, int32 dataDimension, int32 inX, int32 inY)
+uint32 CreateLandscape::GetVertexIndex(int32 dataDimension, int32 inX, int32 inY) const
 {
 	if (inX <= dataDimension && inY <= dataDimension)
 	{
@@ -607,15 +607,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex( SizeX, c, r)];
 								}
 								else
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex( SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
 							
-							inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+							inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
 
@@ -639,15 +639,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
 								}
 								else
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
 
-							inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+							inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
 
@@ -671,15 +671,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX,  c, r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX,  c, r)];
 								}
 								else
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
 
-							inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+							inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
 
@@ -703,15 +703,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
 								}
 								else
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
 
-							inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+							inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
 
@@ -742,15 +742,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
 						}
 						else
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 						}
 					}
 
-					inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+					inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 				}
 			}
 
@@ -773,15 +773,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
 						}
 						else
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 						}
 					}
 
-					inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+					inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 				}
 			}
 
@@ -804,15 +804,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex( SizeX, c, r)];
 						}
 						else
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 						}
 					}
 
-					inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+					inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 				}
 			}
 
@@ -835,15 +835,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
 						}
 						else
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 						}
 					}
 
-					inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+					inConcData[GetVertexIndex( SizeX, c, r)] = weightedKernelVertex;
 				}
 			}
 
@@ -956,8 +956,7 @@ ALandscape* CreateLandscape::generate()
 
 	FQuat InRotation{ 0,0,0,0 };
 	FVector InTranslation{ 0,0,5 };
-	FVector InScale{ 100,100,100 };
-	FTransform LandscapeTransform{ InRotation, InTranslation, InScale };
+	FTransform LandscapeTransform{ InRotation, InTranslation, LandscapeScale };
 	//int32 QuadsPerSection{ 63 };
 	//int32 SectionsPerComponent{ 1 };
 	////int32 ComponentCountX{12345};
@@ -1037,9 +1036,8 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 {
 
 	FQuat InRotation{ 0,0,0,0 };
-	FVector InTranslation{ 0,0,5 };
-	FVector InScale{ 100,100,100 };
-	FTransform LandscapeTransform{ InRotation, InTranslation, InScale };
+	FVector InTranslation{ 0,0,0 };
+	FTransform LandscapeTransform{ InRotation, InTranslation, LandscapeScale };
 
 	TArray<uint16> concatedHeightData;
 	//concatedHeightData.SetNum(SizeX * SizeY);
@@ -1059,8 +1057,25 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	/*	UE_LOG(LogTemp, Warning, TEXT("DynamicStep = %d"), dynamicStep);*/
 		
 	}
-	
+
 	interpGaussianBlur(inTiles, concatedHeightData, 3, 0.1, 31);
+
+	//Spline it up
+	ControlPoint cp1 = { 63, 63, 0 };
+	//Vi vill ha CP i (63,63) 
+	FVector worldPosCP1 = GetWorldCoordinates(concatedHeightData, cp1.pos.X, cp1.pos.Y);
+	cp1.pos.X = worldPosCP1.X;
+	cp1.pos.Y = worldPosCP1.Y;
+	cp1.pos.Z = worldPosCP1.Z;
+
+	CRSpline spline;
+
+	spline.addControlPoint(cp1);
+	//spline.addControlPoint(cp2);
+	spline.calcLengths();
+	spline.visualizeSpline();
+	
+	
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
@@ -1126,23 +1141,24 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	return Landscape;
 }
 
-////TArray<FVector> CreateLandscape::generateNormals(const TArray<uint16>& inHeight)
-////{
-////	//Distance between vertices in x and y is the same for all vertices, only difference is height
+FVector CreateLandscape::GetWorldCoordinates(const TArray<uint16>& inData, int32 inX, int32 inY) const
+{
+	FVector temp;
+	if(inX >= 0 && inX < SizeX && inY >= 0 && inY < SizeY){
+		/*temp = { inX * LandscapeScale.X, inY * LandscapeScale.Y, ((float)inData[GetVertexIndex(SizeX, inX, inY)] - 32768) / LandscapeScale.Z };*/
+		temp = { inX * LandscapeScale.X, inY * LandscapeScale.Y, (inData[GetVertexIndex(SizeX, inX, inY)] * LandscapeScale.Z - 32768 * (1 / 128)) };
+		return temp;
+	}else{
+		UE_LOG(LogTemp, Warning, TEXT("GetWorldCoordinates: coordinates are out of range! "));
+		return { 0.0f, 0.0f, 0.0f };
+	}
 
-////	//Find and mark all sampes wiht position
-	
-////	//use position to gret 1 ring
-////	Tarray height getOnering()
 
-
-
-////	return TArray<FVector>();
-////}
+}
 
 const uint32 CreateLandscape::GetGridSizeOfProxies() const
 {
-
+	
 	return gridSizeOfProxies;
 }
 

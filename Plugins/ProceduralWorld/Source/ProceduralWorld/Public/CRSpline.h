@@ -4,32 +4,58 @@
 
 #include "CoreMinimal.h"
 
-struct controlPoint {
+//for cube placement
+#include "Engine/StaticMeshActor.h"
+#include "Engine/World.h"
 
-	controlPoint(float inX, float inY, float inZ) : pos{ inX,inY,inZ } {
+struct ControlPoint {
+
+	ControlPoint() : pos{ 0,0,0} {
+	};
+	ControlPoint(float inX, float inY, float inZ) : pos{ inX,inY,inZ } {
 	};
 	FVector pos;
-	//add length later
+	float length;
 };
 
 class PROCEDURALWORLD_API CRSpline
 {
 public:
 
-
-	
 	CRSpline();
 	~CRSpline();
 
-	controlPoint GetSplinePoint(const float t);
+	ControlPoint GetSplinePoint(float t);
 
-	TArray<controlPoint> points;
+	//Used for agent moving, might prove unuseful
+	ControlPoint GetSplineGradient(float t);
 
-	float alpha = 0.5f;
-	float tension = 0.0f;
+	//computes the float value for the segment length
+	float calcSegmentLength(int cp_index,float stepSize);
 
-	controlPoint p0;
-	controlPoint p1;
-	controlPoint p2;
-	controlPoint p3;
+	//calculates the normalized t-value for each segment
+	float GetNormalisedOffset(float p);
+
+	//assigns length to the spline
+	void calcLengths();
+	
+	//Useful for adding singular control point at the end of spline
+	void addControlPoint(const ControlPoint& cp);
+
+	//highlights spline curve
+	void visualizeSpline();
+
+	float TotalLength = 0.0f;
+	float alpha = 0.1f;
+	float tension = 0.5f;
+
+private:
+
+	ControlPoint p0;
+	ControlPoint p1;
+	ControlPoint p2;
+	ControlPoint p3;
+
+	TArray<ControlPoint> points;
+
 };

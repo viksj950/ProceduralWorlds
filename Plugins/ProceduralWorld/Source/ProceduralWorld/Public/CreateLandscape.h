@@ -24,8 +24,13 @@
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Math/Vector2D.h"
 #include "math.h"
+#include "Math/IntVector.h"
+
 //Tile system
 #include"Tile.h" 
+
+//Spline
+#include "CRSpline.h"
 
 //Noise
 #include "PerlinNoiseGenerator.h"
@@ -53,7 +58,7 @@ public:
 	void SetRowHeightData(TArray<uint16>& inData, const TArray<uint16>& inRowData, int32 sizeOfSquare, int32 Row);
 	void SetColumnHeightData(TArray<uint16>& inData, const TArray<uint16>& inColumnData, int32 sizeOfSquare, int32 Column);
 	//Returns the index of a vertex's height, given coordinates
-	uint32 GetVertexIndex(const TArray<uint16> &inData,int32 dataDimension, int32 inX, int32 inY);
+	uint32 GetVertexIndex(int32 dataDimension, int32 inX, int32 inY) const;
 
 	void concatHeightData(const TArray<UTile*> &inTiles, TArray<uint16>& data);
 
@@ -69,6 +74,8 @@ public:
 	void GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);
 	ALandscape* generate();
 	ALandscape* generateFromTileData(TArray<UTile*> &inTiles);
+
+	FVector GetWorldCoordinates(const TArray<uint16>& inData, int32 inX, int32 inY) const;
 
 	const uint32 GetGridSizeOfProxies() const;
 
@@ -108,6 +115,7 @@ public:
 	int32 ComponentsPerProxy;
 	int32 SectionsPerComponent;
 	int32 TileSize;
+	FVector LandscapeScale = {100,100,100};
 
 	
 private:
