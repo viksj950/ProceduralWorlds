@@ -1060,26 +1060,32 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	interpGaussianBlur(inTiles, concatedHeightData, 3, 0.1, 31);
 
 
-	CRSpline spline;
+	
 	//Spline it up
-	ControlPoint cp1 = { 63, 63, 0 };
-	ControlPoint cp2 = { 354, 297, 0 };
-	ControlPoint cp3 = { 454, 97, 0 };
+	ControlPoint cp1 = { 63.0, 63.0, (float)concatedHeightData[GetVertexIndex(SizeX,63,63)] };
+	ControlPoint cp2 = { 354.0, 297.0, (float)concatedHeightData[GetVertexIndex(SizeX,354,297)] };
+	ControlPoint cp3 = { 454.0, 97.0, (float)concatedHeightData[GetVertexIndex(SizeX,454,97)] };
+	ControlPoint cp4 = { 500.0, 130.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,150)] };
+	ControlPoint cp5 = { 500.0, 150.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,150)] };
+
+	CRSpline spline(cp1,cp2,cp3,cp4);
+
+	spline.addControlPoint(cp5);
 
 	//Vi vill ha CP i (63,63) 
-	FVector worldPosCP1 = GetWorldCoordinates(concatedHeightData, cp1.pos.X, cp1.pos.Y);
-	FVector worldPosCP2 = GetWorldCoordinates(concatedHeightData, cp2.pos.X, cp2.pos.Y);
-	FVector worldPosCP3 = GetWorldCoordinates(concatedHeightData, cp3.pos.X, cp3.pos.Y);
-	cp1.worldPos = worldPosCP1;
-	cp2.worldPos = worldPosCP2;
-	cp3.worldPos = worldPosCP3;
+	//FVector worldPosCP1 = GetWorldCoordinates(concatedHeightData, cp1.pos.X, cp1.pos.Y);
+	//FVector worldPosCP2 = GetWorldCoordinates(concatedHeightData, cp2.pos.X, cp2.pos.Y);
+	//FVector worldPosCP3 = GetWorldCoordinates(concatedHeightData, cp3.pos.X, cp3.pos.Y);
+	//cp1.worldPos = worldPosCP1;
+	//cp2.worldPos = worldPosCP2;
+	//cp3.worldPos = worldPosCP3;
 
-	spline.addControlPoint(cp1);
-	spline.addControlPoint(cp2);
-	spline.addControlPoint(cp3);
+	//spline.addControlPoint(cp1);
+	//spline.addControlPoint(cp2);
+	//spline.addControlPoint(cp3);
 	//spline.addControlPoint(cp2);
 	spline.calcLengths();
-	spline.visualizeSpline();
+	spline.visualizeSpline(LandscapeScale);
 
 	UE_LOG(LogTemp, Warning, TEXT("TotalLength :  %f"), spline.TotalLength);
 	

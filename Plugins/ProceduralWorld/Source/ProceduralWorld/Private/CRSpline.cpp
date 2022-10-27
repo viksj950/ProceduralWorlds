@@ -4,13 +4,18 @@
 #include "CRSpline.h"
 
 
-CRSpline::CRSpline() :p0{0,70,5 },p1{350,250, 5},p2{950,1750, 5},p3{ 2600, 2700, 5}
+CRSpline::CRSpline(ControlPoint p0, ControlPoint p1, ControlPoint p2, ControlPoint p3)
 {
 	points.Add(p0);
 	points.Add(p1);
 	points.Add(p2);
 	points.Add(p3);
 
+
+}
+
+CRSpline::CRSpline()
+{
 
 }
 
@@ -41,6 +46,10 @@ ControlPoint CRSpline::GetSplinePoint(float t)
 	res.pos.X = tension * (points[i0].pos.X * q1 + points[i1].pos.X * q2 + points[i2].pos.X * q3 + points[i3].pos.X * q4);
 	res.pos.Y = tension * (points[i0].pos.Y * q1 + points[i1].pos.Y * q2 + points[i2].pos.Y * q3 + points[i3].pos.Y * q4);
 	res.pos.Z = tension * (points[i0].pos.Z * q1 + points[i1].pos.Z * q2 + points[i2].pos.Z * q3 + points[i3].pos.Z * q4);
+
+	//UE_LOG(LogTemp, Warning, TEXT("res.pos.X :  %f"), res.pos.X);
+	//UE_LOG(LogTemp, Warning, TEXT("res.pos.Y :  %f"), res.pos.Y);
+	//UE_LOG(LogTemp, Warning, TEXT("res.pos.Z :  %f"), res.pos.Z);
 
 	return res;
 }
@@ -94,7 +103,7 @@ float CRSpline::calcSegmentLength(int cp_index, float stepSize = 0.005f)
 
 float CRSpline::GetNormalisedOffset(float p)
 {
-	int i = 0;
+	int i = 1;
 	while (p > points[i].length)
 	{
 		p -= points[i].length;
@@ -108,7 +117,7 @@ float CRSpline::GetNormalisedOffset(float p)
 void CRSpline::calcLengths()
 {
 	TotalLength = 0;
-	for (size_t i = 0; i < points.Num()-3; i++)
+	for (size_t i = 1; i < points.Num()-1; i++)
 	{
 		TotalLength += points[i].length = calcSegmentLength(i);
 	}
@@ -119,7 +128,7 @@ void CRSpline::addControlPoint(const ControlPoint& cp)
 	points.Add(cp);
 }
 
-void CRSpline::visualizeSpline()
+void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 {
 	UWorld* World = nullptr;
 	FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
@@ -130,15 +139,16 @@ void CRSpline::visualizeSpline()
 	FVector assetScale;
 	FActorSpawnParameters SpawnInfo;
 
-	float scaleValue = 0.05;
+	float scaleValue = 0.25;
 
 	for (int i = 0; i < points.Num(); i++) //Control Points
 	{
 
-		Location = points[i].worldPos;
-		float temp = Location.X;
-		Location.X = Location.Y;
+		Location = points[i].pos;
+		float temp = Location.X * inLandscapeScale.X;
+		Location.X = Location.Y * inLandscapeScale.Y;
 		Location.Y = temp;
+		Location.Z = (Location.Z - 32768) * (100.0f / 128.0f);
 		//UE_LOG(LogTemp, Warning, TEXT("Location (CP): %s"), *Location.ToString());
 
 		AStaticMeshActor* CP_cube = World->SpawnActor<AStaticMeshActor>(Location, Rotation, SpawnInfo);
@@ -154,11 +164,12 @@ void CRSpline::visualizeSpline()
 		}
 
 	}
+	scaleValue = 0.15;
 
 	for (float i = 0; i <= TotalLength; i += 100.0f) //On line points 
 	{
 		Location = GetSplinePoint(GetNormalisedOffset(i)).pos;
-		//UE_LOG(LogTemp, Warning, TEXT("Location (SP): %s"), *Location.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Location (SP): %s"), *Location.ToString());
 		float temp = Location.X;
 		Location.X = Location.Y * 100.0f;
 		Location.Y = temp * 100.0f;

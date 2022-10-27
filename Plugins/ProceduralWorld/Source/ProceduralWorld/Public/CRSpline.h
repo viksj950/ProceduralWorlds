@@ -10,13 +10,12 @@
 
 struct ControlPoint {
 
-	ControlPoint() : pos{ 0,0,0 }, worldPos{ 0,0,0 } {
+	ControlPoint() : pos{ 0,0,0 } {
 	};
-	ControlPoint(float inX, float inY, float inZ) : pos{ inX,inY,inZ }, worldPos{ inX,inY,inZ } {
+	ControlPoint(float inX, float inY, float inZ) : pos{ inX,inY,inZ } {
 	};
 	FVector pos;
-	//worldPos only used for visualization purposes
-	FVector worldPos;
+	
 	float length;
 };
 
@@ -24,6 +23,7 @@ class PROCEDURALWORLD_API CRSpline
 {
 public:
 
+	CRSpline(ControlPoint p0, ControlPoint p1, ControlPoint p2, ControlPoint p3);
 	CRSpline();
 	~CRSpline();
 
@@ -45,7 +45,7 @@ public:
 	void addControlPoint(const ControlPoint& cp);
 
 	//highlights spline curve
-	void visualizeSpline();
+	void visualizeSpline(const FVector &inLandscapeScale);
 
 	float TotalLength = 0.0f;
 	float alpha = 0.1f;
@@ -53,10 +53,7 @@ public:
 
 private:
 
-	ControlPoint p0;
-	ControlPoint p1;
-	ControlPoint p2;
-	ControlPoint p3;
+	
 
 	TArray<ControlPoint> points;
 
