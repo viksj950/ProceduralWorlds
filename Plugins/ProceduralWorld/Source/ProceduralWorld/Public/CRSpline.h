@@ -10,11 +10,13 @@
 
 struct ControlPoint {
 
-	ControlPoint() : pos{ 0,0,0} {
+	ControlPoint() : pos{ 0,0,0 }, worldPos{ 0,0,0 } {
 	};
-	ControlPoint(float inX, float inY, float inZ) : pos{ inX,inY,inZ } {
+	ControlPoint(float inX, float inY, float inZ) : pos{ inX,inY,inZ }, worldPos{ inX,inY,inZ } {
 	};
 	FVector pos;
+	//worldPos only used for visualization purposes
+	FVector worldPos;
 	float length;
 };
 

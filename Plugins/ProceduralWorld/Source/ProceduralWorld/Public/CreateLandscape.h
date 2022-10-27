@@ -25,6 +25,7 @@
 #include "Math/Vector2D.h"
 #include "math.h"
 #include "Math/IntVector.h"
+#include "CoreFwd.h"
 
 //Tile system
 #include"Tile.h" 

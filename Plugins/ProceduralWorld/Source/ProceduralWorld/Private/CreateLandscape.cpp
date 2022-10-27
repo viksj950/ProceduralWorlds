@@ -3,7 +3,6 @@
 
 #include "CreateLandscape.h"
 
-
 CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerComponent, int32 inComponentPerProxy, int32 inSectionsPerComponent, int32 inTileSize)
 	:
 	 SizeX( inSizeX ),
@@ -1060,20 +1059,29 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 
 	interpGaussianBlur(inTiles, concatedHeightData, 3, 0.1, 31);
 
-	//Spline it up
-	ControlPoint cp1 = { 63, 63, 0 };
-	//Vi vill ha CP i (63,63) 
-	FVector worldPosCP1 = GetWorldCoordinates(concatedHeightData, cp1.pos.X, cp1.pos.Y);
-	cp1.pos.X = worldPosCP1.X;
-	cp1.pos.Y = worldPosCP1.Y;
-	cp1.pos.Z = worldPosCP1.Z;
 
 	CRSpline spline;
+	//Spline it up
+	ControlPoint cp1 = { 63, 63, 0 };
+	ControlPoint cp2 = { 354, 297, 0 };
+	ControlPoint cp3 = { 454, 97, 0 };
+
+	//Vi vill ha CP i (63,63) 
+	FVector worldPosCP1 = GetWorldCoordinates(concatedHeightData, cp1.pos.X, cp1.pos.Y);
+	FVector worldPosCP2 = GetWorldCoordinates(concatedHeightData, cp2.pos.X, cp2.pos.Y);
+	FVector worldPosCP3 = GetWorldCoordinates(concatedHeightData, cp3.pos.X, cp3.pos.Y);
+	cp1.worldPos = worldPosCP1;
+	cp2.worldPos = worldPosCP2;
+	cp3.worldPos = worldPosCP3;
 
 	spline.addControlPoint(cp1);
+	spline.addControlPoint(cp2);
+	spline.addControlPoint(cp3);
 	//spline.addControlPoint(cp2);
 	spline.calcLengths();
 	spline.visualizeSpline();
+
+	UE_LOG(LogTemp, Warning, TEXT("TotalLength :  %f"), spline.TotalLength);
 	
 	
 
@@ -1131,12 +1139,7 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
 
-	
-	
 	//LandscapeInfo->export
-
-
-
 
 	return Landscape;
 }
@@ -1146,7 +1149,9 @@ FVector CreateLandscape::GetWorldCoordinates(const TArray<uint16>& inData, int32
 	FVector temp;
 	if(inX >= 0 && inX < SizeX && inY >= 0 && inY < SizeY){
 		/*temp = { inX * LandscapeScale.X, inY * LandscapeScale.Y, ((float)inData[GetVertexIndex(SizeX, inX, inY)] - 32768) / LandscapeScale.Z };*/
-		temp = { inX * LandscapeScale.X, inY * LandscapeScale.Y, (inData[GetVertexIndex(SizeX, inX, inY)] * LandscapeScale.Z - 32768 * (1 / 128)) };
+		temp = { inX * LandscapeScale.X, inY * LandscapeScale.Y, (inData[GetVertexIndex(SizeX, inX, inY)]-32768)*(100.0f/128.0f)};
+		UE_LOG(LogTemp, Warning, TEXT("HeightData at position inX and inY : %d"), inData[GetVertexIndex(SizeX, inX, inY)]);
+		UE_LOG(LogTemp, Warning, TEXT("Computed height : %f"), (inData[GetVertexIndex(SizeX, inX, inY)] - 32768) * (100.0f / 128.0f));
 		return temp;
 	}else{
 		UE_LOG(LogTemp, Warning, TEXT("GetWorldCoordinates: coordinates are out of range! "));

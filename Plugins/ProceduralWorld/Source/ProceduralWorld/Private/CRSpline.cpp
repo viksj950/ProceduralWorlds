@@ -130,19 +130,16 @@ void CRSpline::visualizeSpline()
 	FVector assetScale;
 	FActorSpawnParameters SpawnInfo;
 
-
-
 	float scaleValue = 0.05;
 
-	for (int i = 0; i < points.Num(); i++)
+	for (int i = 0; i < points.Num(); i++) //Control Points
 	{
-		//if(i+1 == points.Num()){
-		//	UE_LOG(LogTemp, Warning, TEXT("DIN DONG %d"), i);
-		//	/*FName Name("CPBarn");
-		//	SpawnInfo.Name = Name;*/
-		//}
-		Location = points[i].pos;
-		UE_LOG(LogTemp, Warning, TEXT("Location (CP): %s"), *Location.ToString());
+
+		Location = points[i].worldPos;
+		float temp = Location.X;
+		Location.X = Location.Y;
+		Location.Y = temp;
+		//UE_LOG(LogTemp, Warning, TEXT("Location (CP): %s"), *Location.ToString());
 
 		AStaticMeshActor* CP_cube = World->SpawnActor<AStaticMeshActor>(Location, Rotation, SpawnInfo);
 		assetScale = { scaleValue ,scaleValue ,scaleValue };
@@ -158,11 +155,14 @@ void CRSpline::visualizeSpline()
 
 	}
 
-	for (float i = 0; i <= TotalLength; i += 100.0f)
+	for (float i = 0; i <= TotalLength; i += 100.0f) //On line points 
 	{
 		Location = GetSplinePoint(GetNormalisedOffset(i)).pos;
-		UE_LOG(LogTemp, Warning, TEXT("Location (SP): %s"), *Location.ToString());
-
+		//UE_LOG(LogTemp, Warning, TEXT("Location (SP): %s"), *Location.ToString());
+		float temp = Location.X;
+		Location.X = Location.Y * 100.0f;
+		Location.Y = temp * 100.0f;
+		Location.Z = (Location.Z - 32768) * (100.0f / 128.0f);
 		AStaticMeshActor* CP_cube = World->SpawnActor<AStaticMeshActor>(Location, Rotation, SpawnInfo);
 		assetScale = { scaleValue ,scaleValue ,scaleValue };
 		CP_cube->SetActorScale3D(assetScale);
