@@ -27,10 +27,10 @@ ControlPoint CRSpline::GetSplinePoint(float t)
 {
 	int i0, i1, i2, i3;
 
-	i1 = (int)t + 1;
-	i2 = i1 + 1;
-	i3 = i2 + 1;
-	i0 = i1 - 1;
+	i1 = (int)t + 1; // 3
+	i2 = i1 + 1;	//4
+	i3 = i2 + 1;	//5
+	i0 = i1 - 1;	//2
 
 	t = t - (int)t;
 	float tt = t * t;
@@ -87,6 +87,7 @@ float CRSpline::calcSegmentLength(int cp_index, float stepSize = 0.005f)
 
 	ControlPoint old_point, new_point;
 	old_point = GetSplinePoint((float)cp_index);
+	UE_LOG(LogTemp, Warning, TEXT("CP assignment (old_point)  %s"), *old_point.pos.ToString());
 
 	for (float t = 0; t < 1.0f; t += stepSize)
 	{
@@ -103,13 +104,13 @@ float CRSpline::calcSegmentLength(int cp_index, float stepSize = 0.005f)
 
 float CRSpline::GetNormalisedOffset(float p)
 {
-	int i = 1;
+	int i = 0;
 	while (p > points[i].length)
 	{
 		p -= points[i].length;
 		i++;
 	}
-
+	UE_LOG(LogTemp, Warning, TEXT("Output  %f"), (float)i + (p / points[i].length));
 	//The fraction is the offset 
 	return (float)i + (p / points[i].length);
 }
@@ -117,9 +118,11 @@ float CRSpline::GetNormalisedOffset(float p)
 void CRSpline::calcLengths()
 {
 	TotalLength = 0;
-	for (size_t i = 1; i < points.Num()-1; i++)
+	UE_LOG(LogTemp, Warning, TEXT("Number of control points:  %d"), points.Num());
+	for (size_t i = 0; i < points.Num()-3; i++)
 	{
-		TotalLength += points[i].length = calcSegmentLength(i);
+		points[i].length = calcSegmentLength(i);
+		TotalLength += points[i].length;
 	}
 }
 
@@ -155,7 +158,7 @@ void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 		assetScale = { scaleValue ,scaleValue ,scaleValue };
 		CP_cube->SetActorScale3D(assetScale);
 
-		UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
+		UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Control_Point.Control_Point'"));
 
 		UStaticMeshComponent* MeshComponent = CP_cube->GetStaticMeshComponent();
 		if (MeshComponent)
