@@ -16,7 +16,7 @@ struct ControlPoint {
 	};
 	FVector pos;
 	
-	float length;
+	float length = 0;
 };
 
 class PROCEDURALWORLD_API CRSpline

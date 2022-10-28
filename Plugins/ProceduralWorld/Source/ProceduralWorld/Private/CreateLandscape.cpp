@@ -1062,15 +1062,32 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 
 	
 	//Spline it up
-	ControlPoint cp1 = { 63.0, 63.0, (float)concatedHeightData[GetVertexIndex(SizeX,63,63)] };
+	ControlPoint cp1 = { 63.0, 630.0, (float)concatedHeightData[GetVertexIndex(SizeX,63,63)] };
 	ControlPoint cp2 = { 354.0, 297.0, (float)concatedHeightData[GetVertexIndex(SizeX,354,297)] };
 	ControlPoint cp3 = { 454.0, 97.0, (float)concatedHeightData[GetVertexIndex(SizeX,454,97)] };
-	ControlPoint cp4 = { 500.0, 130.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,150)] };
+	ControlPoint cp4 = { 500.0, 130.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,130)] };
 	ControlPoint cp5 = { 500.0, 150.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,150)] };
+	ControlPoint cp6 = { 500.0, 200.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,200)] };
+
+	//Spline it up
+	//ControlPoint cp1 = { 63.0f, 63.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,63,63)])};
+	//ControlPoint cp2 = { 354.0f, 297.0f,((float)concatedHeightData[GetVertexIndex(SizeX,354,297)] - 32768) * (100.0f / 128.0f) };
+	//ControlPoint cp3 = { 454.0f, 97.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,454,97)] - 32768) * (100.0f / 128.0f) };
+	//ControlPoint cp4 = { 500.0f, 130.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,130)] - 32768) * (100.0f / 128.0f) };
+	//ControlPoint cp5 = { 500.0f, 150.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,150)] - 32768) * (100.0f / 128.0f) };
+	//ControlPoint cp6 = { 500.0f, 200.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,200)] - 32768) * (100.0f / 128.0f) };
+
+	//ControlPoint cp1 = { 63.0, 63.0, 0.0 };
+	//ControlPoint cp2 = { 354.0, 297.0,0.0};
+	//ControlPoint cp3 = { 454.0, 97.0, 0.0 };
+	//ControlPoint cp4 = { 500.0, 130.0, 0.0 };
+	//ControlPoint cp5 = { 500.0, 150.0,0.0 };
+	//ControlPoint cp6 = { 500.0, 200.0,0.0 };
 
 	CRSpline spline(cp1,cp2,cp3,cp4);
 
 	spline.addControlPoint(cp5);
+	spline.addControlPoint(cp6);
 
 	//Vi vill ha CP i (63,63) 
 	//FVector worldPosCP1 = GetWorldCoordinates(concatedHeightData, cp1.pos.X, cp1.pos.Y);
