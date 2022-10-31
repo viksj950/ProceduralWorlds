@@ -250,7 +250,7 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
 			}*/
 			 //tree + grass
-				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Tree.Tree'"));
+				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"));
 
 			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
 			if (MeshComponent)
