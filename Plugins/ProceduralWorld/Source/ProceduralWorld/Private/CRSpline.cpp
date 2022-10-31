@@ -121,7 +121,7 @@ float CRSpline::GetNormalisedOffset(float p)
 		i++;
 	}
 	//The fraction is the offset 
-	return (float)i + (p / points[i].length);
+	return floor(i) + (p / points[i].length);
 }
 
 void CRSpline::calcLengths()
@@ -175,37 +175,44 @@ void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 			MeshComponent->SetStaticMesh(Mesh);
 		}
 
+		splineActors.Add(CP_cube);
+
 	}
 	scaleValue = 0.15;
-	float steplength = TotalLength / 51.0f;
+	float steplength = TotalLength / 51.0f; //113, 24
+	//UE_LOG(LogTemp, Warning, TEXT("Number of spline points for the total spline should be:  %f"), steplength);
 
+	int counter = 0;
 	for (float i = 0; i <= TotalLength; i += steplength) //On line points 
 	{
+		counter++;
 		Location = GetSplinePoint(GetNormalisedOffset(i)).pos;
 		//UE_LOG(LogTemp, Warning, TEXT("Location (SP): %s"), *Location.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Location of spline point:  %s"), *Location.ToString());
+		/*UE_LOG(LogTemp, Warning, TEXT("Location of spline point:  %s"), *Location.ToString());*/
 		float temp = Location.X;
-		Location.X = Location.Y * inLandscapeScale.X;
-		Location.Y = temp * inLandscapeScale.Y;
+		Location.X = Location.Y * inLandscapeScale.Y;
+		Location.Y = temp * inLandscapeScale.X;
 		Location.Z = (Location.Z - 32768) * (100.0f/128.0f);
-		AStaticMeshActor* CP_cube = World->SpawnActor<AStaticMeshActor>(Location, Rotation, SpawnInfo);
+		AStaticMeshActor* SP_cube = World->SpawnActor<AStaticMeshActor>(Location, Rotation, SpawnInfo);
 		assetScale = { scaleValue ,scaleValue ,scaleValue };
-		CP_cube->SetActorScale3D(assetScale);
+		SP_cube->SetActorScale3D(assetScale);
 
 		UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_Ghost.Cube_Ghost'"));
 
-		UStaticMeshComponent* MeshComponent = CP_cube->GetStaticMeshComponent();
+		UStaticMeshComponent* MeshComponent = SP_cube->GetStaticMeshComponent();
 		if (MeshComponent)
 		{
 			MeshComponent->SetStaticMesh(Mesh);
 		}
+		splineActors.Add(SP_cube);
+
 	}
 
-	for (int i = 0; i < points.Num(); i++) //Control Points
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Controlpoint location:  %s"), *points[i].pos.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Controlpoint length:  %f"), points[i].length);
-	}
+	//for (int i = 0; i < points.Num(); i++) //Control Points
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Controlpoint location:  %s"), *points[i].pos.ToString());
+	//	UE_LOG(LogTemp, Warning, TEXT("Controlpoint length:  %f"), points[i].length);
+	//}
 }
 
 	

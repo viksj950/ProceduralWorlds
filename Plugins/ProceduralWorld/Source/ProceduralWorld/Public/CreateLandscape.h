@@ -61,13 +61,16 @@ public:
 	//Returns the index of a vertex's height, given coordinates
 	uint32 GetVertexIndex(int32 dataDimension, int32 inX, int32 inY) const;
 
-	void concatHeightData(const TArray<UTile*> &inTiles, TArray<uint16>& data);
+	void concatHeightData(const TArray<UTile*> &inTiles);
 
 	//Perlin interpolation (smoothstep)
 	void interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount);
 
+	//Main function for interpolation between biomes
+	void interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes);
+
 	//new and improved gaussian blur 
-	void interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>& inConcData, int kernelSize, float sigma, int32 interpWidth);
+	void interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth);
 
 	void AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>&BiotopeSettings) const;
 
@@ -80,7 +83,11 @@ public:
 
 	const uint32 GetGridSizeOfProxies() const;
 
+	//contains the heightmap for the whole map
+	TArray<uint16> concatedHeightData;
+	//For debug purposes
 	TArray<uint16> rawConcatData;
+
 
 	struct BiomeOriginInformation {
 		

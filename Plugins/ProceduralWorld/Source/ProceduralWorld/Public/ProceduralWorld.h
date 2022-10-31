@@ -13,6 +13,7 @@
 #include "ProceduralAssetDistribution.h"
 #include "CreateLandscape.h" //includes setup for landscape properties
 #include "CRSpline.h"
+#include "Road.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
 //utility to create UTexture2D
@@ -145,6 +146,7 @@ public:
 	bool bShouldDirtyPackage;
 	/*UPROPERTY()*/
 	TArray<UTile*> tiles;
+	TArray<Road> roads;
 	
 	int32 SizeX{505};
 	int32 SizeY{505};
@@ -194,8 +196,6 @@ public:
 
 	};
 
-	
-	
 	
 	int heightScale{ 2050 }; //4192
 	int octaveCount{  1 };

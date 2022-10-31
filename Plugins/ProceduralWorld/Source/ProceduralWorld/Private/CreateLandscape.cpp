@@ -240,7 +240,7 @@ uint32 CreateLandscape::GetVertexIndex(int32 dataDimension, int32 inX, int32 inY
 	
 }
 
-void CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles, TArray<uint16>& data)
+void CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles)
 {
 	int32 heightDataIndex{ 0 };
 	//iterera från tile index 0 till adjacent[6] och för varje tile lägg till en kolumn med data.  
@@ -264,11 +264,11 @@ void CreateLandscape::concatHeightData(const TArray<UTile*> &inTiles, TArray<uin
 			{
 				if ( !IsStart)	//Om det är första tilen, då tar man inte bort
 				{
-					data.RemoveAt(heightDataIndex,1,true);
+					concatedHeightData.RemoveAt(heightDataIndex,1,true);
 					
 				}
 
-				data.Append(GetColumnOfHeightData(tilePtr->tileHeightData,TileSize,i));
+				concatedHeightData.Append(GetColumnOfHeightData(tilePtr->tileHeightData,TileSize,i));
 				//UE_LOG(LogTemp, Warning, TEXT("Num of vertices added to outHeightData: %d"), outHeightData.Num());
 
 				heightDataIndex += (TileSize - 1);
@@ -491,9 +491,22 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 	}
 }
 
+void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes)
+{
+	int dynamicStep = interpWidth;
+	for (int i = 0; i < passes; i++) {
+
+		interpGaussianBlur(inTiles, kernelSize, sigma / (i + 1), dynamicStep);
+		dynamicStep -= dynamicStep / passes;
+
+	}
+
+	interpGaussianBlur(inTiles, kernelSize, sigma/interpWidth, interpWidth+1);
+}
+
 
 //sigma (deviation)
-void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>& inConcData, int kernelSize, float sigma, int32 interpWidth)
+void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth)
 {
 	
 	TArray<kernelElement> kernel;
@@ -572,22 +585,22 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 				//				if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 				//				{
-				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, c, r)];
+				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(concatedHeightData, SizeX, c, r)];
 				//				}
 				//				else
 				//				{
-				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(inConcData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(concatedHeightData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 				//				}
 				//			}
 
-				//			inConcData[GetVertexIndex(inConcData, SizeX, c, r)] = weightedKernelVertex;
+				//			concatedHeightData[GetVertexIndex(concatedHeightData, SizeX, c, r)] = weightedKernelVertex;
 				//		}
 				//	}
 				//}
 
 				if(i == 1){ //top 
-					UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
-					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i); 
+				/*	UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i); */
 					X = t->index % gridSizeOfProxies * (TileSize -1);
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 					/*UE_LOG(LogTemp, Warning, TEXT("Gauss X: %d"), X);
@@ -606,22 +619,22 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex( SizeX, c, r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex( SizeX, c, r)];
 								}
 								else
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex( SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex( SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
 							
-							inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
+							concatedHeightData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
 
 				}
 				if (i == 3) { //right
-					UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
-					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i);
+				/*	UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i);*/
 					X = t->index % gridSizeOfProxies * (TileSize - 1);
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 					
@@ -638,22 +651,22 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, c, r)];
 								}
 								else
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
 
-							inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
+							concatedHeightData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
 
 				}
 				if (i == 4) { //left
-					UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
-					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i);
+			/*		UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i);*/
 					X = t->index % gridSizeOfProxies * (TileSize - 1);
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -670,22 +683,22 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX,  c, r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX,  c, r)];
 								}
 								else
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
 
-							inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
+							concatedHeightData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
 
 				}
 				if (i == 6) { //bottom
-					UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
-					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i);
+	/*				UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
+					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i);*/
 					X = t->index % gridSizeOfProxies * (TileSize - 1);
 					Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -702,15 +715,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 								//kernel[j].coords.Y = yStart;
 								if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, c, r)];
 								}
 								else
 								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 								}
 							}
 
-							inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
+							concatedHeightData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 						}
 					}
 
@@ -741,15 +754,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, c, r)];
 						}
 						else
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 						}
 					}
 
-					inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
+					concatedHeightData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 				}
 			}
 
@@ -772,15 +785,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, c, r)];
 						}
 						else
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 						}
 					}
 
-					inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
+					concatedHeightData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 				}
 			}
 
@@ -803,15 +816,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex( SizeX, c, r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex( SizeX, c, r)];
 						}
 						else
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 						}
 					}
 
-					inConcData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
+					concatedHeightData[GetVertexIndex(SizeX, c, r)] = weightedKernelVertex;
 				}
 			}
 
@@ -834,15 +847,15 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, TArray<uint16>
 
 						if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, c, r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, c, r)];
 						}
 						else
 						{
-							weightedKernelVertex += (kernel[j].weight / sumWeights) * inConcData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
+							weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
 						}
 					}
 
-					inConcData[GetVertexIndex( SizeX, c, r)] = weightedKernelVertex;
+					concatedHeightData[GetVertexIndex( SizeX, c, r)] = weightedKernelVertex;
 				}
 			}
 
@@ -1038,56 +1051,64 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	FVector InTranslation{ 0,0,0 };
 	FTransform LandscapeTransform{ InRotation, InTranslation, LandscapeScale };
 
-	TArray<uint16> concatedHeightData;
+	//TArray<uint16> concatedHeightData;
 	//concatedHeightData.SetNum(SizeX * SizeY);
-	concatHeightData(inTiles, concatedHeightData);
+	//concatHeightData(inTiles);
 
 	//For debugging (creates a copy of the landscape without interpolation)
 	/*rawConcatData = concatedHeightData;
 	generate();*/
 
-	int passes = 20;
-	int dynamicStep = 10;
-	for (int i = 0; i < passes; i++) {
-			
-			interpGaussianBlur(inTiles, concatedHeightData, 3, 1.0 / (i + 1), dynamicStep);
-			dynamicStep -= dynamicStep / passes;
-		
-	/*	UE_LOG(LogTemp, Warning, TEXT("DynamicStep = %d"), dynamicStep);*/
-		
-	}
+	//int passes = 20;
+	//int dynamicStep = 10;
+	//for (int i = 0; i < passes; i++) {
+	//		
+	//		interpGaussianBlur(inTiles, concatedHeightData, 3, 1.0 / (i + 1), dynamicStep);
+	//		dynamicStep -= dynamicStep / passes;
+	//	
+	///*	UE_LOG(LogTemp, Warning, TEXT("DynamicStep = %d"), dynamicStep);*/
+	//	
+	//}
 
-	interpGaussianBlur(inTiles, concatedHeightData, 3, 0.1, 31);
+	//interpGaussianBlur(inTiles, concatedHeightData, 3, 0.1, 31);
 
 
 	
-	//Spline it up
-	ControlPoint cp1 = { 63.0, 630.0, (float)concatedHeightData[GetVertexIndex(SizeX,63,63)] };
-	ControlPoint cp2 = { 354.0, 297.0, (float)concatedHeightData[GetVertexIndex(SizeX,354,297)] };
-	ControlPoint cp3 = { 454.0, 97.0, (float)concatedHeightData[GetVertexIndex(SizeX,454,97)] };
-	ControlPoint cp4 = { 500.0, 130.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,130)] };
-	ControlPoint cp5 = { 500.0, 150.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,150)] };
-	ControlPoint cp6 = { 500.0, 200.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,200)] };
+	//SPline 1
+	//ControlPoint cp1 = { 0.0, 0.0, 0.0 };
+	//ControlPoint cp2 = { 354.0, 297.0, 0.0 };
+	//ControlPoint cp3 = { 300.0, 97.0, 0.0 };
+	//ControlPoint cp4 = { 250.0, 130.0, 0.0 };
+	////ControlPoint cp5 = { 500.0, 150.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,150)] };
+	////ControlPoint cp6 = { 500.0, 200.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,200)] };
 
-	//Spline it up
-	//ControlPoint cp1 = { 63.0f, 63.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,63,63)])};
-	//ControlPoint cp2 = { 354.0f, 297.0f,((float)concatedHeightData[GetVertexIndex(SizeX,354,297)] - 32768) * (100.0f / 128.0f) };
-	//ControlPoint cp3 = { 454.0f, 97.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,454,97)] - 32768) * (100.0f / 128.0f) };
-	//ControlPoint cp4 = { 500.0f, 130.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,130)] - 32768) * (100.0f / 128.0f) };
-	//ControlPoint cp5 = { 500.0f, 150.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,150)] - 32768) * (100.0f / 128.0f) };
-	//ControlPoint cp6 = { 500.0f, 200.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,200)] - 32768) * (100.0f / 128.0f) };
+	////Spline 2
+	//ControlPoint cp5 = { 63.0, 63.0, 0.0 };
+	//ControlPoint cp6 = { 354.0, 297.0,0.0};
+	//ControlPoint cp7 = { 454.0, 97.0, 0.0 };
+	//ControlPoint cp8 = { 500.0, 130.0, 0.0 };
+	////ControlPoint cp5 = { 500.0, 150.0,0.0 };
+	////ControlPoint cp6 = { 500.0, 200.0,0.0 };
 
-	//ControlPoint cp1 = { 63.0, 63.0, 0.0 };
-	//ControlPoint cp2 = { 354.0, 297.0,0.0};
-	//ControlPoint cp3 = { 454.0, 97.0, 0.0 };
-	//ControlPoint cp4 = { 500.0, 130.0, 0.0 };
-	//ControlPoint cp5 = { 500.0, 150.0,0.0 };
-	//ControlPoint cp6 = { 500.0, 200.0,0.0 };
+	////Spline it up
+	////ControlPoint cp1 = { 63.0f, 63.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,63,63)])};
+	////ControlPoint cp2 = { 354.0f, 297.0f,((float)concatedHeightData[GetVertexIndex(SizeX,354,297)] - 32768) * (100.0f / 128.0f) };
+	////ControlPoint cp3 = { 454.0f, 97.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,454,97)] - 32768) * (100.0f / 128.0f) };
+	////ControlPoint cp4 = { 500.0f, 130.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,130)] - 32768) * (100.0f / 128.0f) };
+	////ControlPoint cp5 = { 500.0f, 150.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,150)] - 32768) * (100.0f / 128.0f) };
+	////ControlPoint cp6 = { 500.0f, 200.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,200)] - 32768) * (100.0f / 128.0f) };
 
-	CRSpline spline(cp1,cp2,cp3,cp4);
+	//CRSpline spline1(cp1,cp2,cp3,cp4);
+	//CRSpline spline2(cp5, cp6, cp7, cp8);
 
-	spline.addControlPoint(cp5);
-	spline.addControlPoint(cp6);
+	//spline1.calcLengths();
+	//spline1.visualizeSpline(LandscapeScale);
+
+	//spline2.calcLengths();
+	//spline2.visualizeSpline(LandscapeScale);
+
+	//spline.addControlPoint(cp5);
+	//spline.addControlPoint(cp6);
 
 	//Vi vill ha CP i (63,63) 
 	//FVector worldPosCP1 = GetWorldCoordinates(concatedHeightData, cp1.pos.X, cp1.pos.Y);
@@ -1101,12 +1122,8 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	//spline.addControlPoint(cp2);
 	//spline.addControlPoint(cp3);
 	//spline.addControlPoint(cp2);
-	spline.calcLengths();
-	spline.visualizeSpline(LandscapeScale);
-
-	UE_LOG(LogTemp, Warning, TEXT("TotalLength :  %f"), spline.TotalLength);
-	
-	
+	//spline.calcLengths();
+	//spline.visualizeSpline(LandscapeScale);
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;

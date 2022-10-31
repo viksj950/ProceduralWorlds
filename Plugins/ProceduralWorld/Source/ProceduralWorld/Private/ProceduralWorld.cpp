@@ -548,18 +548,49 @@ FReply FProceduralWorldModule::Setup()
 	//Generate Perlin Noise and assign it to all tiles
 	//myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
 
+	//Creates proxies used in world partioning
 	myLand.GenerateAndAssignHeightData(tiles,BiotopeSettings);
 
-	
-	//myLand.interpAllAdjTiles(tiles, 5);
-
-
 	//Concatinate heightData from all tiles and spawn a landscape
+	myLand.concatHeightData(tiles);
+	//Interpolate using gaussian blur
+	myLand.interpBiomes(tiles, 3, 1.0, 30, 20);
+	//Spline/roads (hardocding)
+	ControlPoint cp1 = { 0.0, 0.0, 0.0 };
+	ControlPoint cp2 = { 63.0, 10.0, 0.0 };
+	ControlPoint cp3 = { 120.0, 10.0, 0.0 };
+	ControlPoint cp4 = { 200.0, 10.0, 0.0 };
+	//Spline 2
+	ControlPoint cp5 = { 200.0, 10.0, 0.0 };
+	ControlPoint cp6 = { 120.0, 10.0, 0.0 };
+	ControlPoint cp7 = { 300.0, 97.0, 0.0 };
+	ControlPoint cp8 = { 500.0, 130.0, 0.0 };
+
+	CRSpline spline1(cp1, cp2, cp3, cp4);
+	CRSpline spline2(cp5, cp6, cp7, cp8);
+
+	spline1.calcLengths();
+	spline2.calcLengths();
+
+	Road r1(spline1);
+	Road r2(spline2);
+	roads.Add(r1);
+	//roads[0].extend({ 500.0, 500.0, 0.0 }); //this value should be the random value
+	roads.Add(r2);
+
+	roads[0].splinePaths[0].visualizeSpline(myLand.LandscapeScale);
+	/*roads[0].splinePaths[1].visualizeSpline(myLand.LandscapeScale);*/
+	roads[1].splinePaths[0].visualizeSpline(myLand.LandscapeScale);
+	UE_LOG(LogTemp, Warning, TEXT("TotalLength (spline1) :  %f"), spline1.TotalLength);
+
+	//Currently only imports the landscape settings to the landscape "mesh"
 	landscapePtr = myLand.generateFromTileData(tiles);
+	//LandscapeInfo used for accessing proxies
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
 
+	//Procedual Asset placement
 	ProceduralAssetDistribution temp;
-	int32 maxTress = 7;
+	int32 maxTrees = 7;
 	int32 maxHouses = 6;
 	float scaleVarF = 0.7;
 	float scaleVarC = 0.2;
@@ -579,7 +610,7 @@ FReply FProceduralWorldModule::Setup()
 		else if(tiles[i]->biotope == 1)
 		{
 			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
-				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTress, scaleVarF);
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTrees, scaleVarF);
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
 		}
 		else {
@@ -650,10 +681,22 @@ FReply FProceduralWorldModule::DeleteLandscape()
 		}
 
 	}
+	//removal of spline elemnts created using viz
+	for (size_t i = 0; i < roads.Num(); i++)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("i in loop is: %d"), i);
+		for (int j = 0; j < roads[i].splinePaths[0].splineActors.Num(); j++)
+		{
+			roads[i].splinePaths[0].splineActors[j]->Destroy();
+		}
+		roads[i].splinePaths[0].splineActors.Empty();
+	}
+	roads.Empty();
 	tiles.Empty();
 	landscapePtr->Destroy();
 	landscapePtr = nullptr;
 	//delete landscapePtr;
+	//auto& it: roads[i].splinePath.splineActors
 	
 
 	return FReply::Handled();

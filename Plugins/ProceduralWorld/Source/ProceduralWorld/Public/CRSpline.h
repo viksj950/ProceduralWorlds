@@ -51,10 +51,13 @@ public:
 	float alpha = 0.1f;
 	float tension = 0.5f;
 
+	TArray<TWeakObjectPtr<AStaticMeshActor>> splineActors;
+	TArray<ControlPoint> points;
+
 private:
 
 	
 
-	TArray<ControlPoint> points;
+	
 
 };
