@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CRSpline.h"
+#include "Tile.h"
 
 class PROCEDURALWORLD_API Road
 {
@@ -16,6 +17,8 @@ public:
 
 	//used to add a spline to splinePaths array that starts from the end point of previous spline (input arg should be the random endpoint in the next tile)
 	void extend(const ControlPoint& endPoint);
+
+	void generateRoad(const TArray<UTile*> &inTiles, const uint32 &inGridSize); 
 	
 	void calcLengthsSplines();
 	void vizualizeRoad(const FVector &inLandscapeScale);

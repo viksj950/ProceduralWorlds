@@ -27,7 +27,7 @@ ControlPoint CRSpline::GetSplinePoint(float t)
 {
 
 		check(t >= 1);
-		check(t <= points.Num()-1)
+		check(t < points.Num()-1)
 
 		int i0, i1, i2, i3;
 
@@ -115,11 +115,12 @@ float CRSpline::calcSegmentLength(int cp_index, float stepSize = 0.0001f)
 float CRSpline::GetNormalisedOffset(float p)
 {
 	int i = 1;
-	while (p >= points[i].length)
+	while (p > points[i].length)
 	{
 		p -= points[i].length;
 		i++;
 	}
+	//UE_LOG(LogTemp, Warning, TEXT("i inside (normalizedOffset) %d"), i);
 	//The fraction is the offset 
 	return floor(i) + (p / points[i].length);
 }
@@ -183,7 +184,7 @@ void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 	//UE_LOG(LogTemp, Warning, TEXT("Number of spline points for the total spline should be:  %f"), steplength);
 
 	int counter = 0;
-	for (float i = 0; i <= TotalLength; i += steplength) //On line points 
+	for (float i = 0; i < TotalLength; i += steplength) //On line points 
 	{
 		counter++;
 		Location = GetSplinePoint(GetNormalisedOffset(i)).pos;

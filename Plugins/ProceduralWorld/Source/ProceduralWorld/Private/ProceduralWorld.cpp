@@ -560,6 +560,7 @@ FReply FProceduralWorldModule::Setup()
 	ControlPoint cp2 = { 63.0, 10.0, 0.0 };
 	ControlPoint cp3 = { 120.0, 10.0, 0.0 };
 	ControlPoint cp4 = { 200.0, 10.0, 0.0 };
+	ControlPoint cp9 = { 230.0, 10.0, 0.0 };
 	//Spline 2
 	ControlPoint cp5 = { 200.0, 10.0, 0.0 };
 	ControlPoint cp6 = { 120.0, 10.0, 0.0 };
@@ -568,20 +569,29 @@ FReply FProceduralWorldModule::Setup()
 
 	CRSpline spline1(cp1, cp2, cp3, cp4);
 	CRSpline spline2(cp5, cp6, cp7, cp8);
+	spline1.addControlPoint(cp9);
 
-	spline1.calcLengths();
-	spline2.calcLengths();
+	/*spline1.calcLengths();
+	spline2.calcLengths();*/
 
 	Road r1(spline1);
 	Road r2(spline2);
 	roads.Add(r1);
-	roads[0].extend({ 150.0, 61.0, 0.0 }); //this value should be the random value
+	roads[0].extend({ 150.0, 60.0, 0.0 }); //this value should be the random value
 	roads.Add(r2);
 
 	roads[0].calcLengthsSplines();
 	roads[0].vizualizeRoad(myLand.LandscapeScale);
 
-	UE_LOG(LogTemp, Warning, TEXT("TotalLength (spline1) :  %f"), spline1.TotalLength);
+	Road RoadGenerated;
+	RoadGenerated.generateRoad(tiles,myLand.GetGridSizeOfProxies());
+	//RoadGenerated.calcLengthsSplines();
+	//RoadGenerated.vizualizeRoad(myLand.LandscapeScale);
+	roads.Add(RoadGenerated);
+	roads[2].calcLengthsSplines();
+	roads[2].vizualizeRoad(myLand.LandscapeScale);
+
+	//UE_LOG(LogTemp, Warning, TEXT("TotalLength (spline1) :  %f"), spline1.TotalLength);
 
 	//Currently only imports the landscape settings to the landscape "mesh"
 	landscapePtr = myLand.generateFromTileData(tiles);
