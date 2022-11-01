@@ -575,12 +575,12 @@ FReply FProceduralWorldModule::Setup()
 	Road r1(spline1);
 	Road r2(spline2);
 	roads.Add(r1);
-	//roads[0].extend({ 500.0, 500.0, 0.0 }); //this value should be the random value
+	roads[0].extend({ 150.0, 61.0, 0.0 }); //this value should be the random value
 	roads.Add(r2);
 
-	roads[0].splinePaths[0].visualizeSpline(myLand.LandscapeScale);
-	/*roads[0].splinePaths[1].visualizeSpline(myLand.LandscapeScale);*/
-	roads[1].splinePaths[0].visualizeSpline(myLand.LandscapeScale);
+	roads[0].calcLengthsSplines();
+	roads[0].vizualizeRoad(myLand.LandscapeScale);
+
 	UE_LOG(LogTemp, Warning, TEXT("TotalLength (spline1) :  %f"), spline1.TotalLength);
 
 	//Currently only imports the landscape settings to the landscape "mesh"
@@ -681,16 +681,22 @@ FReply FProceduralWorldModule::DeleteLandscape()
 		}
 
 	}
+	
 	//removal of spline elemnts created using viz
-	for (size_t i = 0; i < roads.Num(); i++)
+	for (auto& i : roads)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("i in loop is: %d"), i);
-		for (int j = 0; j < roads[i].splinePaths[0].splineActors.Num(); j++)
+		for (auto& j: i.splinePaths)
 		{
-			roads[i].splinePaths[0].splineActors[j]->Destroy();
+			for (auto& k : j.splineActors)
+			{
+				k->Destroy();
+			}
+			j.splineActors.Empty();
 		}
-		roads[i].splinePaths[0].splineActors.Empty();
+		i.splinePaths.Empty();
+
 	}
+
 	roads.Empty();
 	tiles.Empty();
 	landscapePtr->Destroy();
