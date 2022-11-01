@@ -23,6 +23,7 @@ void Road::generateRoad(const TArray<UTile*>& inTiles, const uint32& inGridSize)
 {
 	FMath math;
 	int tileIndex = 0;
+	
 	do{
 		tileIndex = math.RandRange(0, inGridSize * inGridSize - 1);
 
@@ -43,7 +44,7 @@ void Road::generateRoad(const TArray<UTile*>& inTiles, const uint32& inGridSize)
 	int maxRoadTiles{ 6 };
 		while(maxRoadTiles > 0 && !IsStuck) {
 
-			for (auto& it : inTiles[tileIndex]->adjacentTiles)
+			/*for (auto& it : inTiles[tileIndex]->adjacentTiles)
 			{
 
 				if(it && it->biotope != 2){
@@ -58,7 +59,28 @@ void Road::generateRoad(const TArray<UTile*>& inTiles, const uint32& inGridSize)
 					break;
 				}
 			}
-			maxRoadTiles--;
+			maxRoadTiles--;*/
+
+
+			
+				int32 adjIndex = math.RandRange(0, 7);
+				if (inTiles[tileIndex]->adjacentTiles[adjIndex] && inTiles[tileIndex]->adjacentTiles[adjIndex]->biotope != 2)
+				{
+					int32 tileSize = inTiles[adjIndex]->tileSize;
+					X = adjIndex % inGridSize * ( tileSize - 1);
+					Y = FMath::Floor(adjIndex / inGridSize) * (tileSize - 1);
+
+					spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)33000 });
+					spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)33000 });
+					tileIndex = adjIndex;
+					maxRoadTiles--;
+					
+
+				}
+
+
+
+			
 		}
 
 		//If 4 cp are added, this will construct a spline segment in splinePaths
