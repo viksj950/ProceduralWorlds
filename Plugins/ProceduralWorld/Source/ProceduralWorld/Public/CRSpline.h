@@ -27,7 +27,7 @@ public:
 	CRSpline();
 	~CRSpline();
 
-	ControlPoint GetSplinePoint(float t);
+	ControlPoint GetSplinePoint(float t) const;
 
 	//Used for agent moving, might prove unuseful
 	ControlPoint GetSplineGradient(float t);
@@ -36,7 +36,7 @@ public:
 	float calcSegmentLength(int cp_index,float stepSize);
 
 	//calculates the normalized t-value for each segment
-	float GetNormalisedOffset(float p);
+	float GetNormalisedOffset(float p) const;
 
 	//assigns length to the spline
 	void calcLengths();

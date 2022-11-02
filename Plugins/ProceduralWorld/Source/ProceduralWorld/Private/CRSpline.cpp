@@ -23,7 +23,7 @@ CRSpline::~CRSpline()
 {
 }
 
-ControlPoint CRSpline::GetSplinePoint(float t) 
+ControlPoint CRSpline::GetSplinePoint(float t) const
 {
 
 		check(t >= 1);
@@ -112,7 +112,7 @@ float CRSpline::calcSegmentLength(int cp_index, float stepSize = 0.0001f)
 	return resLength;
 }
 
-float CRSpline::GetNormalisedOffset(float p)
+float CRSpline::GetNormalisedOffset(float p) const
 {
 	int i = 1;
 	while (p > points[i].length)
@@ -134,6 +134,7 @@ void CRSpline::calcLengths()
 		points[i].length = calcSegmentLength(i);
 		TotalLength += points[i].length;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Totallength:  %f"), TotalLength);
 }
 
 void CRSpline::addControlPoint(const ControlPoint& cp)
@@ -152,7 +153,7 @@ void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 	FVector assetScale;
 	FActorSpawnParameters SpawnInfo;
 
-	float scaleValue = 0.25;
+	float scaleValue = 0.55;
 
 	for (int i = 0; i < points.Num(); i++) //Control Points
 	{
@@ -179,8 +180,8 @@ void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 		splineActors.Add(CP_cube);
 
 	}
-	scaleValue = 0.15;
-	float steplength = TotalLength / 51.0f; //113, 24
+	scaleValue = 0.35;
+	float steplength = TotalLength / 150.0f; 
 	//UE_LOG(LogTemp, Warning, TEXT("Number of spline points for the total spline should be:  %f"), steplength);
 
 	int counter = 0;

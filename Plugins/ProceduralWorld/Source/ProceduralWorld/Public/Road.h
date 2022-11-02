@@ -20,11 +20,14 @@ public:
 
 	void generateRoad(const TArray<UTile*> &inTiles, const uint32 &inGridSize); 
 	
+	//void generateRoadSmart(const TArray<UTile*>& inTiles, const uint32& inGridSize);
+	
 	void calcLengthsSplines();
 	void vizualizeRoad(const FVector &inLandscapeScale);
 
 	//Spline that acts as the skeleton for the road
 	TArray<CRSpline> splinePaths;
 
-	uint32 Width;
+	//Width for the total road width (should always be odd)
+	uint32 Width = 5;
 };

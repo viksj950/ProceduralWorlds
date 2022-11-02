@@ -556,40 +556,56 @@ FReply FProceduralWorldModule::Setup()
 	//Interpolate using gaussian blur
 	myLand.interpBiomes(tiles, 3, 1.0, 30, 20);
 	//Spline/roads (hardocding)
-	ControlPoint cp1 = { 0.0, 0.0, 0.0 };
-	ControlPoint cp2 = { 63.0, 10.0, 0.0 };
-	ControlPoint cp3 = { 120.0, 10.0, 0.0 };
-	ControlPoint cp4 = { 200.0, 10.0, 0.0 };
-	ControlPoint cp9 = { 230.0, 10.0, 0.0 };
-	//Spline 2
-	ControlPoint cp5 = { 200.0, 10.0, 0.0 };
-	ControlPoint cp6 = { 120.0, 10.0, 0.0 };
-	ControlPoint cp7 = { 300.0, 97.0, 0.0 };
-	ControlPoint cp8 = { 500.0, 130.0, 0.0 };
+	//ControlPoint cp1 = { 0.0, 0.0, 0.0 };
+	//ControlPoint cp2 = { 63.0, 10.0, 0.0 };
+	//ControlPoint cp3 = { 120.0, 10.0, 0.0 };
+	//ControlPoint cp4 = { 200.0, 10.0, 0.0 };
+	//ControlPoint cp9 = { 230.0, 10.0, 0.0 };
+	////Spline 2
+	//ControlPoint cp5 = { 200.0, 10.0, 0.0 };
+	//ControlPoint cp6 = { 120.0, 10.0, 0.0 };
+	//ControlPoint cp7 = { 300.0, 97.0, 0.0 };
+	//ControlPoint cp8 = { 500.0, 130.0, 0.0 };
 
-	CRSpline spline1(cp1, cp2, cp3, cp4);
-	CRSpline spline2(cp5, cp6, cp7, cp8);
-	spline1.addControlPoint(cp9);
+	//CRSpline spline1(cp1, cp2, cp3, cp4);
+	//CRSpline spline2(cp5, cp6, cp7, cp8);
+	//spline1.addControlPoint(cp9);
 
-	/*spline1.calcLengths();
-	spline2.calcLengths();*/
+	///*spline1.calcLengths();
+	//spline2.calcLengths();*/
 
-	Road r1(spline1);
-	Road r2(spline2);
-	roads.Add(r1);
-	roads[0].extend({ 150.0, 60.0, 0.0 }); //this value should be the random value
-	roads.Add(r2);
+	//Road r1(spline1);
+	//Road r2(spline2);
+	//roads.Add(r1);
+	//roads[0].extend({ 150.0, 60.0, 0.0 }); //this value should be the random value
+	//roads.Add(r2);
 
-	roads[0].calcLengthsSplines();
-	roads[0].vizualizeRoad(myLand.LandscapeScale);
+	//roads[0].calcLengthsSplines();
+	//roads[0].vizualizeRoad(myLand.LandscapeScale);
 
-	Road RoadGenerated;
-	RoadGenerated.generateRoad(tiles,myLand.GetGridSizeOfProxies());
-	//RoadGenerated.calcLengthsSplines();
-	//RoadGenerated.vizualizeRoad(myLand.LandscapeScale);
-	roads.Add(RoadGenerated);
-	roads[2].calcLengthsSplines();
-	roads[2].vizualizeRoad(myLand.LandscapeScale);
+	//Road RoadGenerated;
+	//RoadGenerated.generateRoad(tiles,myLand.GetGridSizeOfProxies());
+	////RoadGenerated.calcLengthsSplines();
+	////RoadGenerated.vizualizeRoad(myLand.LandscapeScale);
+	//roads.Add(RoadGenerated);
+	//roads[0].calcLengthsSplines();
+	//roads[0].vizualizeRoad(myLand.LandscapeScale);
+
+	myLand.generateRoadSmart(tiles, roads);
+	if (!roads.IsEmpty()) {
+		roads[0].calcLengthsSplines();
+		roads[0].vizualizeRoad(myLand.LandscapeScale);
+
+		myLand.roadAnamarphosis(roads);
+		myLand.roadAnamarphosis(roads);
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("No posible path for road to geneata"));
+	}
+	//road eformatiom
+	
+
+
 
 	//UE_LOG(LogTemp, Warning, TEXT("TotalLength (spline1) :  %f"), spline1.TotalLength);
 

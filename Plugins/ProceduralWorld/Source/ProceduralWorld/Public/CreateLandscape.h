@@ -31,7 +31,7 @@
 #include"Tile.h" 
 
 //Spline
-#include "CRSpline.h"
+#include "Road.h"
 
 //Noise
 #include "PerlinNoiseGenerator.h"
@@ -66,6 +66,11 @@ public:
 	//Perlin interpolation (smoothstep)
 	void interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount);
 
+	//Function for deforming the world height data based on road placement (brute force)
+	void roadAnamarphosis(const TArray<Road>& roads, int kernelSize = 9);
+	//sugma func
+	void generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads);
+
 	//Main function for interpolation between biomes
 	void interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes);
 
@@ -81,6 +86,7 @@ public:
 
 	FVector GetWorldCoordinates(const TArray<uint16>& inData, int32 inX, int32 inY) const;
 
+	//Returns number of tiles in each row/column
 	const uint32 GetGridSizeOfProxies() const;
 
 	//contains the heightmap for the whole map

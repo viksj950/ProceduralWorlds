@@ -15,13 +15,6 @@ CreateLandscape::CreateLandscape(int32 inSizeX, int32 inSizeY, int32 inQuadsPerC
 	//Amount of components per proxy, 
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * ComponentsPerProxy));
 
-	/*heightData.SetNum(SizeX * SizeY);
-	cityHeightData.SetNum(SizeX * SizeY);
-	mountainHeightData.SetNum(SizeX * SizeY);*/
-	//heightData.Reserve(inSizeX * inSizeY);
-	////Currently city has the same size, not optimized, have to redo alot to improve it
-	//cityHeightData.Reserve(inSizeX * inSizeY);
-
 }
 
 CreateLandscape::~CreateLandscape()
@@ -489,6 +482,184 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 
 
 	}
+}
+
+void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize)
+{
+	//Create kernel
+	TArray<kernelElement> kernel;
+
+	int firstIndex = floor(kernelSize / 2);
+
+	//create weights
+	float weight;
+	float sumWeights = 0;
+	float sigma = 0.3;
+
+	for (int x = -firstIndex; x <= firstIndex; x++) {
+
+		for (int y = -firstIndex; y <= firstIndex; y++) {
+
+			weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, -(pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2)));
+			kernel.Add(kernelElement(weight, FVector2D(x, y)));
+			sumWeights += weight;
+		}
+
+	}
+
+	//Iterate through the road(s) and its internal splines (double foor loop)
+	//sp is NOT a control point, but rather a point on the spline curve
+	ControlPoint sp;
+	int X;
+	int Y;
+	float weightedKernelVertex;
+		for(auto& r: roads)
+		{
+			for(auto& s: r.splinePaths )
+			{
+				for (float t = 0; t < s.TotalLength; t++) {
+					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+					//Iterate through road kernel
+					for (size_t xRoad = (X-(r.Width-1)/2); xRoad < (X + (r.Width - 1) / 2); xRoad++)
+					{
+						for (size_t yRoad = (Y - (r.Width - 1) / 2); yRoad < (Y + (r.Width - 1) / 2); yRoad++)
+						{
+							weightedKernelVertex = 0;
+							//Iterate through Gauss kernel
+							for (int j = 0; j < kernelSize * kernelSize; j++) {
+								weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+							}
+							concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
+						}
+					}
+				}
+				//kenrel for pass 2
+				kernel.Empty();
+				sumWeights = 0;
+				kernelSize += 4;
+				firstIndex = floor((kernelSize) / 2);
+				sigma = 0.85;
+				for (int x = -firstIndex; x <= firstIndex; x++) {
+
+					for (int y = -firstIndex; y <= firstIndex; y++) {
+
+						weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, -(pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2)));
+						kernel.Add(kernelElement(weight, FVector2D(x, y)));
+						sumWeights += weight;
+					}
+
+				}
+				//pass 2
+				for (float t = 0; t < s.TotalLength; t++) {
+					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+					//Iterate through road kernel
+					for (size_t xRoad = (X - (r.Width - 1) / 2); xRoad < (X + (r.Width - 1) / 2); xRoad++)
+					{
+						for (size_t yRoad = (Y - (r.Width - 1) / 2); yRoad < (Y + (r.Width - 1) / 2); yRoad++)
+						{
+							weightedKernelVertex = 0;
+							//Iterate through Gauss kernel
+							for (int j = 0; j < kernelSize * kernelSize; j++) {
+								weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+							}
+							concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
+						}
+					}
+				}
+				
+			}
+		}
+	//
+}
+
+void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads)
+{
+	FMath math;
+	int tileIndex = 0;
+
+	do {
+		tileIndex = math.RandRange(0, gridSizeOfProxies * gridSizeOfProxies - 1);
+
+	} while (inTiles[tileIndex]->biotope == 2);
+	//Now we have found a sutiable tile to start with
+	CRSpline spline;
+
+	int32 X = inTiles[tileIndex]->index % gridSizeOfProxies * (inTiles[tileIndex]->tileSize - 1);
+	int32 Y = FMath::Floor(inTiles[tileIndex]->index / gridSizeOfProxies) * (inTiles[tileIndex]->tileSize - 1);
+
+	//tangent
+	spline.addControlPoint({ (float)math.RandRange(X, X + inTiles[tileIndex]->tileSize - 1), (float)math.RandRange(Y, Y + inTiles[tileIndex]->tileSize - 1),(float)35000 });
+	//first control point
+	spline.addControlPoint({ (float)math.RandRange(X, X + inTiles[tileIndex]->tileSize - 1),(float)math.RandRange(Y, Y + inTiles[tileIndex]->tileSize - 1),(float)35000 });
+
+	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
+	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
+	int maxRoadTiles{ 6 };
+	int AdjTries{ 30 };
+	int randomPointTries = 10;
+	int32 tileSize;
+	while (maxRoadTiles > 0 && AdjTries > 0) {
+		AdjTries--;
+		int32 adjIndex = math.RandRange(0, 7);
+		if (inTiles[tileIndex]->adjacentTiles[adjIndex] && inTiles[tileIndex]->adjacentTiles[adjIndex]->biotope != 2)
+		{
+
+			tileIndex = inTiles[tileIndex]->adjacentTiles[adjIndex]->index;
+			tileSize = inTiles[tileIndex]->tileSize;
+			X = tileIndex % gridSizeOfProxies * (tileSize - 1);
+			Y = FMath::Floor(tileIndex / gridSizeOfProxies) * (tileSize - 1);
+
+
+			ControlPoint lastSP = spline.points.Last();
+			//Random cp
+			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)35000 });
+			//Random Tangent
+			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)35000 });
+
+			//Iterate the new curve segment
+			spline.calcLengths();
+			float heightvariance = 0;
+			float startLength = 0;
+			if(spline.points.Num() > 4)
+			{
+				for (int i = 0; i > spline.points.Num()-2; i++) {
+					startLength += spline.points[i].length;
+				}
+
+			}
+				
+			ControlPoint nextSP;
+			for (; startLength < spline.TotalLength; startLength += 2) {
+				nextSP = spline.GetSplinePoint(spline.GetNormalisedOffset(startLength));
+
+			
+				heightvariance += abs(concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(lastSP.pos.X), FGenericPlatformMath::RoundToInt(lastSP.pos.Y))] -
+					concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(nextSP.pos.X), FGenericPlatformMath::RoundToInt(nextSP.pos.Y))]);
+				lastSP = nextSP;
+			}
+			UE_LOG(LogTemp, Warning, TEXT("heightVariance = %f"), heightvariance);
+			int threshold = 7500;
+			if(heightvariance > threshold){
+
+				spline.points.RemoveAt(spline.points.Num() - 1);
+				spline.points.RemoveAt(spline.points.Num() - 1);
+			}
+			else {
+				maxRoadTiles--;
+			}
+		}
+
+
+	}
+
+	if(spline.points.Num() >= 4){
+		inRoads.Add(spline);
+	}
+
 }
 
 void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes)
@@ -1206,91 +1377,3 @@ const uint32 CreateLandscape::GetGridSizeOfProxies() const
 	
 	return gridSizeOfProxies;
 }
-
-
-//OLD COSINE INTERP CODE
-					// currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, 0 + int_steps);
-					// adjRowHeight = GetRowOfHeightData(t->adjacentTiles[i]->tileHeightData, 64, 63 - int_steps);
-
-					//TArray<uint16> interpArray;
-					//mu = 1.0;
-					//for (int k = int_steps -1; k > 0; k--) {	//looping rows 6-1
-					//	//mu = mu / k;
-					//	//for (int j = 0; j < 64; j++) {
-					//	//	float mu2 = (1 - cos(mu * PI)) / 2;
-					//	//	//This is for cosine interpolation
-					//	//	interpArray.Add(currentRowHeight[j] * (1 - mu2) + temp[j] * mu2);
-					//	//	//This is for linear interpolation
-					//	//	//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
-					//	//}
-					//	//SetRowHeightData(t->tileHeightData, temp, 64, 0 + k);
-
-
-					//	currentRowHeight = GetRowOfHeightData(t->tileHeightData, 64, int_steps - k);
-					//	for (int j = 0; j < 64; j++) {
-					//		float mu2 = (1 - cos(mu * PI)) / 2;
-					//		//This is for cosine interpolation
-					//		interpArray.Add((currentRowHeight[j] + temp[j]) / 2);
-					//		//This is for linear interpolation
-					//		//temp.Add((adjRowHeight[k] + currentRowHeight[k]) / 2);
-					//	}
-					//	SetRowHeightData(t->tileHeightData, temp, 64, 0 + k);
-					//	interpArray.Empty();
-					//}
-
-//OLD ASS CODE
-
-	//int32 numOfProxiesPerRow = (SizeX / QuadsPerComponent * ComponentsPerProxy);
-
-	//int32 tileColumn{ 0 };
-	//int32 tileCounter{ 0 };
-	
-	//for (size_t i = 0; i < heightData.Num(); i++)
-	//{
-
-	//	inTiles[tileCounter]->tileHeightData[i] = heightData[i];
-
-	//	//If true on boundaries of tiles, adds same data as duplicates
-	//	if (i % ((QuadsPerComponent+1) * ComponentsPerProxy) == 0)
-	//	{
-
-	//		tileCounter += numOfProxiesPerRow;
-	//		inTiles[tileCounter]->tileHeightData[i] = heightData[i];
-	//	}
-
-	//	//New row
-	//	if (i == SizeX * (QuadsPerComponent + 1))
-	//	{
-	//		tileColumn++;
-	//	}
-	//	//Next column of verts
-	//	if (i % SizeX == 0)
-	//	{
-	//		tileCounter = tileColumn;
-	//	}
-		
-
-	//}
-
-	//int32 startVert{ 0 };
-	//for (auto& it: inTiles)
-	//{
-
-		
-	//	for (size_t i = startVert; i < heightData.Num(); i++)
-	//	{
-	//		for (size_t j = 0; j < it->tileHeightData.Num(); j++)
-	//		{
-	//			if (j % (QuadsPerComponent+1) == 0)
-	//			{
-	//				//iterated through the size of a tile
-	//				//Right side: SízeX - (2*QuadsPerComp) 
-	//				//Middle: (SizeX-2) * QuadsPerComp
-	//				//Left: SizeX - (6 * QuadsPerComp)
-	//			}
-
-	//		}
-
-	//	}
-
-	//}
