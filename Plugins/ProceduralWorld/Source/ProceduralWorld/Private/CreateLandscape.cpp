@@ -110,11 +110,8 @@ void CreateLandscape::GenerateAndAssignHeightData(TArray<UTile*>& inTiles, const
 			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
 		}
 
-
-
 		currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *BiotopeSettings[it->biotope]);
 
-		
 		//assign correct noise values depending on tile index and biotope 
 		//Also need to have biotopeSettings
 		//void func(tile, BiotopeSettings)
@@ -521,6 +518,11 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
 					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
 					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+					//Check that the road is not outside of the landscape
+					if(X < 0 || X > SizeX || Y < 0 || Y > SizeY){
+						break;
+					}
+
 					//Iterate through road kernel
 					for (size_t xRoad = (X-(r.Width-1)/2); xRoad < (X + (r.Width - 1) / 2); xRoad++)
 					{
@@ -529,7 +531,13 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 							weightedKernelVertex = 0;
 							//Iterate through Gauss kernel
 							for (int j = 0; j < kernelSize * kernelSize; j++) {
+
+								if( 0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+								{
 								weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+								}else{
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + X, kernel[j].coords.Y + Y)];
+								}
 							}
 							concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
 						}
@@ -540,7 +548,7 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 				sumWeights = 0;
 				kernelSize += 4;
 				firstIndex = floor((kernelSize) / 2);
-				sigma = 0.85;
+				sigma = 2;
 				for (int x = -firstIndex; x <= firstIndex; x++) {
 
 					for (int y = -firstIndex; y <= firstIndex; y++) {
@@ -552,19 +560,74 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 
 				}
 				//pass 2
-				for (float t = 0; t < s.TotalLength; t++) {
+				for (float t = 0.5; t < s.TotalLength; t++) {
 					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
 					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
 					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+					//Check that the road is not outside of the landscape
+					if (X < 0 || X > SizeX || Y < 0 || Y > SizeY) {
+						break;
+					}
 					//Iterate through road kernel
-					for (size_t xRoad = (X - (r.Width - 1) / 2); xRoad < (X + (r.Width - 1) / 2); xRoad++)
+					for (size_t xRoad = (X - (r.Width - 1)); xRoad < (X + (r.Width - 1)); xRoad++)
 					{
-						for (size_t yRoad = (Y - (r.Width - 1) / 2); yRoad < (Y + (r.Width - 1) / 2); yRoad++)
+						for (size_t yRoad = (Y - (r.Width - 1)); yRoad < (Y + (r.Width - 1)); yRoad++)
 						{
 							weightedKernelVertex = 0;
 							//Iterate through Gauss kernel
 							for (int j = 0; j < kernelSize * kernelSize; j++) {
-								weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+								if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+								{
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+								}
+								else {
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + X, kernel[j].coords.Y + Y)];
+								}
+							}
+							concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
+						}
+					}
+				}
+				//kenrel for pass 3
+				kernel.Empty();
+				sumWeights = 0;
+				kernelSize += 1;
+				firstIndex = floor((kernelSize) / 2);
+				sigma = 3;
+				for (int x = -firstIndex; x <= firstIndex; x++) {
+
+					for (int y = -firstIndex; y <= firstIndex; y++) {
+
+						weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, -(pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2)));
+						kernel.Add(kernelElement(weight, FVector2D(x, y)));
+						sumWeights += weight;
+					}
+
+				}
+				//pass 3
+				for (float t = 0; t < s.TotalLength; t++) {
+					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+					//Check that the road is not outside of the landscape
+					if (X < 0 || X > SizeX || Y < 0 || Y > SizeY) {
+						break;
+					}
+					//Iterate through road kernel
+					for (size_t xRoad = (X - (r.Width - 1)+1); xRoad < (X + (r.Width - 1)+1); xRoad++)
+					{
+						for (size_t yRoad = (Y - (r.Width - 1)+1); yRoad < (Y + (r.Width - 1)+1); yRoad++)
+						{
+							weightedKernelVertex = 0;
+							//Iterate through Gauss kernel
+							for (int j = 0; j < kernelSize * kernelSize; j++) {
+								if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+								{
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+								}
+								else {
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + X, kernel[j].coords.Y + Y)];
+								}
 							}
 							concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
 						}
@@ -596,25 +659,30 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 	//first control point
 	spline.addControlPoint({ (float)math.RandRange(X, X + inTiles[tileIndex]->tileSize - 1),(float)math.RandRange(Y, Y + inTiles[tileIndex]->tileSize - 1),(float)35000 });
 
+	ControlPoint startCP = spline.points.Last();
+
+	uint16 startHeight = concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(startCP.pos.X), FGenericPlatformMath::RoundToInt(startCP.pos.Y))];
+
 	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
 	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
 	int maxRoadTiles{ 6 };
-	int AdjTries{ 30 };
-	int randomPointTries = 10;
+	int AdjTries{ 100 };
+	int randomPointTries = 200;
 	int32 tileSize;
+	int oldTileIndex = 0;
 	while (maxRoadTiles > 0 && AdjTries > 0) {
 		AdjTries--;
+		
 		int32 adjIndex = math.RandRange(0, 7);
-		if (inTiles[tileIndex]->adjacentTiles[adjIndex] && inTiles[tileIndex]->adjacentTiles[adjIndex]->biotope != 2)
+		if (inTiles[tileIndex]->adjacentTiles[adjIndex] && inTiles[tileIndex]->adjacentTiles[adjIndex]->biotope != 2 && randomPointTries > 0)
 		{
-
+			randomPointTries--;
+			oldTileIndex = tileIndex;
 			tileIndex = inTiles[tileIndex]->adjacentTiles[adjIndex]->index;
 			tileSize = inTiles[tileIndex]->tileSize;
 			X = tileIndex % gridSizeOfProxies * (tileSize - 1);
 			Y = FMath::Floor(tileIndex / gridSizeOfProxies) * (tileSize - 1);
-
-
-			ControlPoint lastSP = spline.points.Last();
+			
 			//Random cp
 			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)35000 });
 			//Random Tangent
@@ -622,7 +690,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 			//Iterate the new curve segment
 			spline.calcLengths();
-			float heightvariance = 0;
+			float heightDifference = 0;
 			float startLength = 0;
 			if(spline.points.Num() > 4)
 			{
@@ -631,34 +699,43 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 				}
 
 			}
-				
+			int threshold = 1300;
+			bool canSpawn = true;
 			ControlPoint nextSP;
 			for (; startLength < spline.TotalLength; startLength += 2) {
 				nextSP = spline.GetSplinePoint(spline.GetNormalisedOffset(startLength));
-
 			
-				heightvariance += abs(concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(lastSP.pos.X), FGenericPlatformMath::RoundToInt(lastSP.pos.Y))] -
+				heightDifference = abs(startHeight -
 					concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(nextSP.pos.X), FGenericPlatformMath::RoundToInt(nextSP.pos.Y))]);
-				lastSP = nextSP;
-			}
-			UE_LOG(LogTemp, Warning, TEXT("heightVariance = %f"), heightvariance);
-			int threshold = 7500;
-			if(heightvariance > threshold){
+				UE_LOG(LogTemp, Warning, TEXT("heightDiff = %f"), heightDifference);
+				if (heightDifference > threshold) {
+					UE_LOG(LogTemp, Warning, TEXT("Attempt at creating spline failed, to much height difference!"));
+					canSpawn = false;
+					spline.points.RemoveAt(spline.points.Num() - 1);
+					spline.points.RemoveAt(spline.points.Num() - 1);
+					tileIndex = oldTileIndex;
+					break;
+				}
 
-				spline.points.RemoveAt(spline.points.Num() - 1);
-				spline.points.RemoveAt(spline.points.Num() - 1);
 			}
-			else {
+			if(canSpawn) {
+				UE_LOG(LogTemp, Warning, TEXT("Added a spline segment succesfully"));
+				spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+				startHeight = concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(spline.points[spline.points.Num() - 2].pos.X), FGenericPlatformMath::RoundToInt(spline.points[spline.points.Num() - 2].pos.Y))];
 				maxRoadTiles--;
+				randomPointTries = 200;
+				AdjTries = 100;
 			}
+			
+			
 		}
 
-
 	}
-
+	
 	if(spline.points.Num() >= 4){
 		inRoads.Add(spline);
 	}
+
 
 }
 
@@ -1041,8 +1118,8 @@ void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &
 {
 
 	//3 default: city,plains,mountains
-	float nmbrOfDifferentBiotopes = BiotopeSettings.Num();
-	float nmbrOfTiles = inTiles.Num();
+	int nmbrOfDifferentBiotopes = BiotopeSettings.Num();
+	int nmbrOfTiles = inTiles.Num();
 	float X;
 	float Y;
 	float maxDistance;
@@ -1051,8 +1128,8 @@ void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &
 	FMath mathInstance;
 	for (size_t i = 0; i < nmbrOfBiomes; i++)
 	{
-		int32 biotope = FGenericPlatformMath::RoundToInt32(mathInstance.FRandRange(0.0f, nmbrOfDifferentBiotopes - 1));	//random type of biotope (0-2)
-		int32 tileIndex = FGenericPlatformMath::RoundToInt32(mathInstance.FRandRange(0.0f, nmbrOfTiles - 1)); //Random tile as origin (0-7)
+		int32 biotope = mathInstance.RandRange(0, nmbrOfDifferentBiotopes - 1);	//random type of biotope (0-2)
+		int32 tileIndex = mathInstance.RandRange(0, nmbrOfTiles - 1); //Random tile as origin (0-7)
 
 		//convert tile index to X Y coordinates used for range computation
 		X = tileIndex % gridSizeOfProxies;
@@ -1067,14 +1144,9 @@ void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &
 		}
 		biomes.Add(BiomeOriginInformation(biotope,FVector2D(X,Y),maxDistance));
 
-		//translate tile index to X Y coordinates
-
 		
-		UE_LOG(LogTemp, Warning, TEXT("RANDOM tileIndex: %d"), tileIndex);
-		UE_LOG(LogTemp, Warning, TEXT("RANDOM Biomes: %d"), biotope);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Tile coordinates: %s"), *biomes[0].coordinates.ToString());
-
+	//Assign placed biomes to all tiles
 	for (auto& it : inTiles)
 	{
 		FVector2D currTileCoords(X = it->index % gridSizeOfProxies, FMath::Floor(it->index / gridSizeOfProxies));
@@ -1222,80 +1294,6 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	FVector InTranslation{ 0,0,0 };
 	FTransform LandscapeTransform{ InRotation, InTranslation, LandscapeScale };
 
-	//TArray<uint16> concatedHeightData;
-	//concatedHeightData.SetNum(SizeX * SizeY);
-	//concatHeightData(inTiles);
-
-	//For debugging (creates a copy of the landscape without interpolation)
-	/*rawConcatData = concatedHeightData;
-	generate();*/
-
-	//int passes = 20;
-	//int dynamicStep = 10;
-	//for (int i = 0; i < passes; i++) {
-	//		
-	//		interpGaussianBlur(inTiles, concatedHeightData, 3, 1.0 / (i + 1), dynamicStep);
-	//		dynamicStep -= dynamicStep / passes;
-	//	
-	///*	UE_LOG(LogTemp, Warning, TEXT("DynamicStep = %d"), dynamicStep);*/
-	//	
-	//}
-
-	//interpGaussianBlur(inTiles, concatedHeightData, 3, 0.1, 31);
-
-
-	
-	//SPline 1
-	//ControlPoint cp1 = { 0.0, 0.0, 0.0 };
-	//ControlPoint cp2 = { 354.0, 297.0, 0.0 };
-	//ControlPoint cp3 = { 300.0, 97.0, 0.0 };
-	//ControlPoint cp4 = { 250.0, 130.0, 0.0 };
-	////ControlPoint cp5 = { 500.0, 150.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,150)] };
-	////ControlPoint cp6 = { 500.0, 200.0, (float)concatedHeightData[GetVertexIndex(SizeX,500,200)] };
-
-	////Spline 2
-	//ControlPoint cp5 = { 63.0, 63.0, 0.0 };
-	//ControlPoint cp6 = { 354.0, 297.0,0.0};
-	//ControlPoint cp7 = { 454.0, 97.0, 0.0 };
-	//ControlPoint cp8 = { 500.0, 130.0, 0.0 };
-	////ControlPoint cp5 = { 500.0, 150.0,0.0 };
-	////ControlPoint cp6 = { 500.0, 200.0,0.0 };
-
-	////Spline it up
-	////ControlPoint cp1 = { 63.0f, 63.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,63,63)])};
-	////ControlPoint cp2 = { 354.0f, 297.0f,((float)concatedHeightData[GetVertexIndex(SizeX,354,297)] - 32768) * (100.0f / 128.0f) };
-	////ControlPoint cp3 = { 454.0f, 97.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,454,97)] - 32768) * (100.0f / 128.0f) };
-	////ControlPoint cp4 = { 500.0f, 130.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,130)] - 32768) * (100.0f / 128.0f) };
-	////ControlPoint cp5 = { 500.0f, 150.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,150)] - 32768) * (100.0f / 128.0f) };
-	////ControlPoint cp6 = { 500.0f, 200.0f, ((float)concatedHeightData[GetVertexIndex(SizeX,500,200)] - 32768) * (100.0f / 128.0f) };
-
-	//CRSpline spline1(cp1,cp2,cp3,cp4);
-	//CRSpline spline2(cp5, cp6, cp7, cp8);
-
-	//spline1.calcLengths();
-	//spline1.visualizeSpline(LandscapeScale);
-
-	//spline2.calcLengths();
-	//spline2.visualizeSpline(LandscapeScale);
-
-	//spline.addControlPoint(cp5);
-	//spline.addControlPoint(cp6);
-
-	//Vi vill ha CP i (63,63) 
-	//FVector worldPosCP1 = GetWorldCoordinates(concatedHeightData, cp1.pos.X, cp1.pos.Y);
-	//FVector worldPosCP2 = GetWorldCoordinates(concatedHeightData, cp2.pos.X, cp2.pos.Y);
-	//FVector worldPosCP3 = GetWorldCoordinates(concatedHeightData, cp3.pos.X, cp3.pos.Y);
-	//cp1.worldPos = worldPosCP1;
-	//cp2.worldPos = worldPosCP2;
-	//cp3.worldPos = worldPosCP3;
-
-	//spline.addControlPoint(cp1);
-	//spline.addControlPoint(cp2);
-	//spline.addControlPoint(cp3);
-	//spline.addControlPoint(cp2);
-	//spline.calcLengths();
-	//spline.visualizeSpline(LandscapeScale);
-
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
@@ -1314,20 +1312,7 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 
 	Landscape->bCanHaveLayersContent = true;
 	Landscape->LandscapeMaterial = nullptr;
-	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Materials/YourMaterialName.YourMaterialName'"));
-	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'"));
-
-	//if (Material.Object != NULL)
-	//{
-	//	Landscape->LandscapeMaterial = (UMaterial*)Material.Object;
-	//	//TheMaterial = (UMaterial*)Material.Object;
-	//}else{ 
-	//	Landscape->LandscapeMaterial = nullptr; 
-	//}
-
 	
-	
-
 	Landscape->SetActorTransform(LandscapeTransform);
 	Landscape->Import(FGuid::NewGuid(), 0, 0, SizeX - 1, SizeY - 1, SectionsPerComponent, QuadsPerComponent,
 		HeightDataPerLayers, nullptr, MaterialLayerDataPerLayers, ELandscapeImportAlphamapType::Additive);
@@ -1339,7 +1324,6 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	LandscapeInfo->UpdateLayerInfoMap(Landscape);
 
 	
-
 	Landscape->RegisterAllComponents();
 
 	// Need to explicitly call PostEditChange on the LandscapeMaterial property or the landscape proxy won't update its material

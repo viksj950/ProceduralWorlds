@@ -181,6 +181,8 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 	FMath mathInstance;
 	float minPos = 0.0f;
 	float maxPos = 1.0f;
+	float minRot = 0.0f;
+	float maxRot = 360.0f;
 	float minScale;
 	float maxScale;
 	float RotationAngle;
@@ -244,23 +246,136 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 
 			MyNewActor->SetActorScale3D(assetScale);
 
+			//For rotation
+			float randomZRotation = mathInstance.FRandRange(minRot, maxRot);
+			UE_LOG(LogTemp, Warning, TEXT("Rotation of Z is : %f"), randomZRotation);
+			FRotator rotation{ Quat.Rotator().Pitch,randomZRotation,Quat.Rotator().Roll };
+			UE_LOG(LogTemp, Warning, TEXT("Rotation of plain trees after update : %s"), *rotation.ToString());
+
+			MyNewActor->SetActorRotation(rotation);
+
+			//Mesh binding
 			UStaticMesh* Mesh1;
 
-			/*if (t->biotope == 0) {
-				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
-			}*/
-			 //tree + grass
-				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"));
+			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/_GENERATED/viksj950/Combined_296E45EE.Combined_296E45EE'"));
 
 			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
 			if (MeshComponent)
 			{
 				MeshComponent->SetStaticMesh(Mesh1);
 			}
-
+			//Add to tileassets for deletion if needed
 			t->tileAssets.Add(MyNewActor);
 		}
 	
+
+}
+
+void ProceduralAssetDistribution::spawnActorObjectsMountains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar)
+{
+	UWorld* World = nullptr;
+
+	FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
+	World = EditorWorldContext.World();
+	FVector proxyLocation;
+	FVector proxyScale;
+	FVector Location;
+
+	//Asset specific
+	FVector assetScale;
+	FMath mathInstance;
+	float minPos = 0.0f;
+	float maxPos = 1.0f;
+	float minRot = 0.0f;
+	float maxRot = 360.0f;
+	float minScale;
+	float maxScale;
+	float RotationAngle;
+
+
+	if (t->streamingProxy != nullptr)
+	{
+		proxyLocation = t->streamingProxy->GetActorLocation();
+		proxyScale = t->streamingProxy->GetActorScale();
+
+	}
+
+	for (int i = 0; i < assetCount; i++) {
+
+		//For position
+		float randomValX = mathInstance.FRandRange(minPos, maxPos);
+		float randomValY = mathInstance.FRandRange(minPos, maxPos);
+
+		//Find position in tile
+		Location = proxyLocation + (ComponentSizeQuads * proxyScale) * (ComponentsPerProxy / 2.0); //scales based on perProxy
+
+		Location.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValX);
+		Location.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValY);
+
+		//Create triangle for normal calculations
+		Triangle tri(t, Location.X, Location.Y);
+
+		Location.Z = t->streamingProxy->GetHeightAtLocation(Location).GetValue();
+
+		FVector UpVector = FVector(0, 0, 1);
+
+		RotationAngle = acosf(FVector::DotProduct(UpVector, tri.normal));
+
+		if (RotationAngle > 0.8) {
+			UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for rock was to steep with id: %d"), i);
+			continue;
+		}
+
+		FVector RotationAxis = FVector::CrossProduct(UpVector, tri.normal);
+		RotationAxis.Normalize();
+
+		FQuat Quat = FQuat(RotationAxis, RotationAngle);
+
+		FRotator Rotation(tri.normal.Rotation());
+
+		FActorSpawnParameters SpawnInfo;
+
+		//Specify where in the world it will spawn, using ground tilt
+		AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Quat.Rotator(), SpawnInfo);
+
+		//For scale variance (Super ugly implementation, assumes uniform scale on all axises)
+		FVector defaultScale = MyNewActor->GetActorScale3D();
+		minScale = defaultScale.X - scaleVar;
+		maxScale = defaultScale.X + scaleVar;
+
+		float scaleValue = mathInstance.FRandRange(minScale, maxScale);
+
+		assetScale = { scaleValue ,scaleValue ,scaleValue };
+
+		MyNewActor->SetActorScale3D(assetScale);
+
+		//For rotation
+		float randomZRotation = mathInstance.FRandRange(minRot, maxRot);
+
+		FRotator rotation{ Quat.Rotator().Pitch,randomZRotation,Quat.Rotator().Roll };
+
+		MyNewActor->SetActorRotation(rotation);
+
+		UStaticMesh* Mesh1;
+
+		if (Location.Z > 2000) {
+			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Rocks/LargeRock/LargerockLowpoly01.LargerockLowpoly01'"));
+		}
+		else if (Location.Z <= 2000 && Location.Z >= 1000) {
+			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"));
+		}
+		else {
+			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/_GENERATED/viksj950/Combined_296E45EE.Combined_296E45EE'"));
+		}
+		UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+		if (MeshComponent)
+		{
+			MeshComponent->SetStaticMesh(Mesh1);
+		}
+
+		t->tileAssets.Add(MyNewActor);
+	}
+
 
 }
 

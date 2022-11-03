@@ -178,7 +178,13 @@ public:
 
 	TArray< TSharedPtr< FString > > ComboItems;
 
-	TArray<TSharedPtr<LandscapeSetting>> LandscapeComboSettings;
+	TArray<TSharedPtr<LandscapeSetting>> LandscapeComboSettings= { MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1,64)),
+	MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 2, 1, 127)),
+	MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1, 64)),
+	MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 4(2x2) : 126x126 256(16x16)", 1009, 1009, 63, 2, 1, 127)),
+	MakeShareable(new LandscapeSetting("2017 x 2017 : 63 : 4(2x2) : 126x126 256(16x16)", 2017, 2017, 63, 2, 1, 127)),
+	MakeShareable(new LandscapeSetting("(CRASHES) 4033 x 4033 : 63 : 4(2x2) : 126x126 1024(32x32)", 4033, 4033, 63, 2, 1, 127)),
+	MakeShareable(new LandscapeSetting("(CRASHES) 8129 x 8129 : 127 : 4(2x2) : 254x254 1024(32x32)", 8129, 8129, 127, 2, 1, 255)) };
 
 	TSharedPtr<STextBlock> ComboBoxTitleBlock;
 

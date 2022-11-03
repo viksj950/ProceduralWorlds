@@ -64,34 +64,7 @@ void FProceduralWorldModule::ShutdownModule()
 
 TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
-	//FText WidgetText = FText::Format(
-	//	LOCTEXT("WindowWidgetText", "Generate landscape")
-	//	);
-
-	//CreateLandscape boomboom;
-
-	//return SNew(SDockTab)
-	//	.TabRole(ETabRole::NomadTab)
-	//	[
-	//		// Put your tab content here!
-	//		//myButt;
-	//		
-	//		SNew(SBox)
-	//		.HAlign(HAlign_Center)
-	//		.VAlign(VAlign_Center)
-	//		[
-	//			SNew(SButton)
-	//			.Text(WidgetText)
-	//			.OnClicked_Raw(this, &FProceduralWorldModule::Setup)
-	//		]
-	//
-	//	];
 	
-
-	
-	
-
-
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
@@ -146,7 +119,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 			})
 				[
-					SAssignNew(ComboBoxTitleBlockNoise, STextBlock).Text(LOCTEXT("ComboLabel", "Biotope"))
+					SAssignNew(ComboBoxTitleBlockNoise, STextBlock).Text(LOCTEXT("ComboLabel", "City"))
 				]
 
 
@@ -592,17 +565,23 @@ FReply FProceduralWorldModule::Setup()
 	//roads[0].vizualizeRoad(myLand.LandscapeScale);
 
 	myLand.generateRoadSmart(tiles, roads);
+	//myLand.generateRoadSmart(tiles, roads);
 	if (!roads.IsEmpty()) {
 		roads[0].calcLengthsSplines();
 		roads[0].vizualizeRoad(myLand.LandscapeScale);
-
-		myLand.roadAnamarphosis(roads);
-		myLand.roadAnamarphosis(roads);
+		//roads[1].calcLengthsSplines();
+		//roads[1].vizualizeRoad(myLand.LandscapeScale);
+		for (int i = 0; i < 20; i++) {
+			myLand.roadAnamarphosis(roads);
+		}
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("No posible path for road to geneata"));
 	}
-	//road eformatiom
+	
+
+	//Creating texture??
+	//createTextureFromArray(myLand.SizeX,myLand.SizeY,myLand.concatedHeightData);
 	
 
 
@@ -616,9 +595,11 @@ FReply FProceduralWorldModule::Setup()
 
 	//Procedual Asset placement
 	ProceduralAssetDistribution temp;
-	int32 maxTrees = 7;
+	int32 maxTrees = 8;
 	int32 maxHouses = 6;
+	int32 maxRocks = 15;
 	float scaleVarF = 0.7;
+	float scaleVarR = 0.8;
 	float scaleVarC = 0.2;
 	float houseSpread = 1.3; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall in order to fit)
 	
@@ -630,17 +611,18 @@ FReply FProceduralWorldModule::Setup()
 		if (tiles[i]->biotope == 0)
 		{
 			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC);
-			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+			//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
 			/*tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));*/
 		}
 		else if(tiles[i]->biotope == 1)
 		{
 			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
 				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTrees, scaleVarF);
-			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+			//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
 		}
 		else {
-
+			temp.spawnActorObjectsMountains(tiles[i], QuadsPerComponent,
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxRocks, scaleVarR);
 		}
 		
 		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
@@ -1009,15 +991,15 @@ void FProceduralWorldModule::PluginButtonClicked()
 	
 
 	//UI settings for Landscape resolution
-	LandscapeComboSettings.Empty();
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1,64)));
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 2, 1, 127)));
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1, 64)));
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 4(2x2) : 126x126 256(16x16)", 1009, 1009, 63, 2, 1, 127)));
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("2017 x 2017 : 63 : 4(2x2) : 126x126 256(16x16)", 2017, 2017, 63, 2, 1, 127)));
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 4033 x 4033 : 63 : 4(2x2) : 126x126 1024(32x32)", 4033, 4033, 63, 2, 1, 127)));
+	//LandscapeComboSettings.Empty();
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1,64)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 2, 1, 127)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1, 64)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 4(2x2) : 126x126 256(16x16)", 1009, 1009, 63, 2, 1, 127)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("2017 x 2017 : 63 : 4(2x2) : 126x126 256(16x16)", 2017, 2017, 63, 2, 1, 127)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 4033 x 4033 : 63 : 4(2x2) : 126x126 1024(32x32)", 4033, 4033, 63, 2, 1, 127)));
 
-	LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 8129 x 8129 : 127 : 4(2x2) : 254x254 1024(32x32)", 8129, 8129, 127, 2, 1, 255)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 8129 x 8129 : 127 : 4(2x2) : 254x254 1024(32x32)", 8129, 8129, 127, 2, 1, 255)));
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldTabName);
 }
 

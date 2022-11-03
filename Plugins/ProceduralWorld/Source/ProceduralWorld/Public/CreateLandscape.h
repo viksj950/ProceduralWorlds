@@ -94,7 +94,7 @@ public:
 	//For debug purposes
 	TArray<uint16> rawConcatData;
 
-
+	//Struct for storing information of biomes that are placed in the landscape  
 	struct BiomeOriginInformation {
 		
 		BiomeOriginInformation(int inBiomeType, FVector2D inCoordinates, float inMaxBiomeSize) : biomeType{ inBiomeType }, coordinates{ inCoordinates },
@@ -106,6 +106,7 @@ public:
 
 	};
 
+	//Struct used for storing kernal weights and coordinates, used for Gaussian interpolation
 	struct kernelElement {
 
 		kernelElement() : coords{ 0,0 }, weight{ -1 } {};
@@ -118,7 +119,7 @@ public:
 	};
 
 
-
+	//Legacy heightmaps
 	TArray<uint16> heightData;
 	TArray<uint16> cityHeightData;
 	TArray<uint16> mountainHeightData;
