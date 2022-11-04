@@ -571,8 +571,8 @@ FReply FProceduralWorldModule::Setup()
 		roads[0].vizualizeRoad(myLand.LandscapeScale);
 		//roads[1].calcLengthsSplines();
 		//roads[1].vizualizeRoad(myLand.LandscapeScale);
-		for (int i = 0; i < 20; i++) {
-			myLand.roadAnamarphosis(roads);
+		for (int i = 0; i < 5; i++) {
+			myLand.roadAnamarphosis(roads, 0.3,3,i);
 		}
 	}
 	else {

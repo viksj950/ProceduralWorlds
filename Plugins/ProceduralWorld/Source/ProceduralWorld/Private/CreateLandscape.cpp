@@ -481,7 +481,7 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 	}
 }
 
-void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize)
+void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, float const sigma, int kernelSize, int interpolationPadding)
 {
 	//Create kernel
 	TArray<kernelElement> kernel;
@@ -491,7 +491,7 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 	//create weights
 	float weight;
 	float sumWeights = 0;
-	float sigma = 0.3;
+	//float sigma = 0.3;
 
 	for (int x = -firstIndex; x <= firstIndex; x++) {
 
@@ -524,9 +524,9 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 					}
 
 					//Iterate through road kernel
-					for (size_t xRoad = (X-(r.Width-1)/2); xRoad < (X + (r.Width - 1) / 2); xRoad++)
+					for (size_t xRoad = (X-(r.Width-1)/2 + interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
 					{
-						for (size_t yRoad = (Y - (r.Width - 1) / 2); yRoad < (Y + (r.Width - 1) / 2); yRoad++)
+						for (size_t yRoad = (Y - (r.Width - 1) / 2 + interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
 						{
 							//Iterate through Gauss kernel
 							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
@@ -546,101 +546,101 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 						}
 					}
 				}
-				//kenrel for pass 2
-				kernel.Empty();
-				sumWeights = 0;
-				kernelSize += 4;
-				firstIndex = floor((kernelSize) / 2);
-				sigma = 0.8;
-				for (int x = -firstIndex; x <= firstIndex; x++) {
+				////kenrel for pass 2
+				//kernel.Empty();
+				//sumWeights = 0;
+				//kernelSize += 4;
+				//firstIndex = floor((kernelSize) / 2);
+				//sigma = 0.8;
+				//for (int x = -firstIndex; x <= firstIndex; x++) {
 
-					for (int y = -firstIndex; y <= firstIndex; y++) {
+				//	for (int y = -firstIndex; y <= firstIndex; y++) {
 
-						weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, -(pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2)));
-						kernel.Add(kernelElement(weight, FVector2D(x, y)));
-						sumWeights += weight;
-					}
+				//		weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, -(pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2)));
+				//		kernel.Add(kernelElement(weight, FVector2D(x, y)));
+				//		sumWeights += weight;
+				//	}
 
-				}
-				//pass 2
-				for (float t = 0.5; t < s.TotalLength; t++) {
-					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
-					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
-					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
-					//Check that the road is not outside of the landscape
-					if (X < 0 || X > SizeX || Y < 0 || Y > SizeY) {
-						break;
-					}
-					//Iterate through road kernel
-					for (size_t xRoad = (X - (r.Width - 1)); xRoad < (X + (r.Width - 1)); xRoad++)
-					{
-						for (size_t yRoad = (Y - (r.Width - 1)); yRoad < (Y + (r.Width - 1)); yRoad++)
-						{
-							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
-									weightedKernelVertex = 0;
-							//Iterate through Gauss kernel
-							for (int j = 0; j < kernelSize * kernelSize; j++) {
-								if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
-								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
-								}
-								else {
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, X, Y)];
-								}
-							}
-							concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
-							}
+				//}
+				////pass 2
+				//for (float t = 0.5; t < s.TotalLength; t++) {
+				//	sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+				//	X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+				//	Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+				//	//Check that the road is not outside of the landscape
+				//	if (X < 0 || X > SizeX || Y < 0 || Y > SizeY) {
+				//		break;
+				//	}
+				//	//Iterate through road kernel
+				//	for (size_t xRoad = (X - (r.Width - 1)); xRoad < (X + (r.Width - 1)); xRoad++)
+				//	{
+				//		for (size_t yRoad = (Y - (r.Width - 1)); yRoad < (Y + (r.Width - 1)); yRoad++)
+				//		{
+				//			if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
+				//					weightedKernelVertex = 0;
+				//			//Iterate through Gauss kernel
+				//			for (int j = 0; j < kernelSize * kernelSize; j++) {
+				//				if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+				//				{
+				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+				//				}
+				//				else {
+				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, X, Y)];
+				//				}
+				//			}
+				//			concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
+				//			}
 						
-						}
-					}
-				}
-				//kenrel for pass 3
-				kernel.Empty();
-				sumWeights = 0;
-				kernelSize += 1;
-				firstIndex = floor((kernelSize) / 2);
-				sigma = 1;
-				for (int x = -firstIndex; x <= firstIndex; x++) {
+				//		}
+				//	}
+				//}
+				////kenrel for pass 3
+				//kernel.Empty();
+				//sumWeights = 0;
+				//kernelSize += 1;
+				//firstIndex = floor((kernelSize) / 2);
+				//sigma = 1;
+				//for (int x = -firstIndex; x <= firstIndex; x++) {
 
-					for (int y = -firstIndex; y <= firstIndex; y++) {
+				//	for (int y = -firstIndex; y <= firstIndex; y++) {
 
-						weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, -(pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2)));
-						kernel.Add(kernelElement(weight, FVector2D(x, y)));
-						sumWeights += weight;
-					}
+				//		weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, -(pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2)));
+				//		kernel.Add(kernelElement(weight, FVector2D(x, y)));
+				//		sumWeights += weight;
+				//	}
 
-				}
-				//pass 3
-				for (float t = 0; t < s.TotalLength; t++) {
-					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
-					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
-					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
-					//Check that the road is not outside of the landscape
-					if (X < 0 || X > SizeX || Y < 0 || Y > SizeY) {
-						break;
-					}
-					//Iterate through road kernel
-					for (size_t xRoad = (X - (r.Width - 1)+1); xRoad < (X + (r.Width - 1)+1); xRoad++)
-					{
-						for (size_t yRoad = (Y - (r.Width - 1)+1); yRoad < (Y + (r.Width - 1)+1); yRoad++)
-						{
-							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
-								weightedKernelVertex = 0;
-								//Iterate through Gauss kernel
-								for (int j = 0; j < kernelSize * kernelSize; j++) {
-									if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
-									{
-										weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
-									}
-									else {
-										weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, X, Y)];
-									}
-								}
-								concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
-							}
-						}
-					}
-				}
+				//}
+				////pass 3
+				//for (float t = 0; t < s.TotalLength; t++) {
+				//	sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+				//	X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+				//	Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+				//	//Check that the road is not outside of the landscape
+				//	if (X < 0 || X > SizeX || Y < 0 || Y > SizeY) {
+				//		break;
+				//	}
+				//	//Iterate through road kernel
+				//	for (size_t xRoad = (X - (r.Width - 1)+1); xRoad < (X + (r.Width - 1)+1); xRoad++)
+				//	{
+				//		for (size_t yRoad = (Y - (r.Width - 1)+1); yRoad < (Y + (r.Width - 1)+1); yRoad++)
+				//		{
+				//			if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
+				//				weightedKernelVertex = 0;
+				//				//Iterate through Gauss kernel
+				//				for (int j = 0; j < kernelSize * kernelSize; j++) {
+				//					if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+				//					{
+				//						weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+				//					}
+				//					else {
+				//						weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, X, Y)];
+				//					}
+				//				}
+				//				concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
+				//			}
+				//		}
+				//	}
+				//}
 				
 			}
 		}

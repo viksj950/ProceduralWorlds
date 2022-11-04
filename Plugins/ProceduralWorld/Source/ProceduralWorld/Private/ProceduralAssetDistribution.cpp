@@ -25,6 +25,8 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 	FMath mathInstance;
 	float minPos = 0.1f; //not zero or 1 to reduce chance for houses to spawn on cliffsides/inside mountain
 	float maxPos = 0.9f;
+	float minRot = 0.0f;
+	float maxRot = 2.0f * PI;
 	float minScale;
 	float maxScale;
 	float RotationAngle;
@@ -66,12 +68,15 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		FVector RotationAxis = FVector::CrossProduct(UpVector, tri.normal);
 		RotationAxis.Normalize();
 
+		float randomZRotation = mathInstance.FRandRange(minRot, maxRot);
+
 		FQuat Quat = FQuat(RotationAxis, RotationAngle);
+		FQuat quatRotZ = FQuat(tri.normal, randomZRotation);
+
+		Quat = quatRotZ * Quat;
+
 
 		FRotator Rotation(tri.normal.Rotation());
-
-		//UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
-		//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine for house id : %d"), i);
 
 		FActorSpawnParameters SpawnInfo;
 
@@ -89,7 +94,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		
 		MyNewActor->SetActorScale3D(assetScale);
 		
-		UStaticMesh* Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_City.Cube_City'"));
+		UStaticMesh* Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/house.house'"));
 		//temp mesh to identify culled houses
 	/*	UStaticMesh* Mesh2 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Cube_Ghost.Cube_Ghost'"));*/
 
@@ -257,7 +262,7 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 			//Mesh binding
 			UStaticMesh* Mesh1;
 
-			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/_GENERATED/viksj950/Combined_296E45EE.Combined_296E45EE'"));
+			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/_GENERATED/viksj950/temp_tree02.temp_tree02'"));
 
 			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
 			if (MeshComponent)
@@ -287,7 +292,7 @@ void ProceduralAssetDistribution::spawnActorObjectsMountains(UTile* t, const int
 	float minPos = 0.0f;
 	float maxPos = 1.0f;
 	float minRot = 0.0f;
-	float maxRot = 360.0f;
+	float maxRot = 2.0f*PI;
 	float minScale;
 	float maxScale;
 	float RotationAngle;
@@ -329,14 +334,18 @@ void ProceduralAssetDistribution::spawnActorObjectsMountains(UTile* t, const int
 		FVector RotationAxis = FVector::CrossProduct(UpVector, tri.normal);
 		RotationAxis.Normalize();
 
-		FQuat Quat = FQuat(RotationAxis, RotationAngle);
+		float randomZRotation = mathInstance.FRandRange(minRot, maxRot);
+		
 
-		FRotator Rotation(tri.normal.Rotation());
+		FQuat Quat = FQuat(RotationAxis, RotationAngle);
+		FQuat quatRotZ = FQuat(tri.normal, randomZRotation);
+
+		Quat = quatRotZ * Quat;
 
 		FActorSpawnParameters SpawnInfo;
 
 		//Specify where in the world it will spawn, using ground tilt
-		AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Quat.Rotator(), SpawnInfo);
+		AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, /*Quat.Rotator()*/ Quat.Rotator(), SpawnInfo);
 
 		//For scale variance (Super ugly implementation, assumes uniform scale on all axises)
 		FVector defaultScale = MyNewActor->GetActorScale3D();
@@ -348,14 +357,7 @@ void ProceduralAssetDistribution::spawnActorObjectsMountains(UTile* t, const int
 		assetScale = { scaleValue ,scaleValue ,scaleValue };
 
 		MyNewActor->SetActorScale3D(assetScale);
-
-		//For rotation
-		float randomZRotation = mathInstance.FRandRange(minRot, maxRot);
-
-		FRotator rotation{ Quat.Rotator().Pitch,randomZRotation,Quat.Rotator().Roll };
-
-		MyNewActor->SetActorRotation(rotation);
-
+		
 		UStaticMesh* Mesh1;
 
 		if (Location.Z > 2000) {
@@ -365,7 +367,7 @@ void ProceduralAssetDistribution::spawnActorObjectsMountains(UTile* t, const int
 			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"));
 		}
 		else {
-			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/_GENERATED/viksj950/Combined_296E45EE.Combined_296E45EE'"));
+			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/_GENERATED/viksj950/temp_tree02.temp_tree02'"));
 		}
 		UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
 		if (MeshComponent)

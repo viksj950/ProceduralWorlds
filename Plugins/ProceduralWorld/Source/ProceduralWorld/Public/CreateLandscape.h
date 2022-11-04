@@ -67,7 +67,7 @@ public:
 	void interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount);
 
 	//Function for deforming the world height data based on road placement (brute force)
-	void roadAnamarphosis(const TArray<Road>& roads, int kernelSize = 9);
+	void roadAnamarphosis(const TArray<Road>& roads,float sigma = 0.3f, int kernelSize = 9, int interpolationPadding = 0);
 	//sugma func
 	void generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads);
 
