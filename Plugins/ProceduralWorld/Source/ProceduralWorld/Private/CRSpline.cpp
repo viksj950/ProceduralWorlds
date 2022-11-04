@@ -153,7 +153,7 @@ void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 	FVector assetScale;
 	FActorSpawnParameters SpawnInfo;
 
-	float scaleValue = 0.55;
+	float scaleValue = 0.9;
 
 	for (int i = 0; i < points.Num(); i++) //Control Points
 	{
@@ -180,7 +180,7 @@ void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 		splineActors.Add(CP_cube);
 
 	}
-	scaleValue = 0.35;
+	scaleValue = 0.7;
 	float steplength = TotalLength / 150.0f; 
 	//UE_LOG(LogTemp, Warning, TEXT("Number of spline points for the total spline should be:  %f"), steplength);
 

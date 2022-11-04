@@ -397,20 +397,27 @@ Triangle::Triangle(UTile* tile, float x, float y, float edgeLength /*= 1 */)
 	//i is lenght of triangle from top to bottom
 	float i = sqrt(pow(edgeLength, 2) - pow(edgeLength / 2, 2));
 
-	//Fetch height (Z) position 
+	//Fetch height (Z) position
 	TOptional<float> heightOptP0 = tile->streamingProxy->GetHeightAtLocation(FVector(x,y + (i / 2),0.0));
 	TOptional<float> heightOptP1 = tile->streamingProxy->GetHeightAtLocation(FVector(x+(edgeLength/2),y-(i/2),0.0));
 	TOptional<float> heightOptP2 = tile->streamingProxy->GetHeightAtLocation(FVector(x - (edgeLength / 2), y - (i / 2), 0.0));
 
 	//Get actual Z value if fetch was succesfull
-	float heightP0 = heightOptP0.GetValue();
-	float heightP1 = heightOptP1.GetValue();
-	float heightP2 = heightOptP2.GetValue();
+
+	if (!heightOptP0.IsSet()) {
+		heightOptP0 = tile->streamingProxy->GetHeightAtLocation(FVector(x, y, 0.0));
+	}
+	if (!heightOptP1.IsSet()) {
+		heightOptP1 = tile->streamingProxy->GetHeightAtLocation(FVector(x, y , 0.0));
+	}
+	if (!heightOptP2.IsSet()) {
+		heightOptP2 = tile->streamingProxy->GetHeightAtLocation(FVector(x, y , 0.0));
+	}
 	
 	//Assigning triangle corners
-	p0 = FVector(x, y + (i / 2), heightP0);
-	p1 = FVector(x + (edgeLength / 2), y - (i / 2), heightP1);
-	p2 = FVector(x - (edgeLength / 2), y - (i / 2), heightP2);
+	p0 = FVector(x, y + (i / 2), heightOptP0.GetValue());
+	p1 = FVector(x + (edgeLength / 2), y - (i / 2), heightOptP1.GetValue());
+	p2 = FVector(x - (edgeLength / 2), y - (i / 2), heightOptP2.GetValue());
 
 	//Calc normal
 	normal =  FVector::CrossProduct((p2 - p0), (p1 - p2));

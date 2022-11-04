@@ -29,5 +29,5 @@ public:
 	TArray<CRSpline> splinePaths;
 
 	//Width for the total road width (should always be odd)
-	uint32 Width = 5;
+	uint32 Width = 7;
 };

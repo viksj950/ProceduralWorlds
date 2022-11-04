@@ -528,18 +528,21 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 					{
 						for (size_t yRoad = (Y - (r.Width - 1) / 2); yRoad < (Y + (r.Width - 1) / 2); yRoad++)
 						{
-							weightedKernelVertex = 0;
 							//Iterate through Gauss kernel
-							for (int j = 0; j < kernelSize * kernelSize; j++) {
-
-								if( 0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
-								{
-								weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
-								}else{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + X, kernel[j].coords.Y + Y)];
+							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
+								weightedKernelVertex = 0;
+								//Iterate through Gauss kernel
+								for (int j = 0; j < kernelSize * kernelSize; j++) {
+									if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+									{
+										weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+									}
+									else {
+										weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, X, Y)];
+									}
 								}
+								concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
 							}
-							concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
 						}
 					}
 				}
@@ -548,7 +551,7 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 				sumWeights = 0;
 				kernelSize += 4;
 				firstIndex = floor((kernelSize) / 2);
-				sigma = 2;
+				sigma = 0.8;
 				for (int x = -firstIndex; x <= firstIndex; x++) {
 
 					for (int y = -firstIndex; y <= firstIndex; y++) {
@@ -573,7 +576,8 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 					{
 						for (size_t yRoad = (Y - (r.Width - 1)); yRoad < (Y + (r.Width - 1)); yRoad++)
 						{
-							weightedKernelVertex = 0;
+							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
+									weightedKernelVertex = 0;
 							//Iterate through Gauss kernel
 							for (int j = 0; j < kernelSize * kernelSize; j++) {
 								if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
@@ -581,10 +585,12 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
 								}
 								else {
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + X, kernel[j].coords.Y + Y)];
+									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, X, Y)];
 								}
 							}
 							concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
+							}
+						
 						}
 					}
 				}
@@ -593,7 +599,7 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 				sumWeights = 0;
 				kernelSize += 1;
 				firstIndex = floor((kernelSize) / 2);
-				sigma = 3;
+				sigma = 1;
 				for (int x = -firstIndex; x <= firstIndex; x++) {
 
 					for (int y = -firstIndex; y <= firstIndex; y++) {
@@ -618,31 +624,32 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, int kernelSize
 					{
 						for (size_t yRoad = (Y - (r.Width - 1)+1); yRoad < (Y + (r.Width - 1)+1); yRoad++)
 						{
-							weightedKernelVertex = 0;
-							//Iterate through Gauss kernel
-							for (int j = 0; j < kernelSize * kernelSize; j++) {
-								if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
-								{
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
+								weightedKernelVertex = 0;
+								//Iterate through Gauss kernel
+								for (int j = 0; j < kernelSize * kernelSize; j++) {
+									if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+									{
+										weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+									}
+									else {
+										weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, X, Y)];
+									}
 								}
-								else {
-									weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + X, kernel[j].coords.Y + Y)];
-								}
+								concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
 							}
-							concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
 						}
 					}
 				}
 				
 			}
 		}
-	//
 }
 
 void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads)
 {
 	FMath math;
-	int tileIndex = 0;
+	uint16 tileIndex = 0;
 
 	do {
 		tileIndex = math.RandRange(0, gridSizeOfProxies * gridSizeOfProxies - 1);
@@ -665,16 +672,18 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
 	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
-	int maxRoadTiles{ 6 };
+	int maxRoadTiles{ 24 };
 	int AdjTries{ 100 };
 	int randomPointTries = 200;
 	int32 tileSize;
 	int oldTileIndex = 0;
+	TArray<uint16> visitedTiles{tileIndex}; //used to not iterate to the same again
+	
 	while (maxRoadTiles > 0 && AdjTries > 0) {
 		AdjTries--;
 		
 		int32 adjIndex = math.RandRange(0, 7);
-		if (inTiles[tileIndex]->adjacentTiles[adjIndex] && inTiles[tileIndex]->adjacentTiles[adjIndex]->biotope != 2 && randomPointTries > 0)
+		if (inTiles[tileIndex]->adjacentTiles[adjIndex] && inTiles[tileIndex]->adjacentTiles[adjIndex]->biotope != 2 && randomPointTries > 0 && !(visitedTiles.Contains(inTiles[tileIndex]->adjacentTiles[adjIndex]->index)))
 		{
 			randomPointTries--;
 			oldTileIndex = tileIndex;
@@ -704,9 +713,16 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 			ControlPoint nextSP;
 			for (; startLength < spline.TotalLength; startLength += 2) {
 				nextSP = spline.GetSplinePoint(spline.GetNormalisedOffset(startLength));
-			
+				
+				//Check so that the point exists within the map boundaries
+				if(0 > FGenericPlatformMath::RoundToInt(nextSP.pos.X) || SizeX <= FGenericPlatformMath::RoundToInt(nextSP.pos.X) || 
+				   0 > FGenericPlatformMath::RoundToInt(nextSP.pos.Y) || SizeY <= FGenericPlatformMath::RoundToInt(nextSP.pos.Y))
+				{
+					canSpawn = false;
+					break;
+				}
 				heightDifference = abs(startHeight -
-					concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(nextSP.pos.X), FGenericPlatformMath::RoundToInt(nextSP.pos.Y))]);
+					concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(nextSP.pos.X), FGenericPlatformMath::RoundToInt(nextSP.pos.Y))])*(100.0f/128.0f);
 				UE_LOG(LogTemp, Warning, TEXT("heightDiff = %f"), heightDifference);
 				if (heightDifference > threshold) {
 					UE_LOG(LogTemp, Warning, TEXT("Attempt at creating spline failed, to much height difference!"));
@@ -720,6 +736,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 			}
 			if(canSpawn) {
 				UE_LOG(LogTemp, Warning, TEXT("Added a spline segment succesfully"));
+				visitedTiles.Add(tileIndex);
 				spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
 				startHeight = concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(spline.points[spline.points.Num() - 2].pos.X), FGenericPlatformMath::RoundToInt(spline.points[spline.points.Num() - 2].pos.Y))];
 				maxRoadTiles--;
@@ -1312,12 +1329,14 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 
 	Landscape->bCanHaveLayersContent = true;
 	Landscape->LandscapeMaterial = nullptr;
+
+	Landscape->StaticLightingLOD = FMath::DivideAndRoundUp(FMath::CeilLogTwo((SizeX * SizeY) / (2048 * 2048) + 1), (uint32)2);
 	
 	Landscape->SetActorTransform(LandscapeTransform);
 	Landscape->Import(FGuid::NewGuid(), 0, 0, SizeX - 1, SizeY - 1, SectionsPerComponent, QuadsPerComponent,
 		HeightDataPerLayers, nullptr, MaterialLayerDataPerLayers, ELandscapeImportAlphamapType::Additive);
 
-	Landscape->StaticLightingLOD = FMath::DivideAndRoundUp(FMath::CeilLogTwo((SizeX * SizeY) / (2048 * 2048) + 1), (uint32)2);
+	
 	// Register all the landscape components
 	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
 
