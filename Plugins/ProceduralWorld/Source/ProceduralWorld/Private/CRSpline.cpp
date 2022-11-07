@@ -108,7 +108,7 @@ float CRSpline::calcSegmentLength(int cp_index, float stepSize = 0.0001f)
 		
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("Segment length  %f"), resLength);
+	//UE_LOG(LogTemp, Warning, TEXT("Segment length  %f"), resLength);
 	return resLength;
 }
 
@@ -134,7 +134,7 @@ void CRSpline::calcLengths()
 		points[i].length = calcSegmentLength(i);
 		TotalLength += points[i].length;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Totallength:  %f"), TotalLength);
+	//UE_LOG(LogTemp, Warning, TEXT("Totallength:  %f"), TotalLength);
 }
 
 void CRSpline::addControlPoint(const ControlPoint& cp)

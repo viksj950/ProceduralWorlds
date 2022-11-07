@@ -11,7 +11,7 @@ ProceduralAssetDistribution::~ProceduralAssetDistribution()
 {
 }
 
-void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float spread, float scaleVar) {
+void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float spread, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int &roadWidth) {
 	UWorld* World = nullptr;
 
 	FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
@@ -40,6 +40,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 
 	for (int i = 0; i < assetCount; i++) {
 
+	
 		//For position
 		float randomValX = mathInstance.FRandRange(minPos, maxPos);
 		float randomValY = mathInstance.FRandRange(minPos, maxPos);
@@ -49,6 +50,32 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 
 		Location.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValX);
 		Location.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValY);
+		//UE_LOG(LogTemp, Warning, TEXT("Asset location.X %f"), Location.X);
+		//UE_LOG(LogTemp, Warning, TEXT("Asset location.Y %f"), Location.Y);
+
+		//Position check to avoid collison with road
+		if (t->biotope != 2) {
+			int maxDistToRoad{ roadWidth };
+			float Xdiff, Ydiff;
+			bool toCloseToRoad{ false };
+			for (size_t j = 0; j < inRoadCoords.Num(); j++)
+			{
+				Xdiff = abs(inRoadCoords[j].pos.Y -Location.X);
+				Ydiff = abs(inRoadCoords[j].pos.X - Location.Y);
+				//UE_LOG(LogTemp, Warning, TEXT("Diff x %f"), Xdiff);
+				//UE_LOG(LogTemp, Warning, TEXT("Diff y %f"), Ydiff);
+				if (Xdiff <= maxDistToRoad && Ydiff <= maxDistToRoad) {
+					toCloseToRoad = true;
+					break;
+				}
+			}
+
+			if (toCloseToRoad) {
+				UE_LOG(LogTemp, Warning, TEXT("Asset to close to span to road, aborting!"));
+				continue;
+			}
+		
+		}
 
 		//Create triangle for normal calculations
 		Triangle tri(t, Location.X, Location.Y);
@@ -60,7 +87,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		RotationAngle = acosf(FVector::DotProduct(UpVector, tri.normal));
 
 		//Check if angle is acceptable to spawn the object within
-		if (RotationAngle > 0.3) {
+		if (RotationAngle > 0.1) {
 			//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for asset was to steep with id: %d"), i);
 			continue;
 		}
@@ -74,7 +101,6 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		FQuat quatRotZ = FQuat(tri.normal, randomZRotation);
 
 		Quat = quatRotZ * Quat;
-
 
 		FRotator Rotation(tri.normal.Rotation());
 
@@ -103,11 +129,8 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		//UE_LOG(LogTemp, Warning, TEXT("Size of house : %s"), *newSize.ToString());
 	
 		Point2D currentHouseTL = { Location.X - (newSize.X/2), Location.Y + (newSize.Y/2) };
-		//UE_LOG(LogTemp, Warning, TEXT("TL.x : %f"), currentHouseTL.x);
-		//UE_LOG(LogTemp, Warning, TEXT("TL.y : %f"), currentHouseTL.y);
 		Point2D currentHouseBR = { Location.X + (newSize.X/2), Location.Y - (newSize.Y/2) };
-		//UE_LOG(LogTemp, Warning, TEXT("BR.x : %f"), currentHouseBR.x);
-		//UE_LOG(LogTemp, Warning, TEXT("BR.y : %f"), currentHouseBR.y);
+
 		Point2D prevHouseTL;
 		Point2D prevHouseBL; 
 		bool shouldSpawn = true;
@@ -125,18 +148,15 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		else { //need to check intersect between other houses, as there is houses already in the tile
 			for (int k = 0; k < t->tileAssets.Num(); k++) {
 				FVector scale = t->tileAssets[k].Get()->GetStaticMeshComponent()->GetRelativeScale3D();
-					/*UE_LOG(LogTemp, Warning, TEXT("SCALE OF ACTOR : %s"), *scale.ToString());
-					UE_LOG(LogTemp, Warning, TEXT("Size of prevHouse : %s"), *(scale*t->tileAssets[k].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize()).ToString());*/
+				
 				FVector prevSize = spread * scale * t->tileAssets[k].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize();
 				prevHouseTL = { t->tileAssets[k]->GetActorLocation().X - (prevSize.X/2) , t->tileAssets[k]->GetActorLocation().Y + (prevSize.Y/2) };
-				//UE_LOG(LogTemp, Warning, TEXT("pTL.x : %f"), prevHouseTL.x);
-				//UE_LOG(LogTemp, Warning, TEXT("pTL.y : %f"), prevHouseTL.y);
 				prevHouseBL = { t->tileAssets[k]->GetActorLocation().X + (prevSize.X/2) , t->tileAssets[k]->GetActorLocation().Y - (prevSize.Y/2) };
-		/*		UE_LOG(LogTemp, Warning, TEXT("pBL.x : %f"), prevHouseBL.x);
-				UE_LOG(LogTemp, Warning, TEXT("pBL.y : %f"), prevHouseBL.y);*/
+
 				if (Intersecting(currentHouseTL, currentHouseBR, prevHouseTL, prevHouseBL)) {
 					//UE_LOG(LogTemp, Warning, TEXT("WILL NOT SPAWN HOUSE, IT IS WITHIN BOUNDS OF OTHER"));
 					shouldSpawn = false;
+					culledAssets.Add(MyNewActor);
 					break;
 				}
 				//else {
@@ -165,13 +185,20 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		
 		}
 		
-		
-		
 	}
+	//Works 2 times, 3rd times is inifnite loop
+	for (auto& i : culledAssets)
+	{
+		if (i.IsValid())
+		{
+			i->Destroy();
+		}
+	}
+	culledAssets.Empty();
 }
 
 
-void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar) {
+void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int& roadWidth) {
 
 	UWorld* World = nullptr;
 
@@ -210,6 +237,33 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 
 			Location.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValX);
 			Location.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValY);
+			//UE_LOG(LogTemp, Warning, TEXT("Asset location.X %f"), Location.X);
+			//UE_LOG(LogTemp, Warning, TEXT("Asset location.Y %f"), Location.Y);
+
+			//Position check to avoid collison with road
+			if (t->biotope != 2) {
+
+				int maxDistToRoad{ roadWidth};
+				float Xdiff, Ydiff;
+				bool toCloseToRoad{ false };
+				for (size_t j = 0; j < inRoadCoords.Num(); j++)
+				{
+					Xdiff = abs(inRoadCoords[j].pos.Y - Location.X);
+					Ydiff = abs(inRoadCoords[j].pos.X - Location.Y);
+					UE_LOG(LogTemp, Warning, TEXT("Diff x %f"), Xdiff);
+					UE_LOG(LogTemp, Warning, TEXT("Diff y %f"), Ydiff);
+					if (Xdiff <= maxDistToRoad && Ydiff <= maxDistToRoad) {
+						toCloseToRoad = true;
+						break;
+					}
+				}
+
+				if (toCloseToRoad) {
+					UE_LOG(LogTemp, Warning, TEXT("Asset to close to road to spawn, aborting!"));
+					continue;
+				}
+
+			}
 
 			//Create triangle for normal calculations
 			Triangle tri(t, Location.X, Location.Y);
@@ -253,9 +307,9 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 
 			//For rotation
 			float randomZRotation = mathInstance.FRandRange(minRot, maxRot);
-			UE_LOG(LogTemp, Warning, TEXT("Rotation of Z is : %f"), randomZRotation);
+			//UE_LOG(LogTemp, Warning, TEXT("Rotation of Z is : %f"), randomZRotation);
 			FRotator rotation{ Quat.Rotator().Pitch,randomZRotation,Quat.Rotator().Roll };
-			UE_LOG(LogTemp, Warning, TEXT("Rotation of plain trees after update : %s"), *rotation.ToString());
+			/*UE_LOG(LogTemp, Warning, TEXT("Rotation of plain trees after update : %s"), *rotation.ToString());*/
 
 			MyNewActor->SetActorRotation(rotation);
 
@@ -327,7 +381,7 @@ void ProceduralAssetDistribution::spawnActorObjectsMountains(UTile* t, const int
 		RotationAngle = acosf(FVector::DotProduct(UpVector, tri.normal));
 
 		if (RotationAngle > 0.8) {
-			UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for rock was to steep with id: %d"), i);
+		/*	UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for rock was to steep with id: %d"), i);*/
 			continue;
 		}
 

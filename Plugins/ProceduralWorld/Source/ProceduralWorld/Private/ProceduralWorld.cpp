@@ -571,38 +571,46 @@ FReply FProceduralWorldModule::Setup()
 		roads[0].vizualizeRoad(myLand.LandscapeScale);
 		//roads[1].calcLengthsSplines();
 		//roads[1].vizualizeRoad(myLand.LandscapeScale);
-		for (int i = 0; i < 5; i++) {
-			myLand.roadAnamarphosis(roads, 0.3,3,i);
+		for (int i = 0; i < 5; i++) { 
+			myLand.roadAnamarphosis(roads, 0.01,15,i);
 		}
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("No posible path for road to geneata"));
+		
 	}
-	
-
-	//Creating texture??
-	//createTextureFromArray(myLand.SizeX,myLand.SizeY,myLand.concatedHeightData);
-	
-
-
-
-	//UE_LOG(LogTemp, Warning, TEXT("TotalLength (spline1) :  %f"), spline1.TotalLength);
 
 	//Currently only imports the landscape settings to the landscape "mesh"
 	landscapePtr = myLand.generateFromTileData(tiles);
 	//LandscapeInfo used for accessing proxies
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
 
+	TArray<ControlPoint> roadCoords;
+	int tempCounter = 0;
+	for (int i = 0; i < roads.Num(); i++) {
+		for (int j = 0; j < roads[i].splinePaths.Num();j++) {
+			for (int k = 0; k < roads[i].splinePaths[j].TotalLength; k += roads[i].splinePaths[j].TotalLength / 100) { //division is the amount of steps
+				roadCoords.Add(roads[i].splinePaths[j].GetSplinePoint(roads[i].splinePaths[j].GetNormalisedOffset(k)));
+				roadCoords[tempCounter].pos = roadCoords[tempCounter].pos * myLand.LandscapeScale; //scale to worldcoords
+				UE_LOG(LogTemp, Warning, TEXT("roadCoords: %s"), *roadCoords[tempCounter].pos.ToString());
+				tempCounter++;
+			}
+		}
+	}
+
 	//Procedual Asset placement
 	ProceduralAssetDistribution temp;
-	int32 maxTrees = 8;
-	int32 maxHouses = 6;
-	int32 maxRocks = 15;
-	float scaleVarF = 0.7;
+	int32 maxTrees = 15;
+	int32 maxHouses = 5;
+	int32 maxRocks = 10;
+	float scaleVarF = 0.5;
 	float scaleVarR = 0.8;
 	float scaleVarC = 0.2;
-	float houseSpread = 1.3; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall in order to fit)
-	
+	float houseSpread = 1.4; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall in order to fit)
+	int roadWidthOffset = 1000; //default is no road was generated
+	if (!roads.IsEmpty()) {
+		roadWidthOffset = roads[0].Width * (myLand.LandscapeScale.X); //currently the width is static for all roads (division by 2 is the "right" way but intersects houses easily)
+	}
 	//after the landscape has been spawned assign proxies to each tile
 	size_t i{ 0 };
 	for (auto& it: LandscapeInfo->Proxies)
@@ -610,15 +618,13 @@ FReply FProceduralWorldModule::Setup()
 		tiles[i]->streamingProxy = it;
 		if (tiles[i]->biotope == 0)
 		{
-			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC);
-			//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
-			/*tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));*/
+			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy,
+				myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC, roadCoords, roadWidthOffset);
 		}
 		else if(tiles[i]->biotope == 1)
 		{
 			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
-				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTrees, scaleVarF);
-			//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTrees, scaleVarF, roadCoords, roadWidthOffset);
 		}
 		else {
 			temp.spawnActorObjectsMountains(tiles[i], QuadsPerComponent,

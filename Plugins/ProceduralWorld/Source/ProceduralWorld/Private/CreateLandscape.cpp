@@ -538,7 +538,7 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, float const si
 										weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
 									}
 									else {
-										weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, X, Y)];
+										weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(SizeX, X, Y)]; //This can crash
 									}
 								}
 								concatedHeightData[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
@@ -723,7 +723,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 				}
 				heightDifference = abs(startHeight -
 					concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(nextSP.pos.X), FGenericPlatformMath::RoundToInt(nextSP.pos.Y))])*(100.0f/128.0f);
-				UE_LOG(LogTemp, Warning, TEXT("heightDiff = %f"), heightDifference);
+			/*	UE_LOG(LogTemp, Warning, TEXT("heightDiff = %f"), heightDifference);*/
 				if (heightDifference > threshold) {
 					UE_LOG(LogTemp, Warning, TEXT("Attempt at creating spline failed, to much height difference!"));
 					canSpawn = false;
