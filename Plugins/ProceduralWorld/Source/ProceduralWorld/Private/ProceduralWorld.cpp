@@ -692,7 +692,7 @@ FReply FProceduralWorldModule::Setup()
 			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
 				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), plainsAssets, scaleVarF, roadCoords, roadWidthOffset);
 		}
-		else {
+		else if(tiles[i]->biotope == 2) {
 			temp.spawnActorObjectsMountains(tiles[i], QuadsPerComponent,
 				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), mountainAssets, scaleVarR);
 		}
