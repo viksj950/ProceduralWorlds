@@ -489,10 +489,12 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
-
+			+SVerticalBox::Slot()
+				[
+					SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
 			]
 		
-
+			]
 	+ SHorizontalBox::Slot()
 		[
 

@@ -30,6 +30,10 @@
 #include "Widgets/Input/SComboButton.h"
 #include "Types/SlateEnums.h"
 
+#include "PropertyEditorModule.h"
+#include "PropertyCustomizationHelpers.h"
+
+
 class FToolBarBuilder;
 class FMenuBuilder;
 struct FLandscapeTextureDataInfo
@@ -258,6 +262,14 @@ public:
 	//Amplitude
 	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
+
+
+	TSharedRef<SObjectPropertyEntryBox>  MyObjectPropertyEntryBox = SNew(SObjectPropertyEntryBox)
+		.AllowedClass(UStaticMesh::StaticClass())
+		.AllowClear(true)
+		.DisplayThumbnail(true)
+		;
+		
 	
 	
 private:
