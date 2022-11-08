@@ -572,7 +572,7 @@ FReply FProceduralWorldModule::Setup()
 		//roads[1].calcLengthsSplines();
 		//roads[1].vizualizeRoad(myLand.LandscapeScale);
 		for (int i = 0; i < 5; i++) { 
-			myLand.roadAnamarphosis(roads, 0.01,15,i);
+			myLand.roadAnamarphosis(roads, 0.01,3,i);
 		}
 	}
 	else {
@@ -580,7 +580,7 @@ FReply FProceduralWorldModule::Setup()
 		
 	}
 
-	//Currently only imports the landscape settings to the landscape "mesh"
+	//Currently only imports the landscape settings to the landscape "mesh"mountainAssets
 	landscapePtr = myLand.generateFromTileData(tiles);
 	//LandscapeInfo used for accessing proxies
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
@@ -600,11 +600,11 @@ FReply FProceduralWorldModule::Setup()
 
 	//Procedual Asset placement
 	ProceduralAssetDistribution temp;
-	int32 maxTrees = 15;
+	int32 plainsAssets = 15;
 	int32 maxHouses = 5;
-	int32 maxRocks = 10;
-	float scaleVarF = 0.5;
-	float scaleVarR = 0.8;
+	int32 mountainAssets = 10;
+	float scaleVarF = 0.3;
+	float scaleVarR = 0.5;
 	float scaleVarC = 0.2;
 	float houseSpread = 1.4; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall in order to fit)
 	int roadWidthOffset = 1000; //default is no road was generated
@@ -624,11 +624,11 @@ FReply FProceduralWorldModule::Setup()
 		else if(tiles[i]->biotope == 1)
 		{
 			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
-				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxTrees, scaleVarF, roadCoords, roadWidthOffset);
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), plainsAssets, scaleVarF, roadCoords, roadWidthOffset);
 		}
 		else {
 			temp.spawnActorObjectsMountains(tiles[i], QuadsPerComponent,
-				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), maxRocks, scaleVarR);
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), mountainAssets, scaleVarR);
 		}
 		
 		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));

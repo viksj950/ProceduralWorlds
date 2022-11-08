@@ -186,7 +186,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 		}
 		
 	}
-	//Works 2 times, 3rd times is inifnite loop
+	//removal of all the culled houses
 	for (auto& i : culledAssets)
 	{
 		if (i.IsValid())
@@ -206,7 +206,7 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 	World = EditorWorldContext.World();
 	FVector proxyLocation;
 	FVector proxyScale;
-	FVector Location;
+	FVector Location, Locationl;
 
 	//Asset specific
 	FVector assetScale;
@@ -217,7 +217,7 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 	float maxRot = 360.0f;
 	float minScale;
 	float maxScale;
-	float RotationAngle;
+	float RotationAngle, RotationAnglel;
 
 		if (t->streamingProxy != nullptr)
 		{
@@ -231,14 +231,22 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 			//For position
 			float randomValX = mathInstance.FRandRange(minPos, maxPos);
 			float randomValY = mathInstance.FRandRange(minPos, maxPos);
+			
+			//Temp for leaf
+			float randomValXl = mathInstance.FRandRange(minPos, maxPos);
+			float randomValYl = mathInstance.FRandRange(minPos, maxPos);
 
 			//Find position in tile
 			Location = proxyLocation + (ComponentSizeQuads * proxyScale) * (ComponentsPerProxy / 2.0); //scales based on perProxy
+			//leaf emp
+			Locationl = proxyLocation + (ComponentSizeQuads * proxyScale) * (ComponentsPerProxy / 2.0); //scales based on perProxy
 
 			Location.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValX);
 			Location.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValY);
-			//UE_LOG(LogTemp, Warning, TEXT("Asset location.X %f"), Location.X);
-			//UE_LOG(LogTemp, Warning, TEXT("Asset location.Y %f"), Location.Y);
+
+			//leaf temp
+			Locationl.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValXl);
+			Locationl.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValYl);
 
 			//Position check to avoid collison with road
 			if (t->biotope != 2) {
@@ -250,8 +258,8 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 				{
 					Xdiff = abs(inRoadCoords[j].pos.Y - Location.X);
 					Ydiff = abs(inRoadCoords[j].pos.X - Location.Y);
-					UE_LOG(LogTemp, Warning, TEXT("Diff x %f"), Xdiff);
-					UE_LOG(LogTemp, Warning, TEXT("Diff y %f"), Ydiff);
+	/*				UE_LOG(LogTemp, Warning, TEXT("Diff x %f"), Xdiff);
+					UE_LOG(LogTemp, Warning, TEXT("Diff y %f"), Ydiff);*/
 					if (Xdiff <= maxDistToRoad && Ydiff <= maxDistToRoad) {
 						toCloseToRoad = true;
 						break;
@@ -262,7 +270,7 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 					UE_LOG(LogTemp, Warning, TEXT("Asset to close to road to spawn, aborting!"));
 					continue;
 				}
-
+				 
 			}
 
 			//Create triangle for normal calculations
@@ -270,9 +278,16 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 
 			Location.Z = t->streamingProxy->GetHeightAtLocation(Location).GetValue();
 
+			//leaf temp
+			Triangle tril(t, Locationl.X, Locationl.Y);
+			Locationl.Z = t->streamingProxy->GetHeightAtLocation(Locationl).GetValue();
+
 			FVector UpVector = FVector(0, 0, 1);
 
 			RotationAngle = acosf(FVector::DotProduct(UpVector, tri.normal));
+
+			//leaf
+			RotationAnglel = acosf(FVector::DotProduct(UpVector, tril.normal));
 
 			if (RotationAngle > 0.5) {
 				//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for asset was to steep with id: %d"), i);
@@ -284,7 +299,11 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 
 			FQuat Quat = FQuat(RotationAxis, RotationAngle);
 
-			FRotator Rotation(tri.normal.Rotation());
+			//for leaf temp
+			FVector RotationAxisl = FVector::CrossProduct(UpVector, tril.normal);
+			RotationAxisl.Normalize();
+
+			FQuat Quatl = FQuat(RotationAxisl, RotationAnglel);
 
 			//UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
 			//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine, spawns actor in tile: %d"), i);
@@ -293,6 +312,8 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 
 			//Specify where in the world it will spawn, using ground tilt
 			AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Quat.Rotator(), SpawnInfo);
+
+			AStaticMeshActor* MyNewActor1 = World->SpawnActor<AStaticMeshActor>(Locationl, Quatl.Rotator(), SpawnInfo);
 
 			//For scale variance (Super ugly implementation, assumes uniform scale on all axises)
 			FVector defaultScale = MyNewActor->GetActorScale3D();
@@ -312,19 +333,44 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 			/*UE_LOG(LogTemp, Warning, TEXT("Rotation of plain trees after update : %s"), *rotation.ToString());*/
 
 			MyNewActor->SetActorRotation(rotation);
+			MyNewActor1->SetActorRotation(rotation);
 
 			//Mesh binding
 			UStaticMesh* Mesh1;
+			UStaticMesh* Mesh2;
+			
+			//srand(time(NULL)); // Seed the time
+			int randNum = rand() % (5 - 1 + 1) + 1; //random number between 1-5 (20 % chance for rocks)
 
-			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/_GENERATED/viksj950/temp_tree02.temp_tree02'"));
+			UE_LOG(LogTemp, Warning, TEXT("randomNumber : %d"), randNum); 
+
+			if (randNum == 5) {
+				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Rocks/TinyRock/TinyRockLowPoly01.TinyRockLowPoly01'"));
+				
+			}
+			else if (randNum == 4) {
+				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Tree.Tree'"));
+			}
+			else {
+				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/_GENERATED/viksj950/temp_tree02.temp_tree02'"));
+			}
+
+			//Leaf/grass
+			Mesh2 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/leaf.leaf'"));
 
 			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+			UStaticMeshComponent* MeshComponent1 = MyNewActor1->GetStaticMeshComponent();
 			if (MeshComponent)
 			{
 				MeshComponent->SetStaticMesh(Mesh1);
 			}
+			if (MeshComponent1)
+			{
+				MeshComponent1->SetStaticMesh(Mesh2);
+			}
 			//Add to tileassets for deletion if needed
 			t->tileAssets.Add(MyNewActor);
+			t->tileAssets.Add(MyNewActor1);
 		}
 	
 
