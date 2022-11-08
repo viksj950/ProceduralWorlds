@@ -491,7 +491,17 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				
 			+SVerticalBox::Slot()
 				[
-					SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
+					//SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
+					SNew(SObjectPropertyEntryBox)
+					.AllowedClass(UStaticMesh::StaticClass())
+					.AllowClear(true)
+					.DisplayThumbnail(true)
+				.OnObjectChanged_Lambda([&](auto inData) {
+
+				this->storedData = &inData;
+				
+				
+						})
 			]
 		
 			]
@@ -726,6 +736,8 @@ FReply FProceduralWorldModule::ListTiles()
 	UE_LOG(LogTemp, Warning, TEXT("frequency: %f"), BiotopeSettings[BiomeSettingSelection].Frequency);
 	UE_LOG(LogTemp, Warning, TEXT("Lacuanarity: %f"), BiotopeSettings[BiomeSettingSelection].Lacunarity);*/
 
+
+	UE_LOG(LogTemp, Warning, TEXT("Added a static mesh?????: %s"), *storedData->ObjectPath.ToString());
 	return FReply::Handled();
 }
 

@@ -270,6 +270,7 @@ public:
 		.DisplayThumbnail(true)
 		;
 		
+	FAssetData *storedData;
 	
 	
 private:
