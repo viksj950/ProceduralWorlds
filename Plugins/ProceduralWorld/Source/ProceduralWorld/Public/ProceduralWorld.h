@@ -30,6 +30,10 @@
 #include "Widgets/Input/SComboButton.h"
 #include "Types/SlateEnums.h"
 
+#include "PropertyEditorModule.h"
+#include "PropertyCustomizationHelpers.h"
+
+
 class FToolBarBuilder;
 class FMenuBuilder;
 struct FLandscapeTextureDataInfo
@@ -188,6 +192,8 @@ public:
 
 	TSharedPtr<STextBlock> ComboBoxTitleBlock;
 
+	
+
 	///Some functions for UI, maybe move this later?
 	int32 sizeOfLandscape{ 0 };
 	TOptional<int32> GetNumberOfTiles();
@@ -224,6 +230,15 @@ public:
 		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64, 2550,3,1.2f,0.5f,0.015f,1.0f)) ,
 		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64, 4096,5,2.3f,0.92f,0.0015f,1.96f)) };
 	
+
+	//TSharedPtr<FString> newBiotopeName;
+	//void SetNewBiotopeName(const FText& NewText) { newBiotopeName = MakeShareable(new FString(NewText.ToString())); };
+	FText newBiomeName;
+	FReply addNewBiotope() {
+		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(newBiomeName.ToString(), BiotopeSettings.Num(), 64, 4096, 5, 2.3f, 0.92f, 0.0015f, 1.96f)));
+		return FReply::Handled();
+	};
+
 	TSharedPtr<STextBlock> ComboBoxTitleBlockNoise;
 	int BiomeSettingSelection{ 0 };
 
@@ -247,6 +262,14 @@ public:
 	//Amplitude
 	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
+
+
+	TSharedRef<SObjectPropertyEntryBox>  MyObjectPropertyEntryBox = SNew(SObjectPropertyEntryBox)
+		.AllowedClass(UStaticMesh::StaticClass())
+		.AllowClear(true)
+		.DisplayThumbnail(true)
+		;
+		
 	
 	
 private:

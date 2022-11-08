@@ -80,6 +80,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 
 			+SVerticalBox::Slot()
+		.AutoHeight()
 		.MaxHeight(100)
 		[
 
@@ -395,6 +396,66 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 		+SHorizontalBox::Slot()
 			[
+
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.MaxHeight(50)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Left)
+			[
+
+				SNew(STextBlock)
+				.Text(FText::FromString("Add new biotope"))
+
+
+
+			]
+
+		+ SHorizontalBox::Slot()
+			//.AutoWidth()
+			//.MaxWidth(150)
+
+			[
+				SNew(SEditableTextBox)
+				.HintText(LOCTEXT("addBiotopeHint", "name"))
+				
+				.OnTextChanged_Lambda([&](auto newName){
+				
+			this->newBiomeName = newName;
+			})
+				
+			]
+		+SHorizontalBox::Slot()
+			.MaxWidth(50)
+			[
+				SNew(SButton)
+				.Text(LOCTEXT("AddBiotopeButton", "Add"))
+				.OnClicked_Raw(this, &FProceduralWorldModule::addNewBiotope)
+			[
+				SNew(SBox)
+				.WidthOverride(50)
+				.HeightOverride(25)
+				
+				[
+				SNew(SImage)
+				
+				.ColorAndOpacity(FSlateColor::UseForeground())
+				.Image(FAppStyle::Get().GetBrush("Icons.plus"))
+				]
+				]
+			]
+
+			]
+			+SVerticalBox::Slot()
+			[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
 			.AutoWidth()
@@ -426,9 +487,14 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			.OnValueChanged_Lambda([&](auto newValue) {this->nmbrOfBiomes = newValue; })
 			]
 
+				]
+				
+			+SVerticalBox::Slot()
+				[
+					SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
 			]
 		
-
+			]
 	+ SHorizontalBox::Slot()
 		[
 
@@ -637,6 +703,7 @@ FReply FProceduralWorldModule::Setup()
 
 
 	
+	
 	return FReply::Handled();
 }
 
@@ -650,6 +717,7 @@ FReply FProceduralWorldModule::ListTiles()
 
 	UE_LOG(LogTemp, Warning, TEXT("Have amount of biomes changed?: %d"), nmbrOfBiomes);
 
+	UE_LOG(LogTemp, Warning, TEXT("Name for new biome: %s"), *newBiomeName.ToString());
 
 	/*UE_LOG(LogTemp, Warning, TEXT("heightScale %d"), BiotopeSettings[BiomeSettingSelection].HeightScale);
 	UE_LOG(LogTemp, Warning, TEXT("octaveCount: %d"), BiotopeSettings[BiomeSettingSelection].OctaveCount);
