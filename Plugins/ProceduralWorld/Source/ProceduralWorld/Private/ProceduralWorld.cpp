@@ -489,20 +489,20 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
-			+SVerticalBox::Slot()
+			+ SVerticalBox::Slot()
 				[
 					//SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
 					SNew(SObjectPropertyEntryBox)
 					.AllowedClass(UStaticMesh::StaticClass())
-					.AllowClear(true)
-					.DisplayThumbnail(true)
-				.OnObjectChanged_Lambda([&](auto inData) {
-
-				this->storedData = &inData;
-				
-				
+				.AllowClear(true)
+				.ObjectPath_Lambda([&]() {return this->storedNamePath; })
+				.DisplayUseSelected(true)
+				.DisplayThumbnail(true)
+				.ThumbnailPool(this->myAssetThumbnailPool)
+				.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+				this->storedNamePath = inData.ObjectPath.ToString();			
 						})
-			]
+				]
 		
 			]
 	+ SHorizontalBox::Slot()
@@ -736,8 +736,18 @@ FReply FProceduralWorldModule::ListTiles()
 	UE_LOG(LogTemp, Warning, TEXT("frequency: %f"), BiotopeSettings[BiomeSettingSelection].Frequency);
 	UE_LOG(LogTemp, Warning, TEXT("Lacuanarity: %f"), BiotopeSettings[BiomeSettingSelection].Lacunarity);*/
 
-
-	UE_LOG(LogTemp, Warning, TEXT("Added a static mesh?????: %s"), *storedData->ObjectPath.ToString());
+	/*if (storedData->IsValid())
+	{
+		storedData
+		UE_LOG(LogTemp, Warning, TEXT("Added a static mesh?????: %s"), storedData.Get().);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("storedData is not valid"));
+	}*/
+	
+	UE_LOG(LogTemp, Warning, TEXT("storedData Name: %s"),*storedNamePath);
+	
 	return FReply::Handled();
 }
 

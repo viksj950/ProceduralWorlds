@@ -263,14 +263,9 @@ public:
 	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
 
-
-	TSharedRef<SObjectPropertyEntryBox>  MyObjectPropertyEntryBox = SNew(SObjectPropertyEntryBox)
-		.AllowedClass(UStaticMesh::StaticClass())
-		.AllowClear(true)
-		.DisplayThumbnail(true)
-		;
-		
-	FAssetData *storedData;
+	//
+	FString storedNamePath;
+	TSharedPtr<FAssetThumbnailPool> myAssetThumbnailPool = MakeShareable(new FAssetThumbnailPool(100));
 	
 	
 private:
