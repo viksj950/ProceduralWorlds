@@ -263,13 +263,10 @@ public:
 	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
 
-
-	TSharedRef<SObjectPropertyEntryBox>  MyObjectPropertyEntryBox = SNew(SObjectPropertyEntryBox)
-		.AllowedClass(UStaticMesh::StaticClass())
-		.AllowClear(true)
-		.DisplayThumbnail(true)
-		;
-		
+	//Functionality for saving asset paths when selecting static meshes
+	FString storedNamePath;
+	//Saving Thumbnails for the asset selection functionality in the UI (Set to store up to 50 thumbnaails)
+	TSharedPtr<FAssetThumbnailPool> myAssetThumbnailPool = MakeShareable(new FAssetThumbnailPool(50));
 	
 	
 private:
@@ -277,6 +274,7 @@ private:
 	void RegisterMenus();
 
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
+	TSharedRef<class SDockTab> OnSpawnPluginAssetTab(const class FSpawnTabArgs& SpawnTabArgs);
 
 private:
 	TSharedPtr<class FUICommandList> PluginCommands;
