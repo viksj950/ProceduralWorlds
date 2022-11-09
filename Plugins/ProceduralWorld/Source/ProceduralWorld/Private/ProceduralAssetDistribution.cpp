@@ -319,8 +319,6 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 			//srand(time(NULL)); // Seed the time
 			int randNum = rand() % (5 - 1 + 1) + 1; //random number between 1-5 (20 % chance for rocks)
 
-			UE_LOG(LogTemp, Warning, TEXT("randomNumber : %d"), randNum); 
-
 			if (randNum == 5) {
 				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Rocks/TinyRock/TinyRockLowPoly01.TinyRockLowPoly01'"));
 				
