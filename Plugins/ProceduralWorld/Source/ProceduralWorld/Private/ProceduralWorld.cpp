@@ -12,7 +12,7 @@
 
 //We added this
 #include "Widgets/Input/SButton.h" //sbutton for UI
-#include "CreateLandscape.h" //includes setup for landscape properties
+
 
 
 
@@ -64,185 +64,667 @@ void FProceduralWorldModule::ShutdownModule()
 
 TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
-	//FText WidgetText = FText::Format(
-	//	LOCTEXT("WindowWidgetText", "Generate landscape")
-	//	);
-
-	//CreateLandscape boomboom;
-
-	//return SNew(SDockTab)
-	//	.TabRole(ETabRole::NomadTab)
-	//	[
-	//		// Put your tab content here!
-	//		//myButt;
-	//		
-	//		SNew(SBox)
-	//		.HAlign(HAlign_Center)
-	//		.VAlign(VAlign_Center)
-	//		[
-	//			SNew(SButton)
-	//			.Text(WidgetText)
-	//			.OnClicked_Raw(this, &FProceduralWorldModule::Setup)
-	//		]
-	//
-	//	];
-
-
+	
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
+			SNew(SHorizontalBox)	//Main Horizontal box, now dividing setting on one box and generation/listinging/deletion in the other
+			+ SHorizontalBox::Slot()
+		[
+
+
+
+
+			SNew(SVerticalBox)	//Vertical box to store rows(Horizontal boxes) with text / settings
+
+
+
+			+SVerticalBox::Slot()
+		.AutoHeight()
+		.MaxHeight(100)
+		[
+
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Biotope:"))
+
+
+
+		]
+	+ SHorizontalBox::Slot()
+		[
+			SNew(SComboBox<TSharedPtr<BiotopePerlinNoiseSetting>>)
+			.OptionsSource(&BiotopeSettings)
+		.OnGenerateWidget_Lambda([](TSharedPtr<BiotopePerlinNoiseSetting> Item)
+			{
+				return SNew(STextBlock).Text(FText::FromString(*Item->Biotope));
+				//return SNew(SButton).Text(FText::FromString(*Item->Description));
+			})
+		.OnSelectionChanged_Lambda([this](TSharedPtr<BiotopePerlinNoiseSetting> InSelection, ESelectInfo::Type InSelectInfo)
+			{
+				if (InSelection.IsValid() && ComboBoxTitleBlockNoise.IsValid())
+				{
+					ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
+					this->BiomeSettingSelection = InSelection->BiotopeIndex;
+
+				}
+
+			})
+				[
+					SAssignNew(ComboBoxTitleBlockNoise, STextBlock).Text(LOCTEXT("ComboLabel", "City"))
+				]
+
+
+		]
+
+		]
+			+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("HeightScale"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.MaxWidth(150)
+
+		.Padding(5.0f)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SNumericEntryBox<int32>)
+			.AllowSpin(true)
+		.MinValue(1)
+		.MaxValue(4096)
+		.MaxSliderValue(4096)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetHeightScale)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetHeightScale)
+		]
+
+
+		]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Octaves"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<int32>)
+			.AllowSpin(true)
+		.MinValue(1)
+		.MaxValue(16)
+		.MaxSliderValue(5)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetOctaveCount)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetOctaveCount)
+		]
+
+
+		]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Amplitude"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(0)
+		.MaxValue(12)
+		.MaxSliderValue(5)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetAmplitude)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetAmplitude)
+		]
+
+
+		]
+
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Persistence"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(0)
+		.MaxValue(1)
+		.MaxSliderValue(1)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetPersistence)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetPersistence)
+		]
+
+
+		]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Frequency"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(0)
+		.MaxValue(1)
+		.MaxSliderValue(1)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetFrequency)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetFrequency)
+		]
+
+
+		]
+
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Lacunarity"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(1)
+		.MaxValue(4)
+		.MaxSliderValue(16)
+		.MinDesiredValueWidth(2)
+		.Value_Raw(this, &FProceduralWorldModule::GetLacunarity)
+		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetLacunarity)
+		]
+
+
+		]
+	+ SVerticalBox::Slot()
+		.MaxHeight(100)
+		[
+
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Landscape dimensions (OBS only 1 component per proxy is working)"))
+
+
+
+		]
+	+ SHorizontalBox::Slot()
+		[
+			SNew(SComboBox<TSharedPtr<LandscapeSetting>>)
+			.OptionsSource(&LandscapeComboSettings)
+		.OnGenerateWidget_Lambda([](TSharedPtr<LandscapeSetting> Item)
+			{
+				return SNew(STextBlock).Text(FText::FromString(*Item->Description));
+				//return SNew(SButton).Text(FText::FromString(*Item->Description));
+			})
+		.OnSelectionChanged_Lambda([this](TSharedPtr<LandscapeSetting> InSelection, ESelectInfo::Type InSelectInfo)
+			{
+				if (InSelection.IsValid() && ComboBoxTitleBlock.IsValid())
+				{
+					ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
+					this->SetLandscapeSettings(InSelection);
+
+				}
+
+			})
+				[
+					SAssignNew(ComboBoxTitleBlock, STextBlock).Text(LOCTEXT("ComboLabel", "Label"))
+				]
+
+
+		]
+
+		]
+
+
+		]
+
+		+SHorizontalBox::Slot()
+			[
+
 			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.MaxHeight(50)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Left)
+			[
+
+				SNew(STextBlock)
+				.Text(FText::FromString("Add new biotope"))
+
+
+
+			]
+
+		+ SHorizontalBox::Slot()
+			//.AutoWidth()
+			//.MaxWidth(150)
+
+			[
+				SNew(SEditableTextBox)
+				.HintText(LOCTEXT("addBiotopeHint", "name"))
+				
+				.OnTextChanged_Lambda([&](auto newName){
+				
+			this->newBiomeName = newName;
+			})
+				
+			]
+		+SHorizontalBox::Slot()
+			.MaxWidth(50)
+			[
+				SNew(SButton)
+				.Text(LOCTEXT("AddBiotopeButton", "Add"))
+				.OnClicked_Raw(this, &FProceduralWorldModule::addNewBiotope)
+			[
+				SNew(SBox)
+				.WidthOverride(50)
+				.HeightOverride(25)
+				
+				[
+				SNew(SImage)
+				
+				.ColorAndOpacity(FSlateColor::UseForeground())
+				.Image(FAppStyle::Get().GetBrush("Icons.plus"))
+				]
+				]
+			]
+
+			]
 			+SVerticalBox::Slot()
-			.Padding(1.0f)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Left)
+			[
+
+				SNew(STextBlock)
+				.Text(FText::FromString("Amount of biomes"))
+
+
+
+			]
+
+		+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			[
+				SNew(SNumericEntryBox<int32>)
+				.AllowSpin(true)
+			.MinValue(0)
+			.MaxValue(20)
+			.MaxSliderValue(20)
+			.MinDesiredValueWidth(2)
+			.Value_Lambda([this]() {return this->nmbrOfBiomes; })
+			.OnValueChanged_Lambda([&](auto newValue) {this->nmbrOfBiomes = newValue; })
+			]
+
+				]
+				
+			+SVerticalBox::Slot()
+				[
+					SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
+			]
+		
+			]
+	+ SHorizontalBox::Slot()
+		[
+
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+		.Padding(1.0f)
+		.HAlign(HAlign_Center)
+		[
+			SNew(SBox)
 			.HAlign(HAlign_Center)
-			[
-				SNew(SBox)
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				[
-					SNew(SButton)
-					.Text(FText::FromString("Generate landscape"))
-					.OnClicked_Raw(this, &FProceduralWorldModule::Setup)
-				]
-			]
+		.VAlign(VAlign_Center)
+		[
+			SNew(SButton)
+			.Text(FText::FromString("Generate landscape"))
+		.OnClicked_Raw(this, &FProceduralWorldModule::Setup)
+		]
+		]
 
-			+SVerticalBox::Slot()
-			[
-				SNew(SBox)
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				[
-					SNew(SButton)
-					.Text(FText::FromString("List tiles"))
-					.OnClicked_Raw(this, &FProceduralWorldModule::ListTiles)
-				]
-			]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SBox)
+			.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SButton)
+			.Text(FText::FromString("List tiles"))
+		.OnClicked_Raw(this, &FProceduralWorldModule::ListTiles)
+		]
+		]
 
-			+SVerticalBox::Slot()
-				[
-					SNew(SBox)
-					.HAlign(HAlign_Center)
-					.VAlign(VAlign_Center)
-					[
-						SNew(SButton)
-						.Text(FText::FromString("List and delete tiles"))
-						.OnClicked_Raw(this, &FProceduralWorldModule::DeleteLandscape)
-					]
-				]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SBox)
+			.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SButton)
+			.Text(FText::FromString("Delete Landscape"))
+		.OnClicked_Raw(this, &FProceduralWorldModule::DeleteLandscape)
+		]
+		]
 
-			
-			
+		]
+
+
+
+
+
 		];
 }
 
 FReply FProceduralWorldModule::Setup()
 {
 	//Call to CreateLandscape and generate its properties 
-	CreateLandscape myLand;
-	landscapePtr = myLand.generate();
-
-	//Dynamic sizes
-
-	//Reserve to not reallacoate during runtime. 
-	tiles.Reserve(myLand.GetGridSizeOfProxies()*myLand.GetGridSizeOfProxies());
-
-	//tiles.Init(Tile(), 16);
-
-	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
-	//TConstIterator<ALandscapeStreamingProxy> it(LandscapeInfo->Proxies.CreateConstIterator()); //LandscapeInfo->Proxies.CreateConstIterator();
-	UE_LOG(LogTemp, Warning, TEXT("Num of proxies: %d"), LandscapeInfo->Proxies.Num());
-	UE_LOG(LogTemp, Warning, TEXT("Num of tiles: %d"), tiles.Num());
-	if (!tiles.IsEmpty())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("tiles is not empty, attempting to solve ezpz by resizing"));
-			
-	}
-	//tiles.Empty(); //Should not be needed, but for some reason tiles start of with a maxed out array, we must empty it.
-	//UE_LOG(LogTemp, Warning, TEXT("Num of tiles after being resized: %d"), tiles.Num());
-
-	uint32 index{ 0 };
-	for (auto& it : LandscapeInfo->Proxies)
-	{
+	CreateLandscape myLand(SizeX,SizeY,QuadsPerComponent,ComponentsPerProxy,SectionsPerComponent,TileSize);
 	
-		UTile* temp = new UTile(it);/* = NewObject<UTile>();*/
-		//temp->streamingProxy = it;
-		temp->index = index;
-		temp->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_gravelMaterial.M_gravelMaterial'")));
+	
+	//DO THIS BETTER----------------
+	int32 nmbrOfTilesInARow = (SizeX -1) / (QuadsPerComponent * ComponentsPerProxy);
+
+	//tiles.Init(new UTile(QuadsPerComponent, ComponentsPerProxy), nmbrOfTilesInARow * nmbrOfTilesInARow);
+
+	for (size_t i{0}; i < nmbrOfTilesInARow*nmbrOfTilesInARow; i++)
+	{
+
+		UTile* temp = new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize);
+		temp->index = i;
 		tiles.Add(temp);
-		index++;
-
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Num of tiles after adding them: %d"), tiles.Num());
 
-	tiles[11]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'")));
 	for (size_t i = 0; i < tiles.Num(); i++)
 	{
-	
-		tiles[i]->updateAdjacentTiles(tiles, myLand.GetGridSizeOfProxies());
+
+		tiles[i]->updateAdjacentTiles(tiles, nmbrOfTilesInARow);
 
 	}
+
+	/*tiles[9]->biotope = 0;
+	tiles[1]->biotope = 2;
+	tiles[0]->biotope = 2;
+	tiles[8]->biotope = 2;*/
+	//tiles[17]->biotope = 2;
+	//tiles[18]->biotope = 2;
+	//tiles[17]->biotope = 0;
+	//tiles[18]->biotope = 0;
+	//tiles[19]->biotope = 0;
+
+
+	myLand.AssignBiotopesToTiles(tiles,nmbrOfBiomes,BiotopeSettings);
+	//Generate Perlin Noise and assign it to all tiles
+	//myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
+
+	//Creates proxies used in world partioning
+	myLand.GenerateAndAssignHeightData(tiles,BiotopeSettings);
+
+	//Concatinate heightData from all tiles and spawn a landscape
+	myLand.concatHeightData(tiles);
+	//Interpolate using gaussian blur
+	myLand.interpBiomes(tiles, 3, 1.0, 30, 20);
+	//Spline/roads (hardocding)
+	//ControlPoint cp1 = { 0.0, 0.0, 0.0 };
+	//ControlPoint cp2 = { 63.0, 10.0, 0.0 };
+	//ControlPoint cp3 = { 120.0, 10.0, 0.0 };
+	//ControlPoint cp4 = { 200.0, 10.0, 0.0 };
+	//ControlPoint cp9 = { 230.0, 10.0, 0.0 };
+	////Spline 2
+	//ControlPoint cp5 = { 200.0, 10.0, 0.0 };
+	//ControlPoint cp6 = { 120.0, 10.0, 0.0 };
+	//ControlPoint cp7 = { 300.0, 97.0, 0.0 };
+	//ControlPoint cp8 = { 500.0, 130.0, 0.0 };
+
+	//CRSpline spline1(cp1, cp2, cp3, cp4);
+	//CRSpline spline2(cp5, cp6, cp7, cp8);
+	//spline1.addControlPoint(cp9);
+
+	///*spline1.calcLengths();
+	//spline2.calcLengths();*/
+
+	//Road r1(spline1);
+	//Road r2(spline2);
+	//roads.Add(r1);
+	//roads[0].extend({ 150.0, 60.0, 0.0 }); //this value should be the random value
+	//roads.Add(r2);
+
+	//roads[0].calcLengthsSplines();
+	//roads[0].vizualizeRoad(myLand.LandscapeScale);
+
+	//Road RoadGenerated;
+	//RoadGenerated.generateRoad(tiles,myLand.GetGridSizeOfProxies());
+	////RoadGenerated.calcLengthsSplines();
+	////RoadGenerated.vizualizeRoad(myLand.LandscapeScale);
+	//roads.Add(RoadGenerated);
+	//roads[0].calcLengthsSplines();
+	//roads[0].vizualizeRoad(myLand.LandscapeScale);
+
+	myLand.generateRoadSmart(tiles, roads);
+	//myLand.generateRoadSmart(tiles, roads);
+	if (!roads.IsEmpty()) {
+		roads[0].calcLengthsSplines();
+		roads[0].vizualizeRoad(myLand.LandscapeScale);
+		//roads[1].calcLengthsSplines();
+		//roads[1].vizualizeRoad(myLand.LandscapeScale);
+		for (int i = 0; i < 5; i++) { 
+			myLand.roadAnamarphosis(roads, 0.01,3,i);
+		}
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("No posible path for road to geneata"));
+		
+	}
+
+	//Currently only imports the landscape settings to the landscape "mesh"mountainAssets
+	landscapePtr = myLand.generateFromTileData(tiles);
+	//LandscapeInfo used for accessing proxies
+	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
+
+	TArray<ControlPoint> roadCoords;
+	int tempCounter = 0;
+	for (int i = 0; i < roads.Num(); i++) {
+		for (int j = 0; j < roads[i].splinePaths.Num();j++) {
+			for (int k = 0; k < roads[i].splinePaths[j].TotalLength; k += roads[i].splinePaths[j].TotalLength / 100) { //division is the amount of steps
+				roadCoords.Add(roads[i].splinePaths[j].GetSplinePoint(roads[i].splinePaths[j].GetNormalisedOffset(k)));
+				roadCoords[tempCounter].pos = roadCoords[tempCounter].pos * myLand.LandscapeScale; //scale to worldcoords
+				UE_LOG(LogTemp, Warning, TEXT("roadCoords: %s"), *roadCoords[tempCounter].pos.ToString());
+				tempCounter++;
+			}
+		}
+	}
+
+	//Procedual Asset placement
+	ProceduralAssetDistribution temp;
+	int32 plainsAssets = 15;
+	int32 maxHouses = 5;
+	int32 mountainAssets = 10;
+	float scaleVarF = 0.3;
+	float scaleVarR = 0.5;
+	float scaleVarC = 0.2;
+	float houseSpread = 1.4; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall in order to fit)
+	int roadWidthOffset = 1000; //default is no road was generated
+	if (!roads.IsEmpty()) {
+		roadWidthOffset = roads[0].Width * (myLand.LandscapeScale.X); //currently the width is static for all roads (division by 2 is the "right" way but intersects houses easily)
+	}
+	//after the landscape has been spawned assign proxies to each tile
+	size_t i{ 0 };
+	for (auto& it: LandscapeInfo->Proxies)
+	{
+		tiles[i]->streamingProxy = it;
+		if (tiles[i]->biotope == 0)
+		{
+			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy,
+				myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC, roadCoords, roadWidthOffset);
+		}
+		else if(tiles[i]->biotope == 1)
+		{
+			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), plainsAssets, scaleVarF, roadCoords, roadWidthOffset);
+		}
+		else if(tiles[i]->biotope == 2) {
+			temp.spawnActorObjectsMountains(tiles[i], QuadsPerComponent,
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), mountainAssets, scaleVarR);
+		}
+		
+		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
+		i++;
+	}
+
+
+	
 	
 	return FReply::Handled();
 }
 
 FReply FProceduralWorldModule::ListTiles()
 {
-	UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
+	UE_LOG(LogTemp, Warning, TEXT("heightScale %d"), SizeX);
+	UE_LOG(LogTemp, Warning, TEXT("SizeY: %d"), SizeY);
+	UE_LOG(LogTemp, Warning, TEXT("QuadsPerComponent: %d"), QuadsPerComponent);
+	UE_LOG(LogTemp, Warning, TEXT("ComponentsPerProxy: %d"), ComponentsPerProxy);
+	UE_LOG(LogTemp, Warning, TEXT("SectionsPerComponent: %d"), SectionsPerComponent);
 
-	for (auto& it: tiles)
-	{
-		if (it->streamingProxy != nullptr)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Tile has a proxy, the id is: %d"), it->index);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Tile DO NOT have a proxy, the id is: %d"), it->index);
-		}
+	UE_LOG(LogTemp, Warning, TEXT("Have amount of biomes changed?: %d"), nmbrOfBiomes);
 
+	UE_LOG(LogTemp, Warning, TEXT("Name for new biome: %s"), *newBiomeName.ToString());
 
-	}
-
-	//for (auto& it: tiles)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Adjacent tile to nr 0: %s"), *it->streamingProxy->GetName());
-
-	//}
-
-	for (int i = 0; i < tiles[11]->adjacentTiles.Num(); i++) {
-		if (tiles[11]->adjacentTiles[i] != nullptr)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Adjacent tile has index : %d"), tiles[11]->adjacentTiles[i]->index);
-
-		}else{
-			UE_LOG(LogTemp, Warning, TEXT("Null tile with adjacent array index: %d"), i);
-		}
-		
-		
-	}
-	/*UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
-
-	for (auto& it : tiles) {
-		if (IsValid(it)) {
-			if (it->streamingProxy.IsValid()) {
-
-				UE_LOG(LogTemp, Warning, TEXT("Tiles contain a tile with index: %d"), it->index);
-				UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
-
-			}
-			else {
-
-				UE_LOG(LogTemp, Warning, TEXT("Proxy has been destroyed or is pending destruction"));
-				break;
-			}
-
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("Tile is destroyed or about to be destroyed   "));
-			break;
-		}
-
-	}*/
+	/*UE_LOG(LogTemp, Warning, TEXT("heightScale %d"), BiotopeSettings[BiomeSettingSelection].HeightScale);
+	UE_LOG(LogTemp, Warning, TEXT("octaveCount: %d"), BiotopeSettings[BiomeSettingSelection].OctaveCount);
+	UE_LOG(LogTemp, Warning, TEXT("Amplitude: %f"), BiotopeSettings[BiomeSettingSelection].Amplitude);
+	UE_LOG(LogTemp, Warning, TEXT("persistence: %f"), BiotopeSettings[BiomeSettingSelection].Persistence);
+	UE_LOG(LogTemp, Warning, TEXT("frequency: %f"), BiotopeSettings[BiomeSettingSelection].Frequency);
+	UE_LOG(LogTemp, Warning, TEXT("Lacuanarity: %f"), BiotopeSettings[BiomeSettingSelection].Lacunarity);*/
 
 	return FReply::Handled();
 }
@@ -250,83 +732,368 @@ FReply FProceduralWorldModule::ListTiles()
 FReply FProceduralWorldModule::DeleteLandscape()
 {
 
-	//UE_LOG(LogTemp, Warning, TEXT("tiles contains so many tiles %d"), tiles.Num());
+	UE_LOG(LogTemp, Warning, TEXT("Removal of tiles was called, number of tiles to remove:  %d"), tiles.Num());
+	if (tiles.Num() == 0)
+	{
+		return FReply::Handled();
+	}
+	for (auto& it : tiles) {
+		bool isDestroyed{ false };
+		if (it) {
+			if (it->streamingProxy.IsValid()) {
+				//auto name = it->streamingProxy.Pin();
+				//UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
+				isDestroyed = it->streamingProxy->Destroy();
 
-	////for array traversal (index)
-	//int counter = 0;
+			}
 
-	//for(auto& it : tiles  ){
-	//	if(IsValid(it)){
-	//		if (it->streamingProxy.IsValid()) {
+			for (auto& i: it->tileAssets )
+			{
+				if (i.IsValid())
+				{
+					i->Destroy();
+				}
+			}
+			it->tileAssets.Empty();
 
-	//			UE_LOG(LogTemp, Warning, TEXT("Tiles contain a tile with index: %d"), it->index);
-	//			UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
 
-	//			/*if (it->streamingProxy) {
-	//				UE_LOG(LogTemp, Warning, TEXT("The proxy is not null, pointing to: %s"), *it->streamingProxy->GetName());
-	//			}
-	//			else {
-	//				UE_LOG(LogTemp, Warning, TEXT("Proxy is null "));
-	//			}*/
-	//		}
-	//		else {
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Tile to be removed is null, nothing was done"));
+		}
 
-	//			UE_LOG(LogTemp, Warning, TEXT("Proxy has been destroyed or is pending destruction"));
-	//			
-	//			//tiles.RemoveAt(counter, 1, true);
-	//			break;
-	//			
-	//		}
+	}
+	
+	//removal of spline elemnts created using viz
+	for (auto& i : roads)
+	{
+		for (auto& j: i.splinePaths)
+		{
+			for (auto& k : j.splineActors)
+			{
+				k->Destroy();
+			}
+			j.splineActors.Empty();
+		}
+		i.splinePaths.Empty();
 
-	//	}else{
-	//			UE_LOG(LogTemp, Warning, TEXT("Tile is destroyed or about to be destroyed   "));
-	//			break;
-	//	}
-	//	
+	}
 
-	//	counter++;
-	//}
-	//for (auto& it : tiles)
-	//{
-	//	if(it->streamingProxy == nullptr){
-	//		UE_LOG(LogTemp, Warning, TEXT("Proxy is null with id %d"), it->index);
-	//	}
-
-	//}
+	roads.Empty();
+	tiles.Empty();
+	landscapePtr->Destroy();
+	landscapePtr = nullptr;
+	//delete landscapePtr;
+	//auto& it: roads[i].splinePath.splineActors
+	
 
 	return FReply::Handled();
+	
+}
+//LandscapeEditInterface.cpp ///Line 600
+void FProceduralWorldModule::GetHeightMapData(ULandscapeInfo* inLandscapeInfo, const int32 X1, const int32 Y1, const int32 X2, const int32 Y2, TArray<uint16>& StoreData, UTexture2D* InHeightmap)
+{
+	int32 ComponentIndexX1, ComponentIndexY1, ComponentIndexX2, ComponentIndexY2;
+	int32 ComponentSizeQuads = inLandscapeInfo->ComponentSizeQuads;
+	int32 SubsectionSizeQuads = inLandscapeInfo->SubsectionSizeQuads;
+	int32 ComponentNumSubsections = inLandscapeInfo->ComponentNumSubsections;
 
-	//if (!tiles.IsEmpty() && landscapePtr != nullptr)
+	ALandscape::CalcComponentIndicesNoOverlap(X1, Y1, X2, Y2, ComponentSizeQuads, ComponentIndexX1, ComponentIndexY1, ComponentIndexX2, ComponentIndexY2);
+
+
+	for (int32 ComponentIndexY = ComponentIndexY1; ComponentIndexY <= ComponentIndexY2; ComponentIndexY++)
+	{
+		for (int32 ComponentIndexX = ComponentIndexX1; ComponentIndexX <= ComponentIndexX2; ComponentIndexX++)
+		{
+			ULandscapeComponent* Component = inLandscapeInfo->XYtoComponentMap.FindRef(FIntPoint(ComponentIndexX, ComponentIndexY));
+			
+			if (Component == nullptr)
+			{
+				continue;
+			}
+
+			UTexture2D* Heightmap = InHeightmap != nullptr ? InHeightmap : Component->GetHeightmap(true);
+
+			if (Heightmap == nullptr)
+			{
+				continue;
+			}
+			
+			FLandscapeTextureDataInfo* TexDataInfo = NULL;
+			
+			FColor* HeightmapTextureData = NULL;
+			TexDataInfo = GetTextureDataInfo(Heightmap);
+			HeightmapTextureData = (FColor*)TexDataInfo->GetMipData(0);
+
+			//UE_LOG(LogTemp, Warning, TEXT("HeghtMapTeurextiData (Red): %d"), HeightmapTextureData->R);
+
+			// Find coordinates of box that lies inside component
+			int32 ComponentX1 = FMath::Clamp<int32>(X1 - ComponentIndexX * ComponentSizeQuads, 0, ComponentSizeQuads);
+			int32 ComponentY1 = FMath::Clamp<int32>(Y1 - ComponentIndexY * ComponentSizeQuads, 0, ComponentSizeQuads);
+			int32 ComponentX2 = FMath::Clamp<int32>(X2 - ComponentIndexX * ComponentSizeQuads, 0, ComponentSizeQuads);
+			int32 ComponentY2 = FMath::Clamp<int32>(Y2 - ComponentIndexY * ComponentSizeQuads, 0, ComponentSizeQuads);
+
+			// Find subsection range for this box
+			int32 SubIndexX1 = FMath::Clamp<int32>((ComponentX1 - 1) / SubsectionSizeQuads, 0, ComponentNumSubsections - 1);	// -1 because we need to pick up vertices shared between subsections
+			int32 SubIndexY1 = FMath::Clamp<int32>((ComponentY1 - 1) / SubsectionSizeQuads, 0, ComponentNumSubsections - 1);
+			int32 SubIndexX2 = FMath::Clamp<int32>(ComponentX2 / SubsectionSizeQuads, 0, ComponentNumSubsections - 1);
+			int32 SubIndexY2 = FMath::Clamp<int32>(ComponentY2 / SubsectionSizeQuads, 0, ComponentNumSubsections - 1);
+
+
+			for (int32 SubIndexY = SubIndexY1; SubIndexY <= SubIndexY2; SubIndexY++)
+			{
+				for (int32 SubIndexX = SubIndexX1; SubIndexX <= SubIndexX2; SubIndexX++)
+				{
+					//UE_LOG(LogTemp, Warning, TEXT("WE GOT HERE"));
+					// Find coordinates of box that lies inside subsection
+					int32 SubX1 = FMath::Clamp<int32>(ComponentX1 - SubsectionSizeQuads * SubIndexX, 0, SubsectionSizeQuads);
+					int32 SubY1 = FMath::Clamp<int32>(ComponentY1 - SubsectionSizeQuads * SubIndexY, 0, SubsectionSizeQuads);
+					int32 SubX2 = FMath::Clamp<int32>(ComponentX2 - SubsectionSizeQuads * SubIndexX, 0, SubsectionSizeQuads);
+					int32 SubY2 = FMath::Clamp<int32>(ComponentY2 - SubsectionSizeQuads * SubIndexY, 0, SubsectionSizeQuads);
+
+					// Update texture data for the box that lies inside subsection
+					for (int32 SubY = SubY1; SubY <= SubY2; SubY++)
+					{
+						for (int32 SubX = SubX1; SubX <= SubX2; SubX++)
+						{
+							
+							int32 LandscapeX = SubIndexX * SubsectionSizeQuads + ComponentIndexX * ComponentSizeQuads + SubX;
+							int32 LandscapeY = SubIndexY * SubsectionSizeQuads + ComponentIndexY * ComponentSizeQuads + SubY;
+
+							// Find the texture data corresponding to this vertex
+							int32 SizeU = Heightmap->Source.GetSizeX();
+							int32 SizeV = Heightmap->Source.GetSizeY();
+							int32 HeightmapOffsetX = Component->HeightmapScaleBias.Z * (float)SizeU;
+							int32 HeightmapOffsetY = Component->HeightmapScaleBias.W * (float)SizeV;
+
+							int32 TexX = HeightmapOffsetX + (SubsectionSizeQuads + 1) * SubIndexX + SubX;
+							int32 TexY = HeightmapOffsetY + (SubsectionSizeQuads + 1) * SubIndexY + SubY;
+							FColor& TexData = HeightmapTextureData[TexX + TexY * SizeU];
+
+							uint16 Height = (((uint16)TexData.R) << 8) | TexData.G;
+
+							StoreData.Add(Height);
+							//StoreData.Store(LandscapeX, LandscapeY, Height);
+							
+							uint16 Normals = (((uint16)TexData.B) << 8) | TexData.A;
+							FVector temp;
+							temp.X = LandscapeX;
+							temp.Y = LandscapeY;
+							temp.Z = Normals;
+							//UE_LOG(LogTemp, Warning, TEXT("Normals: %s"), *temp.ToString());
+							/*if (NormalData)
+							{
+								uint16 Normals = (((uint16)TexData.B) << 8) | TexData.A;
+								NormalData->Store(LandscapeX, LandscapeY, Normals);
+							}*/
+						}
+					}
+				}
+			}
+
+
+
+
+		}
+	}
+
+}
+void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray<FColor> inData)
+{
+	// Texture Information
+	int width = SrcWidth;
+	int height = SrcHeight;
+	uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+
+	 //filling the pixels with dummy data (4 boxes: red, green, blue and white)
+	//for (int y = 0; y < height; y++)
 	//{
-	//	bool isDestroyed{ false };
-	//	for (auto& it : tiles)
+	//	for (int x = 0; x < width; x++)
 	//	{
-
-	//		isDestroyed = it->streamingProxy->Destroy();
-	//		if (!isDestroyed)
-	//		{
-	//			UE_LOG(LogTemp, Warning, TEXT("Could not delete all tiles"));
-	//			return FReply::Unhandled();
+	//		if (x < width / 2) {
+	//			if (y < height / 2) {
+	//				pixels[y * 4 * width + x * 4 + 0] = 255; // R
+	//				pixels[y * 4 * width + x * 4 + 1] = 0;   // G
+	//				pixels[y * 4 * width + x * 4 + 2] = 0;   // B
+	//				pixels[y * 4 * width + x * 4 + 3] = 255; // A
+	//			}
+	//			else {
+	//				pixels[y * 4 * width + x * 4 + 0] = 0;   // R
+	//				pixels[y * 4 * width + x * 4 + 1] = 255; // G
+	//				pixels[y * 4 * width + x * 4 + 2] = 0;   // B
+	//				pixels[y * 4 * width + x * 4 + 3] = 255; // A
+	//			}
+	//		}
+	//		else {
+	//			if (y < height / 2) {
+	//				pixels[y * 4 * width + x * 4 + 0] = 0;   // R
+	//				pixels[y * 4 * width + x * 4 + 1] = 0;   // G
+	//				pixels[y * 4 * width + x * 4 + 2] = 255; // B
+	//				pixels[y * 4 * width + x * 4 + 3] = 255; // A
+	//			}
+	//			else {
+	//				pixels[y * 4 * width + x * 4 + 0] = 255; // R
+	//				pixels[y * 4 * width + x * 4 + 1] = 255; // G
+	//				pixels[y * 4 * width + x * 4 + 2] = 255; // B
+	//				pixels[y * 4 * width + x * 4 + 3] = 255; // A
+	//			}
 	//		}
 	//	}
-	//	tiles.Empty();
-	//	landscapePtr->Destroy();
-	//	//delete landscapePtr;
-
-	//	
-	//	return FReply::Handled();
-
 	//}
-	//else
-	//{	
-	//	UE_LOG(LogTemp, Warning, TEXT("Could not delete landscape, no landscape is being pointed"));
-	//	return FReply::Unhandled();
-	//}
+	int counter{ 0 };
+	//uint8 t = 65536;
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)  
+		{
+	
+					pixels[y * 4 * width + x * 4 + 0] = inData[counter].R; // R
+					pixels[y * 4 * width + x * 4 + 1] = inData[counter].G;  // G
+					pixels[y * 4 * width + x * 4 + 2] = inData[counter].B;   // B
+					pixels[y * 4 * width + x * 4 + 3] = 255;				  // A
+					counter++;
+			
+		}
+	}
+
+	
+	
+		
+	
+
+	FString PackageName = TEXT("/Game/Content/");
+	PackageName += "test_texture";
+	UPackage* Package = CreatePackage(NULL, *PackageName);
+	Package->FullyLoad();
+
+	UTexture2D* Texture = NewObject<UTexture2D>(Package, "test_texture", RF_Public | RF_Standalone | RF_MarkAsRootSet);
+
+	// Texture Settings
+	Texture->PlatformData = new FTexturePlatformData();
+	Texture->PlatformData->SizeX = width;
+	Texture->PlatformData->SizeY = height;
+	//Texture->PlatformData->PixelFormat = PF_R8G8B8A8;
+	Texture->PlatformData->PixelFormat = PF_A16B16G16R16;
+
+	// Passing the pixels information to the texture
+	FTexture2DMipMap* Mip = new(Texture->PlatformData->Mips) FTexture2DMipMap();
+	Mip->SizeX = width;
+	Mip->SizeY = height;
+	Mip->BulkData.Lock(LOCK_READ_WRITE);
+	uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
+	FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+	Mip->BulkData.Unlock();
+
+	Texture->Source.Init(SrcWidth, SrcHeight, 1, 1, ETextureSourceFormat::TSF_RGBA16, pixels);
+
+	UE_LOG(LogTemp, Log, TEXT("Texture created:"));
+
+	free(pixels);
+	pixels = NULL;
+
+}
+void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray64<uint8> inData)
+{
+	// Texture Information
+	int width = SrcWidth;
+	int height = SrcHeight;
+	uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+	
+	int counter{ 0 };
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+
+			pixels[y * 4 * width + x * 4 + 0] = inData[y * 4 * width + x * 4 + 0]; // R
+			pixels[y * 4 * width + x * 4 + 1] = inData[y * 4 * width + x * 4 + 1];  // G
+			pixels[y * 4 * width + x * 4 + 2] = inData[y * 4 * width + x * 4 + 2];   // B
+			pixels[y * 4 * width + x * 4 + 3] = 255;				  // A
+			counter++;
+
+		}
+	}
+
+
+
+
+
+
+	FString PackageName = TEXT("/Game/Content/");
+	PackageName += "test_texture_2";
+	UPackage* Package = CreatePackage(NULL, *PackageName);
+	Package->FullyLoad();
+
+	UTexture2D* Texture = NewObject<UTexture2D>(Package, "test_texture_2", RF_Public | RF_Standalone | RF_MarkAsRootSet);
+
+	// Texture Settings
+	Texture->PlatformData = new FTexturePlatformData();
+	Texture->PlatformData->SizeX = width;
+	Texture->PlatformData->SizeY = height;
+	//Texture->PlatformData->PixelFormat = PF_R8G8B8A8;
+	Texture->PlatformData->PixelFormat = PF_A16B16G16R16;
+
+	// Passing the pixels information to the texture
+	FTexture2DMipMap* Mip = new(Texture->PlatformData->Mips) FTexture2DMipMap();
+	Mip->SizeX = width;
+	Mip->SizeY = height;
+	Mip->BulkData.Lock(LOCK_READ_WRITE);
+	uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
+	FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+	Mip->BulkData.Unlock();
+
+	Texture->Source.Init(SrcWidth, SrcHeight, 1, 1, ETextureSourceFormat::TSF_RGBA16, pixels);
+
+	UE_LOG(LogTemp, Log, TEXT("Texture created:"));
+
+	free(pixels);
+	pixels = NULL;
+}
+FLandscapeTextureDataInfo* FProceduralWorldModule::GetTextureDataInfo(UTexture2D* Texture)
+{
+	FLandscapeTextureDataInfo* Result = TextureDataMap.FindRef(Texture);
+	if (!Result)
+	{
+		Result = TextureDataMap.Add(Texture, new FLandscapeTextureDataInfo(Texture, GetShouldDirtyPackage()));
+	}
+	return Result;
 	
 }
 void FProceduralWorldModule::PluginButtonClicked()
 {
+
+	
+
+	//UI settings for Landscape resolution
+	//LandscapeComboSettings.Empty();
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1,64)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 2, 1, 127)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1, 64)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 4(2x2) : 126x126 256(16x16)", 1009, 1009, 63, 2, 1, 127)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("2017 x 2017 : 63 : 4(2x2) : 126x126 256(16x16)", 2017, 2017, 63, 2, 1, 127)));
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 4033 x 4033 : 63 : 4(2x2) : 126x126 1024(32x32)", 4033, 4033, 63, 2, 1, 127)));
+
+	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 8129 x 8129 : 127 : 4(2x2) : 254x254 1024(32x32)", 8129, 8129, 127, 2, 1, 255)));
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldTabName);
+}
+
+
+TOptional<int32> FProceduralWorldModule::GetNumberOfTiles()
+{
+	
+	return tiles.Num();
+}
+
+void FProceduralWorldModule::SetSizeOfLandscape(int32 inSize)
+{
+	sizeOfLandscape = inSize;
+	UE_LOG(LogTemp, Warning, TEXT("Changed size using the UI button of the landscape to: %d"),sizeOfLandscape);
+
+}
+
+TOptional<int32> FProceduralWorldModule::GetSizeOfLandscape() const
+{
+	return sizeOfLandscape;
 }
 
 void FProceduralWorldModule::RegisterMenus()

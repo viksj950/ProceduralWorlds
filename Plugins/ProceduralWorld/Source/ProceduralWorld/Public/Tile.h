@@ -17,13 +17,10 @@
 class PROCEDURALWORLD_API UTile //: public UObject
 {
 
-//uclass generated body seem to be deprecated	
-//GENERATED_BODY()
-
 
 public:
-	UTile();
-	UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy);
+	UTile(int32 NumOfQuads, int32 ComponentsPerProxy, int32 inTileSize);
+	UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy, int32 NumOfQuads, int32 ComponentsPerProxy);
 	~UTile() = default;
 
 	void updateMaterial(UMaterial* inMaterial);
@@ -39,12 +36,18 @@ public:
 	UPROPERTY()
 	UMaterial* tileMaterial = nullptr;
 
+	TArray<TWeakObjectPtr<AStaticMeshActor>> tileAssets;
+
 	bool isCity = false;
 	bool isRoad = false;
 	//Addd more (dungeons, biotope, river, lakes)
 
+	int biotope = 1;
+	//0 = city, 1 = plains, 2 = mountains
+
 	int32 index{0};
-	
+	int32 tileSize{0};
+	TArray<uint16> tileHeightData;
 	TArray<UTile*> adjacentTiles;
 	//TStaticArray<Tile*> asd[8]{ nullptr };
 };

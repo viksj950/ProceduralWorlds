@@ -3,24 +3,21 @@
 
 #include "Tile.h"
 
-UTile::UTile()
+UTile::UTile(int32 NumOfQuads, int32 ComponentsPerProxy, int32 inTileSize)
 {
-	
-	//adjacentTiles.Init(nullptr, 8);
-	/*static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'"));
-	if (Material.Object != NULL)
-	{
-		myMaterial = (UMaterial*)Material.Object;
-		UE_LOG(LogTemp, Warning, TEXT("Value tx: %s"), *myMaterial->GetName());
-	}*/
-	//tileMaterial = LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'"));
-	//updateMaterial(temp);
+	tileSize = inTileSize; 
+	tileHeightData.Init(0,inTileSize * inTileSize);
+	adjacentTiles.Init(nullptr, 8);
+
 }
 
-UTile::UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy)
+//old
+UTile::UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy, int32 NumOfQuads, int32 ComponentsPerProxy)
 {
+	tileSize = ((NumOfQuads +1) * (NumOfQuads+1) * ComponentsPerProxy);
+	tileHeightData.Init(32768,tileSize);
+
 	streamingProxy = inProxy;
-	//streamingProxy->
 	adjacentTiles.Init(nullptr,8);
 
 	//Setting default material
@@ -31,16 +28,6 @@ UTile::UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy)
 	
 }
 
-//Tile::~Tile()
-//{
-//	delete streamingProxy;
-//	//delete tileMaterial;
-//
-//	/*for(int i = 0; i < adjacentTiles.Num(); i++){
-//		delete adjacentTiles[i];
-//	}*/
-//	
-//}
 
 void UTile::updateMaterial(UMaterial* inMaterial)
 {
@@ -106,42 +93,5 @@ void UTile::updateAdjacentTiles(TArray<UTile*>& inTiles, const uint32 gridSizePr
 	{
 		adjacentTiles[7] = inTiles[index + gridSize + 1];
 	}
-
-	//if (index % gridSize == 0) //On right side edge dont add right adjacent tile
-	//{
-	//	adjacentTiles[3] = nullptr;
-	//}
-	//else
-	//{
-	//	adjacentTiles[3] = inTiles[index - 1];
-	//}
-
-	//if (index +1 % == 0) //On left side edge font Add left adjacent tile
-	//{
-
-	//}
-	//else
-	//{
-	//	adjacentTiles[4] = inTiles[index + 1];
-	//}
-
-	//if (index < gridSize) //On top row dont add top adjacent tile
-	//{
-
-	//}
-	//else
-	//{
-	//	adjacentTiles[1] = inTiles[index - gridSize];
-	//}
-
-	//if ((index >= (numOfTiles - gridSize)) //On bottom row dont add bottom adjacent tile
-	//{
-
-	//}
-	//else
-	//{
-	//	adjacentTiles[6] = inTiles[index + gridSize];
-	//}
-
 
 }
