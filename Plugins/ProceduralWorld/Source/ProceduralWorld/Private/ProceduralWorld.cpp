@@ -334,7 +334,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			SNew(SNumericEntryBox<float>)
 			.AllowSpin(true)
 		.MinValue(1)
-		.MaxValue(4)
+		.MaxValue(16)
 		.MaxSliderValue(16)
 		.MinDesiredValueWidth(2)
 		.Value_Raw(this, &FProceduralWorldModule::GetLacunarity)
@@ -648,6 +648,8 @@ FReply FProceduralWorldModule::Setup()
 
 	//Currently only imports the landscape settings to the landscape "mesh"mountainAssets
 	landscapePtr = myLand.generateFromTileData(tiles);
+
+	//createTextureFromArray(500, 500, myLand.concatedHeightData);
 	//LandscapeInfo used for accessing proxies
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
 
@@ -664,11 +666,11 @@ FReply FProceduralWorldModule::Setup()
 		}
 	}
 
-	//Procedual Asset placement
+	//Procedural Asset placement
 	ProceduralAssetDistribution temp;
-	int32 plainsAssets = 15;
+	int32 plainsAssets = 10;
 	int32 maxHouses = 5;
-	int32 mountainAssets = 10;
+	int32 mountainAssets = 8;
 	float scaleVarF = 0.3;
 	float scaleVarR = 0.5;
 	float scaleVarC = 0.2;
@@ -686,18 +688,21 @@ FReply FProceduralWorldModule::Setup()
 		{
 			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy,
 				myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC, roadCoords, roadWidthOffset);
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'")));
 		}
 		else if(tiles[i]->biotope == 1)
 		{
 			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
-				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), plainsAssets, scaleVarF, roadCoords, roadWidthOffset);
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), plainsAssets, scaleVarF, roadCoords, roadWidthOffset, true);
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'")));
 		}
 		else if(tiles[i]->biotope == 2) {
 			temp.spawnActorObjectsMountains(tiles[i], QuadsPerComponent,
 				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), mountainAssets, scaleVarR);
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
 		}
 		
-		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
+		//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
 		i++;
 	}
 
@@ -992,7 +997,7 @@ void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const 
 	pixels = NULL;
 
 }
-void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray64<uint8> inData)
+void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray<uint16> inData)
 {
 	// Texture Information
 	int width = SrcWidth;
@@ -1014,11 +1019,6 @@ void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const 
 		}
 	}
 
-
-
-
-
-
 	FString PackageName = TEXT("/Game/Content/");
 	PackageName += "test_texture_2";
 	UPackage* Package = CreatePackage(NULL, *PackageName);
@@ -1038,8 +1038,8 @@ void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const 
 	Mip->SizeX = width;
 	Mip->SizeY = height;
 	Mip->BulkData.Lock(LOCK_READ_WRITE);
-	uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
-	FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+	uint16* TextureData = (uint16*)Mip->BulkData.Realloc(height * width * sizeof(uint16) * 4);
+	FMemory::Memcpy(TextureData, pixels, sizeof(uint16) * height * width * 4);
 	Mip->BulkData.Unlock();
 
 	Texture->Source.Init(SrcWidth, SrcHeight, 1, 1, ETextureSourceFormat::TSF_RGBA16, pixels);

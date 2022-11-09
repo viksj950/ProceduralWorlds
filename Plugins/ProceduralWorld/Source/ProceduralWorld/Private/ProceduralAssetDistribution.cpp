@@ -198,7 +198,7 @@ void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 Co
 }
 
 
-void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int& roadWidth) {
+void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int& roadWidth, bool withGrass) {
 
 	UWorld* World = nullptr;
 
@@ -219,6 +219,9 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 	float maxScale;
 	float RotationAngle, RotationAnglel;
 
+	//temp counter for grass
+	int grassDensity = 2; //scales with assetCount * grassDensity
+
 		if (t->streamingProxy != nullptr)
 		{
 			proxyLocation = t->streamingProxy->GetActorLocation();
@@ -231,22 +234,12 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 			//For position
 			float randomValX = mathInstance.FRandRange(minPos, maxPos);
 			float randomValY = mathInstance.FRandRange(minPos, maxPos);
-			
-			//Temp for leaf
-			float randomValXl = mathInstance.FRandRange(minPos, maxPos);
-			float randomValYl = mathInstance.FRandRange(minPos, maxPos);
 
 			//Find position in tile
 			Location = proxyLocation + (ComponentSizeQuads * proxyScale) * (ComponentsPerProxy / 2.0); //scales based on perProxy
-			//leaf emp
-			Locationl = proxyLocation + (ComponentSizeQuads * proxyScale) * (ComponentsPerProxy / 2.0); //scales based on perProxy
 
 			Location.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValX);
 			Location.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValY);
-
-			//leaf temp
-			Locationl.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValXl);
-			Locationl.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValYl);
 
 			//Position check to avoid collison with road
 			if (t->biotope != 2) {
@@ -278,16 +271,10 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 
 			Location.Z = t->streamingProxy->GetHeightAtLocation(Location).GetValue();
 
-			//leaf temp
-			Triangle tril(t, Locationl.X, Locationl.Y);
-			Locationl.Z = t->streamingProxy->GetHeightAtLocation(Locationl).GetValue();
-
 			FVector UpVector = FVector(0, 0, 1);
 
 			RotationAngle = acosf(FVector::DotProduct(UpVector, tri.normal));
 
-			//leaf
-			RotationAnglel = acosf(FVector::DotProduct(UpVector, tril.normal));
 
 			if (RotationAngle > 0.5) {
 				//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle for asset was to steep with id: %d"), i);
@@ -299,12 +286,6 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 
 			FQuat Quat = FQuat(RotationAxis, RotationAngle);
 
-			//for leaf temp
-			FVector RotationAxisl = FVector::CrossProduct(UpVector, tril.normal);
-			RotationAxisl.Normalize();
-
-			FQuat Quatl = FQuat(RotationAxisl, RotationAnglel);
-
 			//UE_LOG(LogTemp, Warning, TEXT("Rotation of normal : %s"), *tri.normal.Rotation().ToString());
 			//UE_LOG(LogTemp, Warning, TEXT("Rotation Angle is fine, spawns actor in tile: %d"), i);
 
@@ -312,8 +293,6 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 
 			//Specify where in the world it will spawn, using ground tilt
 			AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Quat.Rotator(), SpawnInfo);
-
-			AStaticMeshActor* MyNewActor1 = World->SpawnActor<AStaticMeshActor>(Locationl, Quatl.Rotator(), SpawnInfo);
 
 			//For scale variance (Super ugly implementation, assumes uniform scale on all axises)
 			FVector defaultScale = MyNewActor->GetActorScale3D();
@@ -333,11 +312,9 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 			/*UE_LOG(LogTemp, Warning, TEXT("Rotation of plain trees after update : %s"), *rotation.ToString());*/
 
 			MyNewActor->SetActorRotation(rotation);
-			MyNewActor1->SetActorRotation(rotation);
 
 			//Mesh binding
 			UStaticMesh* Mesh1;
-			UStaticMesh* Mesh2;
 			
 			//srand(time(NULL)); // Seed the time
 			int randNum = rand() % (5 - 1 + 1) + 1; //random number between 1-5 (20 % chance for rocks)
@@ -355,22 +332,58 @@ void ProceduralAssetDistribution::spawnActorObjectsPlains(UTile* t, const int32 
 				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/_GENERATED/viksj950/temp_tree02.temp_tree02'"));
 			}
 
-			//Leaf/grass
-			Mesh2 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/leaf.leaf'"));
-
 			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
-			UStaticMeshComponent* MeshComponent1 = MyNewActor1->GetStaticMeshComponent();
+
 			if (MeshComponent)
 			{
 				MeshComponent->SetStaticMesh(Mesh1);
 			}
-			if (MeshComponent1)
-			{
-				MeshComponent1->SetStaticMesh(Mesh2);
-			}
-			//Add to tileassets for deletion if needed
 			t->tileAssets.Add(MyNewActor);
-			t->tileAssets.Add(MyNewActor1);
+
+			//Leaf/grass spawning
+			if (randNum >= 2) {
+				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"));
+			}
+			else {
+				Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Quixel/Var15/Var15_LOD0.Var15_LOD0'"));
+			}
+
+			if (withGrass) {
+				for (size_t k = 0; k < grassDensity; k++)
+				{
+					//Temp for leaf
+					 randomValX = mathInstance.FRandRange(minPos, maxPos);
+					 randomValY = mathInstance.FRandRange(minPos, maxPos);
+
+					Location = proxyLocation + (ComponentSizeQuads * proxyScale) * (ComponentsPerProxy / 2.0); //scales based on perProxy
+
+					Location.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValX);
+					Location.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValY);
+
+					Triangle tril(t, Location.X, Location.Y);
+					Location.Z = t->streamingProxy->GetHeightAtLocation(Location).GetValue();
+
+
+					RotationAxis = FVector::CrossProduct(UpVector, tril.normal);
+					RotationAxis.Normalize();
+					Quat = FQuat(RotationAxis, RotationAnglel);
+
+					MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Quat.Rotator(), SpawnInfo);
+
+					RotationAngle = acosf(FVector::DotProduct(UpVector, tril.normal));
+					MyNewActor->SetActorRotation(rotation);
+
+					UStaticMeshComponent* MeshComponent1 = MyNewActor->GetStaticMeshComponent();
+					if (MeshComponent1)
+					{
+						MeshComponent1->SetStaticMesh(Mesh1);
+					}
+					//Add to tileassets for deletion if needed
+					t->tileAssets.Add(MyNewActor);
+
+				}
+			}
+		
 		}
 	
 
@@ -463,7 +476,7 @@ void ProceduralAssetDistribution::spawnActorObjectsMountains(UTile* t, const int
 		if (Location.Z > 2000) {
 			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Rocks/LargeRock/LargerockLowpoly01.LargerockLowpoly01'"));
 		}
-		else if (Location.Z <= 2000 && Location.Z >= 1000) {
+		else if (Location.Z <= 2000 && Location.Z >= 500) {
 			Mesh1 = LoadObject<UStaticMesh>(nullptr, TEXT("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"));
 		}
 		else {

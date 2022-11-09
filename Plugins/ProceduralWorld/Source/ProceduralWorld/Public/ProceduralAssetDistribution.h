@@ -32,6 +32,28 @@ struct Point2D
 	double y;
 };
 
+struct biomeAssetSetting
+{
+	biomeAssetSetting(FString inObjectPath, const int32& inComponentSizeQuads, const int32& inComponentsPerProxy, const int32& inGridSizeOfProxies, int32 inAssetCount,
+		float inScaleVar, float inDensity, bool inConsiderRoad) :
+		ObjectPath{ inObjectPath },  ComponentSizeQuads {inComponentSizeQuads }, ComponentsPerProxy{ inComponentsPerProxy }, 
+		GridSizeOfProxies{ inGridSizeOfProxies },
+		assetCount{ inAssetCount }, scaleVar{ inScaleVar }, density{ inDensity }, considerRoad{ inConsiderRoad}
+
+	{
+	};
+	
+	FString ObjectPath;
+	const int32 ComponentSizeQuads;
+	const int32 ComponentsPerProxy;
+	const int32 GridSizeOfProxies;
+	int32 assetCount;
+	float scaleVar;
+	float density;
+	bool considerRoad;
+
+};
+
 class PROCEDURALWORLD_API ProceduralAssetDistribution
 {
 public:
@@ -40,7 +62,7 @@ public:
 
 	void spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float spread, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int& roadWidth);
 	//Function for spawning object within a tile, objectType is tree/house
-	void spawnActorObjectsPlains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int& roadWidth);
+	void spawnActorObjectsPlains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int& roadWidth, bool withGrass);
 
 	void spawnActorObjectsMountains(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float scaleVar);
 
