@@ -17,6 +17,7 @@
 
 
 static const FName ProceduralWorldTabName("ProceduralWorld");
+static const FName ProceduralWorldAssetTabName("ProceduralWorldAssets");
 
 #define LOCTEXT_NAMESPACE "FProceduralWorldModule"
 
@@ -40,6 +41,10 @@ void FProceduralWorldModule::StartupModule()
 	
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(ProceduralWorldTabName, FOnSpawnTab::CreateRaw(this, &FProceduralWorldModule::OnSpawnPluginTab))
 		.SetDisplayName(LOCTEXT("FProceduralWorldTabTitle", "ProceduralWorld"))
+		.SetMenuType(ETabSpawnerMenuType::Hidden);
+
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(ProceduralWorldAssetTabName, FOnSpawnTab::CreateRaw(this, &FProceduralWorldModule::OnSpawnPluginAssetTab))
+		.SetDisplayName(LOCTEXT("FProceduralWorldAssetTabTitle", "ProceduralWorldAssets"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 }
 
@@ -556,6 +561,23 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		];
 }
 
+TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[
+			SNew(SObjectPropertyEntryBox)
+			.AllowedClass(UStaticMesh::StaticClass())
+		.AllowClear(true)
+		.ObjectPath_Lambda([&]() {return this->storedNamePath; })
+		.DisplayUseSelected(true)
+		.DisplayThumbnail(true)
+		.ThumbnailPool(this->myAssetThumbnailPool)
+		.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+		this->storedNamePath = inData.ObjectPath.ToString();
+			})
+		];
+}
 FReply FProceduralWorldModule::Setup()
 {
 	//Call to CreateLandscape and generate its properties 
@@ -1084,19 +1106,8 @@ FLandscapeTextureDataInfo* FProceduralWorldModule::GetTextureDataInfo(UTexture2D
 void FProceduralWorldModule::PluginButtonClicked()
 {
 
-	
-
-	//UI settings for Landscape resolution
-	//LandscapeComboSettings.Empty();
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1,64)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 2, 1, 127)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1, 64)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 4(2x2) : 126x126 256(16x16)", 1009, 1009, 63, 2, 1, 127)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("2017 x 2017 : 63 : 4(2x2) : 126x126 256(16x16)", 2017, 2017, 63, 2, 1, 127)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 4033 x 4033 : 63 : 4(2x2) : 126x126 1024(32x32)", 4033, 4033, 63, 2, 1, 127)));
-
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 8129 x 8129 : 127 : 4(2x2) : 254x254 1024(32x32)", 8129, 8129, 127, 2, 1, 255)));
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldTabName);
+	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldAssetTabName);
 }
 
 

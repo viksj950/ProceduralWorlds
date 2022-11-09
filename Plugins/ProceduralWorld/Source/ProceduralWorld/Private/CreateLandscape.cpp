@@ -519,7 +519,7 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, float const si
 					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
 					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
 					//Check that the road is not outside of the landscape
-					if(X < 0 || X > SizeX || Y < 0 || Y > SizeY){
+					if(X < 0 || X >= SizeX || Y < 0 || Y >= SizeY){
 						break;
 					}
 
