@@ -34,24 +34,30 @@ struct Point2D
 
 struct biomeAssetSetting
 {
-	biomeAssetSetting(FString inObjectPath, const int32& inComponentSizeQuads, const int32& inComponentsPerProxy, const int32& inGridSizeOfProxies, int32 inAssetCount,
-		float inScaleVar, float inDensity, bool inConsiderRoad) :
-		ObjectPath{ inObjectPath },  ComponentSizeQuads {inComponentSizeQuads }, ComponentsPerProxy{ inComponentsPerProxy }, 
-		GridSizeOfProxies{ inGridSizeOfProxies },
-		assetCount{ inAssetCount }, scaleVar{ inScaleVar }, density{ inDensity }, considerRoad{ inConsiderRoad}
+	biomeAssetSetting(FString inObjectPath, int32 inAssetCount,
+		float inScaleVar, float inaAngleThreshhold, bool inNoCollide, float inDensity, bool inConsiderRoad) :
+		ObjectPath{ inObjectPath },
+		assetCount{ inAssetCount }, scaleVar{ inScaleVar }, angleThreshhold{ inaAngleThreshhold }, noCollide{ inNoCollide }, density{inDensity}, considerRoad{ inConsiderRoad }
 
 	{
 	};
 	
 	FString ObjectPath;
-	const int32 ComponentSizeQuads;
-	const int32 ComponentsPerProxy;
-	const int32 GridSizeOfProxies;
 	int32 assetCount;
 	float scaleVar;
+	float angleThreshhold;
+	bool noCollide;
 	float density;
 	bool considerRoad;
 
+};
+
+struct biomeAssets
+{
+	biomeAssets(FString inName, int32 inBiotopeIndex) :biotopeName{ inName }, biotopeIndex{ inBiotopeIndex }{};
+	FString biotopeName;
+	int32 biotopeIndex;
+	TArray<biomeAssetSetting> AssetSettings;
 };
 
 class PROCEDURALWORLD_API ProceduralAssetDistribution
