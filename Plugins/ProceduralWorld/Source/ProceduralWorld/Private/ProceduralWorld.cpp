@@ -719,10 +719,11 @@ FReply FProceduralWorldModule::Setup()
 		else if (tiles[i]->biotope == 2) {
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
 		}
-		temp.spawnAssets(BiomeAssetsData, tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), roadCoords, roads);
+		
 
 		i++;
 	}
+	temp.spawnAssets(BiomeAssetsData, tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), roadCoords, roads);
 	//int32 plainsAssets = 10;
 	//int32 maxHouses = 5;
 	//int32 mountainAssets = 8;
