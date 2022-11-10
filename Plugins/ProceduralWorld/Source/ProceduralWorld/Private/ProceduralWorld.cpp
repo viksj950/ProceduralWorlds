@@ -581,15 +581,15 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 FReply FProceduralWorldModule::Setup()
 {
 	//Call to CreateLandscape and generate its properties 
-	CreateLandscape myLand(SizeX,SizeY,QuadsPerComponent,ComponentsPerProxy,SectionsPerComponent,TileSize);
-	
-	
+	CreateLandscape myLand(SizeX, SizeY, QuadsPerComponent, ComponentsPerProxy, SectionsPerComponent, TileSize);
+
+
 	//DO THIS BETTER----------------
-	int32 nmbrOfTilesInARow = (SizeX -1) / (QuadsPerComponent * ComponentsPerProxy);
+	int32 nmbrOfTilesInARow = (SizeX - 1) / (QuadsPerComponent * ComponentsPerProxy);
 
 	//tiles.Init(new UTile(QuadsPerComponent, ComponentsPerProxy), nmbrOfTilesInARow * nmbrOfTilesInARow);
 
-	for (size_t i{0}; i < nmbrOfTilesInARow*nmbrOfTilesInARow; i++)
+	for (size_t i{ 0 }; i < nmbrOfTilesInARow * nmbrOfTilesInARow; i++)
 	{
 
 		UTile* temp = new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize);
@@ -615,12 +615,12 @@ FReply FProceduralWorldModule::Setup()
 	//tiles[19]->biotope = 0;
 
 
-	myLand.AssignBiotopesToTiles(tiles,nmbrOfBiomes,BiotopeSettings);
+	myLand.AssignBiotopesToTiles(tiles, nmbrOfBiomes, BiotopeSettings);
 	//Generate Perlin Noise and assign it to all tiles
 	//myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
 
 	//Creates proxies used in world partioning
-	myLand.GenerateAndAssignHeightData(tiles,BiotopeSettings);
+	myLand.GenerateAndAssignHeightData(tiles, BiotopeSettings);
 
 	//Concatinate heightData from all tiles and spawn a landscape
 	myLand.concatHeightData(tiles);
@@ -669,13 +669,13 @@ FReply FProceduralWorldModule::Setup()
 		roads[0].vizualizeRoad(myLand.LandscapeScale);
 		//roads[1].calcLengthsSplines();
 		//roads[1].vizualizeRoad(myLand.LandscapeScale);
-		for (int i = 0; i < 5; i++) { 
-			myLand.roadAnamarphosis(roads, 0.01,3,i);
+		for (int i = 0; i < 5; i++) {
+			myLand.roadAnamarphosis(roads, 0.01, 3, i);
 		}
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("No posible path for road to geneata"));
-		
+
 	}
 
 	//Currently only imports the landscape settings to the landscape "mesh"mountainAssets
@@ -688,59 +688,79 @@ FReply FProceduralWorldModule::Setup()
 	TArray<ControlPoint> roadCoords;
 	int tempCounter = 0;
 	for (int i = 0; i < roads.Num(); i++) {
-		for (int j = 0; j < roads[i].splinePaths.Num();j++) {
+		for (int j = 0; j < roads[i].splinePaths.Num(); j++) {
 			for (int k = 0; k < roads[i].splinePaths[j].TotalLength; k += roads[i].splinePaths[j].TotalLength / 100) { //division is the amount of steps
 				roadCoords.Add(roads[i].splinePaths[j].GetSplinePoint(roads[i].splinePaths[j].GetNormalisedOffset(k)));
 				roadCoords[tempCounter].pos = roadCoords[tempCounter].pos * myLand.LandscapeScale; //scale to worldcoords
-				UE_LOG(LogTemp, Warning, TEXT("roadCoords: %s"), *roadCoords[tempCounter].pos.ToString());
+				//UE_LOG(LogTemp, Warning, TEXT("roadCoords: %s"), *roadCoords[tempCounter].pos.ToString());
 				tempCounter++;
 			}
 		}
 	}
+	//temp
+	TArray<TSharedPtr<biomeAssets>> BiomeAssetsData = { MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
+	  MakeShareable(new biomeAssets("Mountains",2)) };
+
+	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/_GENERATED/viksj950/temp_tree02.temp_tree02'"), 1, 0.5f,0.6f, true, 1.0f, false));
 
 	//Procedural Asset placement
 	ProceduralAssetDistribution temp;
-	int32 plainsAssets = 10;
-	int32 maxHouses = 5;
-	int32 mountainAssets = 8;
-	float scaleVarF = 0.3;
-	float scaleVarR = 0.5;
-	float scaleVarC = 0.2;
-	float houseSpread = 1.4; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall in order to fit)
-	int roadWidthOffset = 1000; //default is no road was generated
-	if (!roads.IsEmpty()) {
-		roadWidthOffset = roads[0].Width * (myLand.LandscapeScale.X); //currently the width is static for all roads (division by 2 is the "right" way but intersects houses easily)
-	}
-	//after the landscape has been spawned assign proxies to each tile
-	size_t i{ 0 };
-	for (auto& it: LandscapeInfo->Proxies)
+
+	int i{ 0 };
+	for (auto& it : LandscapeInfo->Proxies)
 	{
 		tiles[i]->streamingProxy = it;
-		if (tiles[i]->biotope == 0)
-		{
-			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy,
-				myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC, roadCoords, roadWidthOffset);
+		if (tiles[i]->biotope == 0) {
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'")));
 		}
-		else if(tiles[i]->biotope == 1)
-		{
-			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
-				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), plainsAssets, scaleVarF, roadCoords, roadWidthOffset, true);
+		else if (tiles[i]->biotope == 1) {
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'")));
 		}
-		else if(tiles[i]->biotope == 2) {
-			temp.spawnActorObjectsMountains(tiles[i], QuadsPerComponent,
-				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), mountainAssets, scaleVarR);
+		else if (tiles[i]->biotope == 2) {
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
 		}
-		
-		//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
+		temp.spawnAssets(BiomeAssetsData, tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), roadCoords, roads);
+
 		i++;
 	}
+	//int32 plainsAssets = 10;
+	//int32 maxHouses = 5;
+	//int32 mountainAssets = 8;
+	//float scaleVarF = 0.3;
+	//float scaleVarR = 0.5;
+	//float scaleVarC = 0.2;
+	//float houseSpread = 1.4; //1 is lowest, they can align. Higher means more space inbetween (Less houses overall in order to fit)
+	//int roadWidthOffset = 1000; //default is no road was generated
+	//if (!roads.IsEmpty()) {
+	//	roadWidthOffset = roads[0].Width * (myLand.LandscapeScale.X); //currently the width is static for all roads (division by 2 is the "right" way but intersects houses easily)
+	//}
+	////after the landscape has been spawned assign proxies to each tile
+	//size_t i{ 0 };
+	//for (auto& it: LandscapeInfo->Proxies)
+	//{
+	//	tiles[i]->streamingProxy = it;
+	//	if (tiles[i]->biotope == 0)
+	//	{
+	//		temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy,
+	//			myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC, roadCoords, roadWidthOffset);
+	//		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'")));
+	//	}
+	//	else if(tiles[i]->biotope == 1)
+	//	{
+	//		temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
+	//			ComponentsPerProxy, myLand.GetGridSizeOfProxies(), plainsAssets, scaleVarF, roadCoords, roadWidthOffset, true);
+	//		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'")));
+	//	}
+	//	else if(tiles[i]->biotope == 2) {
+	//		temp.spawnActorObjectsMountains(tiles[i], QuadsPerComponent,
+	//			ComponentsPerProxy, myLand.GetGridSizeOfProxies(), mountainAssets, scaleVarR);
+	//		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
+	//	}
+	//	
+	//	//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
+	//	i++;
+	/*}*/
 
-
-	
-	
 	return FReply::Handled();
 }
 

@@ -10,6 +10,7 @@
 
 #include "Tile.h"  
 #include "CRSpline.h"
+#include "Road.h"
 
 struct Triangle
 {
@@ -32,26 +33,36 @@ struct Point2D
 	double y;
 };
 
-struct biomeAssetSetting
+struct biomeAssetSettings
 {
-	biomeAssetSetting(FString inObjectPath, const int32& inComponentSizeQuads, const int32& inComponentsPerProxy, const int32& inGridSizeOfProxies, int32 inAssetCount,
-		float inScaleVar, float inDensity, bool inConsiderRoad) :
-		ObjectPath{ inObjectPath },  ComponentSizeQuads {inComponentSizeQuads }, ComponentsPerProxy{ inComponentsPerProxy }, 
-		GridSizeOfProxies{ inGridSizeOfProxies },
-		assetCount{ inAssetCount }, scaleVar{ inScaleVar }, density{ inDensity }, considerRoad{ inConsiderRoad}
+	biomeAssetSettings(FString inObjectPath, int32 inAssetCount,
+		float inScaleVar, float inAngleThreshold, bool inNoCollide, float inDensity, bool inConsiderRoad) : ObjectPath{ inObjectPath },
+		assetCount{ inAssetCount }, scaleVar{ inScaleVar }, angleThreshold{ inAngleThreshold}, noCollide {
+		inNoCollide },
+		density { inDensity }, considerRoad{ inConsiderRoad }
 
 	{
 	};
 	
 	FString ObjectPath;
-	const int32 ComponentSizeQuads;
-	const int32 ComponentsPerProxy;
-	const int32 GridSizeOfProxies;
 	int32 assetCount;
 	float scaleVar;
+	float angleThreshold;
+	bool noCollide;
 	float density;
 	bool considerRoad;
 
+};
+
+//Strcut for each biome type
+struct biomeAssets
+{
+	biomeAssets(FString biotopeName, int32 biotopeIndex) : biotopeName{ biotopeName }, biotopeIndex{ biotopeIndex } {
+	};
+
+	FString biotopeName;
+	int32 biotopeIndex;
+	TArray<biomeAssetSettings> AssetSettings;
 };
 
 class PROCEDURALWORLD_API ProceduralAssetDistribution
@@ -59,6 +70,15 @@ class PROCEDURALWORLD_API ProceduralAssetDistribution
 public:
 	ProceduralAssetDistribution();
 	~ProceduralAssetDistribution();
+
+	void spawnAssets(TArray<TSharedPtr<biomeAssets>> biomeSettings, TArray<UTile*> tiles, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, 
+		const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads);
+
+	void spawnWithNoCollide(UTile* tile, const FVector& Location, const float &scaleValue, const float &density, AStaticMeshActor* MyNewActor, UStaticMesh* Mesh, int& AssetCount);
+
+	void spawnWithNoCollideAndRoadConsider();
+
+	bool roadConsiderCheck(const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const FVector& Location);
 
 	void spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float spread, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int& roadWidth);
 	//Function for spawning object within a tile, objectType is tree/house

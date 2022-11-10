@@ -267,7 +267,7 @@ public:
 	FString storedNamePath;
 	//Saving Thumbnails for the asset selection functionality in the UI (Set to store up to 50 thumbnaails)
 	TSharedPtr<FAssetThumbnailPool> myAssetThumbnailPool = MakeShareable(new FAssetThumbnailPool(50));
-	
+	//TArray<TSharedPtr<biomeAssets>> BiomeAssetsData; 
 	
 private:
 
