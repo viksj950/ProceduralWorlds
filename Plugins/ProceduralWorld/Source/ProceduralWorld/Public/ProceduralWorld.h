@@ -124,7 +124,7 @@ private:
 class FProceduralWorldModule : public IModuleInterface
 {
 public:
-
+	
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
@@ -263,11 +263,40 @@ public:
 	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
 
+	//UI Asset Distribution ---------------------------------------------------------------------------------------
+	 
+	
+	//Storing all settings for each biome regarding its assets
+	TArray<TSharedPtr<biomeAssets>> BiomeAssetsData{ MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
+	MakeShareable(new biomeAssets("Mountains",2)) };
+
+	//Some intermediate placeholder used for displaying the settings for each biotop
+	TSharedPtr<STextBlock> ComboBoxTitleBlockBiotopeAsset;
+	int BiomeAssetSettingSelection{ 0 };
+
+	TSharedPtr<SNumericEntryBox<float>> myDensityNumBox;
+	//Intermediate setting used as a placeholder when displaying settings for assets.
+	TSharedPtr<biomeAssetSetting> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSetting("asd",0,0,0,false,0,false ));
+
+	TArray<TSharedPtr<biomeAssetSetting>> IntermediateSettingData{ MakeShareable(new biomeAssetSetting("asd",0,0,0,false,0,false)) };
+	//IntermediateSettingData.Add(MakeShareable(new biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
+
 	//Functionality for saving asset paths when selecting static meshes
 	FString storedNamePath;
 	//Saving Thumbnails for the asset selection functionality in the UI (Set to store up to 50 thumbnaails)
 	TSharedPtr<FAssetThumbnailPool> myAssetThumbnailPool = MakeShareable(new FAssetThumbnailPool(50));
-	//TArray<TSharedPtr<biomeAssets>> BiomeAssetsData; 
+
+	FReply addNewAssetSetting() {
+		//BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
+		BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(IntermediateBiomeAssetSetting);
+		UE_LOG(LogTemp, Warning, TEXT("Added an Asset setting"));
+		return FReply::Handled();
+	};
+	
+	//List element function
+	/*TSharedRef<SWidget> OnGenerateWidgetForList(TSharedPtr<biomeAssets> inItem, const TSharedRef<STableViewBase>& ownerTable) {
+		return SNew(STextBlock).Text(inItem->biotopeName);
+	};*/
 	
 private:
 

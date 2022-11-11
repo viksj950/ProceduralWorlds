@@ -494,20 +494,20 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
-			+ SVerticalBox::Slot()
-				[
-					//SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
-					SNew(SObjectPropertyEntryBox)
-					.AllowedClass(UStaticMesh::StaticClass())
-				.AllowClear(true)
-				.ObjectPath_Lambda([&]() {return this->storedNamePath; })
-				.DisplayUseSelected(true)
-				.DisplayThumbnail(true)
-				.ThumbnailPool(this->myAssetThumbnailPool)
-				.OnObjectChanged_Lambda([&](const FAssetData& inData) {
-				this->storedNamePath = inData.ObjectPath.ToString();			
-						})
-				]
+			//+ SVerticalBox::Slot()
+			//	[
+			//		//SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
+			//		SNew(SObjectPropertyEntryBox)
+			//		.AllowedClass(UStaticMesh::StaticClass())
+			//	.AllowClear(true)
+			//	.ObjectPath_Lambda([&]() {return this->storedNamePath; })
+			//	.DisplayUseSelected(true)
+			//	.DisplayThumbnail(true)
+			//	.ThumbnailPool(this->myAssetThumbnailPool)
+			//	.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+			//	this->storedNamePath = inData.ObjectPath.ToString();			
+			//			})
+			//	]
 		
 			]
 	+ SHorizontalBox::Slot()
@@ -566,16 +566,341 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
+			SNew(SHorizontalBox)
+			+SHorizontalBox::Slot()
+			[
+			SNew(SVerticalBox)
+			+SVerticalBox::Slot()
+				[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.MaxWidth(150)
+				.Padding(0)
+				.FillWidth(1.0f)
+				.VAlign(VAlign_Center)
+				.HAlign(HAlign_Left)
+				[
+
+					SNew(STextBlock)
+					.Text(FText::FromString("Biotope:"))
+
+
+
+				]
+				+ SHorizontalBox::Slot()
+				[
+				SNew(SComboBox<TSharedPtr<biomeAssets>>)
+				.OptionsSource(&BiomeAssetsData)
+				.OnGenerateWidget_Lambda([](TSharedPtr<biomeAssets> Item)
+				{
+				return SNew(STextBlock).Text(FText::FromString(*Item->biotopeName));
+				//return SNew(SButton).Text(FText::FromString(*Item->Description));
+				})
+				.OnSelectionChanged_Lambda([this](TSharedPtr<biomeAssets> InSelection, ESelectInfo::Type InSelectInfo)
+				{
+				if (InSelection.IsValid() && ComboBoxTitleBlockBiotopeAsset.IsValid())
+				{
+					ComboBoxTitleBlockBiotopeAsset->SetText(FText::FromString(*InSelection->biotopeName));
+					this->BiomeAssetSettingSelection = InSelection->biotopeIndex;
+					//this->IntermediateSettingData = BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings;
+
+				}
+
+				})
+					[
+					SAssignNew(ComboBoxTitleBlockBiotopeAsset, STextBlock).Text(LOCTEXT("ComboLabel", "Biotope"))
+					]
+
+
+				]
+		]
+		//+SVerticalBox::Slot()
+		//	[
+		//		SNew(SListView< TSharedPtr<biomeAssetSetting>>)
+		//		.ItemHeight(24)
+		//	.ListItemsSource(&IntermediateSettingData)
+		//	//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
+		//	.OnGenerateRow_Lambda([](TSharedPtr<biomeAssetSetting> item, const TSharedRef<STableViewBase>& OwnerTable) {
+		//	
+		//	
+		//		return SNew(STableRow<TSharedPtr<biomeAssetSetting>>, OwnerTable)[SNew(STextBlock).Text(FText::FromString(item->ObjectPath))];
+		//	
+		//	
+		//	
+		//		})
+		//	]
+			]
+	+SHorizontalBox::Slot()
+		[
+	SNew(SVerticalBox)
+	+ SVerticalBox::Slot()
+		[
 			SNew(SObjectPropertyEntryBox)
 			.AllowedClass(UStaticMesh::StaticClass())
 		.AllowClear(true)
-		.ObjectPath_Lambda([&]() {return this->storedNamePath; })
+		.ObjectPath_Lambda([&]() {return this->IntermediateBiomeAssetSetting->ObjectPath; })
 		.DisplayUseSelected(true)
 		.DisplayThumbnail(true)
 		.ThumbnailPool(this->myAssetThumbnailPool)
 		.OnObjectChanged_Lambda([&](const FAssetData& inData) {
-		this->storedNamePath = inData.ObjectPath.ToString();
+		this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
 			})
+		]
+	+SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Asset Count"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.MaxWidth(150)
+
+		.Padding(5.0f)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SNumericEntryBox<int32>)
+			.AllowSpin(true)
+		.MinValue(1)
+		.MaxValue(4096)
+		.MaxSliderValue(4096)
+		.MinDesiredValueWidth(2)
+		.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->assetCount; })
+		.OnValueChanged_Lambda([&](const int32& inValue) {this->IntermediateBiomeAssetSetting->assetCount = inValue; })
+		]
+
+		]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("scaleVar"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.MaxWidth(150)
+
+		.Padding(5.0f)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(0)
+		.MaxValue(0.999)
+		.MaxSliderValue(0.999)
+		.MinDesiredValueWidth(0)
+		.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->scaleVar; })
+		.OnValueChanged_Lambda([&](const float& inValue) {this->IntermediateBiomeAssetSetting->scaleVar = inValue; })
+		]
+
+		]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("angleThreshhold"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.MaxWidth(150)
+
+		.Padding(5.0f)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SNumericEntryBox<float>)
+			.AllowSpin(true)
+		.MinValue(0)
+		.MaxValue(1)
+		.MaxSliderValue(1)
+		.MinDesiredValueWidth(0)
+		.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->angleThreshhold; })
+		.OnValueChanged_Lambda([&](const float& inValue) {this->IntermediateBiomeAssetSetting->angleThreshhold = inValue; })
+		]
+
+		]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("noCollision"))
+
+
+
+		]
+
+	+ SHorizontalBox::Slot()
+		.MaxWidth(150)
+
+		.Padding(5.0f)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SCheckBox)
+		/*	.IsChecked_Lambda([&]() {
+		if (this->IntermediateBiomeAssetSetting->noCollide == true && myDensityNumBox.IsValid() && !myDensityNumBox->IsEnabled()) {
+			return ECheckBoxState::Checked;
+		}
+		else
+		{
+			return ECheckBoxState::Unchecked;
+		}
+		 
+				})
+			*/
+			.OnCheckStateChanged_Lambda([&](const ECheckBoxState &inValue) {
+					if (inValue == ECheckBoxState::Checked && myDensityNumBox.IsValid() && myDensityNumBox->IsEnabled() == false)
+					{
+						this->IntermediateBiomeAssetSetting->noCollide = true;
+					}
+					else if(inValue == ECheckBoxState::Unchecked && myDensityNumBox.IsValid() && myDensityNumBox->IsEnabled() == true)
+					{
+						this->IntermediateBiomeAssetSetting->noCollide = false;
+					}
+					
+				})
+
+		]
+	+SHorizontalBox::Slot()
+		[
+			SAssignNew(myDensityNumBox,SNumericEntryBox<float>)
+			.IsEnabled_Lambda([&]() {return this->IntermediateBiomeAssetSetting->noCollide; })
+			.AllowSpin(true)
+			.MinValue(0)
+			.MaxValue(1)
+			.MaxSliderValue(1)
+			.MinDesiredValueWidth(0)
+			.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->density; })
+			.OnValueChanged_Lambda([&](const float& inValue) {this->IntermediateBiomeAssetSetting->density = inValue; })
+		]
+
+		]
+	+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Consider Roads"))
+		]
+
+	+ SHorizontalBox::Slot()
+		.MaxWidth(150)
+
+		.Padding(5.0f)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SCheckBox)
+		.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
+		if (inValue == ECheckBoxState::Checked )
+		{
+			this->IntermediateBiomeAssetSetting->considerRoad = true;
+		}
+		else if (inValue == ECheckBoxState::Unchecked )
+		{
+			this->IntermediateBiomeAssetSetting->noCollide = false;
+		}
+
+			})
+
+		]]
+	+SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.MaxWidth(150)
+		.Padding(0)
+		.FillWidth(1.0f)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Left)
+		[
+
+			SNew(STextBlock)
+			.Text(FText::FromString("Add Asset"))
+		]
+	+SHorizontalBox::Slot()
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("AddBiotopeButton", "Add"))
+		.OnClicked_Raw(this, &FProceduralWorldModule::addNewAssetSetting)
+		[
+			SNew(SBox)
+			.WidthOverride(50)
+		.HeightOverride(25)
+
+		[
+			SNew(SImage)
+
+			.ColorAndOpacity(FSlateColor::UseForeground())
+		.Image(FAppStyle::Get().GetBrush("Icons.plus"))
+		]
+		]
+		]
+
+		]
+		]
 		];
 }
 FReply FProceduralWorldModule::Setup()
@@ -799,6 +1124,22 @@ FReply FProceduralWorldModule::ListTiles()
 	}*/
 	
 	UE_LOG(LogTemp, Warning, TEXT("storedData Name: %s"),*storedNamePath);
+
+
+	UE_LOG(LogTemp, Warning, TEXT("storedData Name: %s"), *storedNamePath);
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Amount of this asset: %d"), IntermediateBiomeAssetSetting->assetCount)
+
+		UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData contains settings for each biotope, size is: %d"), BiomeAssetsData.Num());
+	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData City size is: %d"), BiomeAssetsData[0]->AssetSettings.Num());
+	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Plains size is: %d"), BiomeAssetsData[1]->AssetSettings.Num());
+	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Mountains size is: %d"), BiomeAssetsData[2]->AssetSettings.Num());
+
+
+		
+
+
 	
 	return FReply::Handled();
 }
