@@ -135,7 +135,7 @@ public:
 
 	void GetHeightMapData(ULandscapeInfo* inLandscapeInfo,const int32 X1, const int32 Y1, const int32 X2, const int32 Y2, TArray<uint16>& StoreData, UTexture2D* InHeightmap);
 	void createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray<FColor> inData);
-	void createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray64< uint8 > inData);
+	void createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray< uint16 > inData);
 	
 	FLandscapeTextureDataInfo* GetTextureDataInfo(UTexture2D* Texture);
 	bool GetShouldDirtyPackage() const { return bShouldDirtyPackage; }
@@ -228,7 +228,7 @@ public:
 
 	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64, 2550,3,1.2f,0.5f,0.015f,1.0f)) ,
 		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64, 2550,3,1.2f,0.5f,0.015f,1.0f)) ,
-		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64, 4096,5,2.3f,0.92f,0.0015f,1.96f)) };
+		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64, 4096,14,3.5f,0.86f,0.0015f,1.4f)) };
 	
 
 	//TSharedPtr<FString> newBiotopeName;
@@ -263,13 +263,10 @@ public:
 	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
 
-
-	TSharedRef<SObjectPropertyEntryBox>  MyObjectPropertyEntryBox = SNew(SObjectPropertyEntryBox)
-		.AllowedClass(UStaticMesh::StaticClass())
-		.AllowClear(true)
-		.DisplayThumbnail(true)
-		;
-		
+	//Functionality for saving asset paths when selecting static meshes
+	FString storedNamePath;
+	//Saving Thumbnails for the asset selection functionality in the UI (Set to store up to 50 thumbnaails)
+	TSharedPtr<FAssetThumbnailPool> myAssetThumbnailPool = MakeShareable(new FAssetThumbnailPool(50));
 	
 	
 private:
@@ -277,6 +274,7 @@ private:
 	void RegisterMenus();
 
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
+	TSharedRef<class SDockTab> OnSpawnPluginAssetTab(const class FSpawnTabArgs& SpawnTabArgs);
 
 private:
 	TSharedPtr<class FUICommandList> PluginCommands;

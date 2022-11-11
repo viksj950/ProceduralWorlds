@@ -17,6 +17,7 @@
 
 
 static const FName ProceduralWorldTabName("ProceduralWorld");
+static const FName ProceduralWorldAssetTabName("ProceduralWorldAssets");
 
 #define LOCTEXT_NAMESPACE "FProceduralWorldModule"
 
@@ -40,6 +41,10 @@ void FProceduralWorldModule::StartupModule()
 	
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(ProceduralWorldTabName, FOnSpawnTab::CreateRaw(this, &FProceduralWorldModule::OnSpawnPluginTab))
 		.SetDisplayName(LOCTEXT("FProceduralWorldTabTitle", "ProceduralWorld"))
+		.SetMenuType(ETabSpawnerMenuType::Hidden);
+
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(ProceduralWorldAssetTabName, FOnSpawnTab::CreateRaw(this, &FProceduralWorldModule::OnSpawnPluginAssetTab))
+		.SetDisplayName(LOCTEXT("FProceduralWorldAssetTabTitle", "ProceduralWorldAssets"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 }
 
@@ -334,7 +339,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			SNew(SNumericEntryBox<float>)
 			.AllowSpin(true)
 		.MinValue(1)
-		.MaxValue(4)
+		.MaxValue(16)
 		.MaxSliderValue(16)
 		.MinDesiredValueWidth(2)
 		.Value_Raw(this, &FProceduralWorldModule::GetLacunarity)
@@ -489,10 +494,20 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
-			+SVerticalBox::Slot()
+			+ SVerticalBox::Slot()
 				[
-					SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
-			]
+					//SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
+					SNew(SObjectPropertyEntryBox)
+					.AllowedClass(UStaticMesh::StaticClass())
+				.AllowClear(true)
+				.ObjectPath_Lambda([&]() {return this->storedNamePath; })
+				.DisplayUseSelected(true)
+				.DisplayThumbnail(true)
+				.ThumbnailPool(this->myAssetThumbnailPool)
+				.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+				this->storedNamePath = inData.ObjectPath.ToString();			
+						})
+				]
 		
 			]
 	+ SHorizontalBox::Slot()
@@ -546,6 +561,23 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		];
 }
 
+TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[
+			SNew(SObjectPropertyEntryBox)
+			.AllowedClass(UStaticMesh::StaticClass())
+		.AllowClear(true)
+		.ObjectPath_Lambda([&]() {return this->storedNamePath; })
+		.DisplayUseSelected(true)
+		.DisplayThumbnail(true)
+		.ThumbnailPool(this->myAssetThumbnailPool)
+		.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+		this->storedNamePath = inData.ObjectPath.ToString();
+			})
+		];
+}
 FReply FProceduralWorldModule::Setup()
 {
 	//Call to CreateLandscape and generate its properties 
@@ -648,6 +680,8 @@ FReply FProceduralWorldModule::Setup()
 
 	//Currently only imports the landscape settings to the landscape "mesh"mountainAssets
 	landscapePtr = myLand.generateFromTileData(tiles);
+
+	//createTextureFromArray(500, 500, myLand.concatedHeightData);
 	//LandscapeInfo used for accessing proxies
 	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
 
@@ -664,11 +698,11 @@ FReply FProceduralWorldModule::Setup()
 		}
 	}
 
-	//Procedual Asset placement
+	//Procedural Asset placement
 	ProceduralAssetDistribution temp;
-	int32 plainsAssets = 15;
+	int32 plainsAssets = 10;
 	int32 maxHouses = 5;
-	int32 mountainAssets = 10;
+	int32 mountainAssets = 8;
 	float scaleVarF = 0.3;
 	float scaleVarR = 0.5;
 	float scaleVarC = 0.2;
@@ -686,18 +720,21 @@ FReply FProceduralWorldModule::Setup()
 		{
 			temp.spawnActorObjectsCity(tiles[i], QuadsPerComponent, ComponentsPerProxy,
 				myLand.GetGridSizeOfProxies(), maxHouses, houseSpread, scaleVarC, roadCoords, roadWidthOffset);
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'")));
 		}
 		else if(tiles[i]->biotope == 1)
 		{
 			temp.spawnActorObjectsPlains(tiles[i], QuadsPerComponent,
-				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), plainsAssets, scaleVarF, roadCoords, roadWidthOffset);
+				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), plainsAssets, scaleVarF, roadCoords, roadWidthOffset, true);
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'")));
 		}
 		else if(tiles[i]->biotope == 2) {
 			temp.spawnActorObjectsMountains(tiles[i], QuadsPerComponent,
 				ComponentsPerProxy, myLand.GetGridSizeOfProxies(), mountainAssets, scaleVarR);
+			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
 		}
 		
-		tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
+		//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
 		i++;
 	}
 
@@ -726,6 +763,18 @@ FReply FProceduralWorldModule::ListTiles()
 	UE_LOG(LogTemp, Warning, TEXT("frequency: %f"), BiotopeSettings[BiomeSettingSelection].Frequency);
 	UE_LOG(LogTemp, Warning, TEXT("Lacuanarity: %f"), BiotopeSettings[BiomeSettingSelection].Lacunarity);*/
 
+	/*if (storedData->IsValid())
+	{
+		storedData
+		UE_LOG(LogTemp, Warning, TEXT("Added a static mesh?????: %s"), storedData.Get().);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("storedData is not valid"));
+	}*/
+	
+	UE_LOG(LogTemp, Warning, TEXT("storedData Name: %s"),*storedNamePath);
+	
 	return FReply::Handled();
 }
 
@@ -992,7 +1041,7 @@ void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const 
 	pixels = NULL;
 
 }
-void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray64<uint8> inData)
+void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray<uint16> inData)
 {
 	// Texture Information
 	int width = SrcWidth;
@@ -1014,11 +1063,6 @@ void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const 
 		}
 	}
 
-
-
-
-
-
 	FString PackageName = TEXT("/Game/Content/");
 	PackageName += "test_texture_2";
 	UPackage* Package = CreatePackage(NULL, *PackageName);
@@ -1038,8 +1082,8 @@ void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const 
 	Mip->SizeX = width;
 	Mip->SizeY = height;
 	Mip->BulkData.Lock(LOCK_READ_WRITE);
-	uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
-	FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+	uint16* TextureData = (uint16*)Mip->BulkData.Realloc(height * width * sizeof(uint16) * 4);
+	FMemory::Memcpy(TextureData, pixels, sizeof(uint16) * height * width * 4);
 	Mip->BulkData.Unlock();
 
 	Texture->Source.Init(SrcWidth, SrcHeight, 1, 1, ETextureSourceFormat::TSF_RGBA16, pixels);
@@ -1062,19 +1106,8 @@ FLandscapeTextureDataInfo* FProceduralWorldModule::GetTextureDataInfo(UTexture2D
 void FProceduralWorldModule::PluginButtonClicked()
 {
 
-	
-
-	//UI settings for Landscape resolution
-	//LandscapeComboSettings.Empty();
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 : 63 1 63x63 64(8x8)",505,505,63,1,1,64)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("505 x 505 63 : 4(2x2) 126x126 16(4x4)", 505, 505, 63, 2, 1, 127)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 1 : 63x63 256(16x16)", 1009, 1009, 63, 1, 1, 64)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("1009 x 1009 : 63 : 4(2x2) : 126x126 256(16x16)", 1009, 1009, 63, 2, 1, 127)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("2017 x 2017 : 63 : 4(2x2) : 126x126 256(16x16)", 2017, 2017, 63, 2, 1, 127)));
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 4033 x 4033 : 63 : 4(2x2) : 126x126 1024(32x32)", 4033, 4033, 63, 2, 1, 127)));
-
-	//LandscapeComboSettings.Add(MakeShareable(new LandscapeSetting("(CRASHES) 8129 x 8129 : 127 : 4(2x2) : 254x254 1024(32x32)", 8129, 8129, 127, 2, 1, 255)));
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldTabName);
+	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldAssetTabName);
 }
 
 
