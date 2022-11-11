@@ -670,7 +670,7 @@ FReply FProceduralWorldModule::Setup()
 		//roads[1].calcLengthsSplines();
 		//roads[1].vizualizeRoad(myLand.LandscapeScale);
 		for (int i = 0; i < 5; i++) {
-			myLand.roadAnamarphosis(roads, 0.01, 3, i);
+			myLand.roadAnamarphosis(roads, 0.01, 9, i);
 		}
 	}
 	else {
@@ -700,8 +700,13 @@ FReply FProceduralWorldModule::Setup()
 	//temp
 	TArray<TSharedPtr<biomeAssets>> BiomeAssetsData = { MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
 	  MakeShareable(new biomeAssets("Mountains",2)) };
+	
+	//City biome
+	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 4, 0.5f, 0.7f, false, 1.0f, false));
+	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/_GENERATED/viksj950/temp_tree02.temp_tree02'"), 3, 0.3f, 0.5f, false, 1.0f, true));
+	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/house.house'"), 3, 0.2f, 0.4f, true, 1.2f, true));
 
-	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/_GENERATED/viksj950/temp_tree02.temp_tree02'"), 1, 0.5f,0.6f, true, 1.0f, false));
+	
 
 	//Procedural Asset placement
 	ProceduralAssetDistribution temp;
@@ -720,10 +725,9 @@ FReply FProceduralWorldModule::Setup()
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
 		}
 		
-
 		i++;
 	}
-	temp.spawnAssets(BiomeAssetsData, tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), roadCoords, roads);
+	temp.spawnAssets(BiomeAssetsData, tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), roadCoords, roads, myLand.LandscapeScale.X);
 	//int32 plainsAssets = 10;
 	//int32 maxHouses = 5;
 	//int32 mountainAssets = 8;

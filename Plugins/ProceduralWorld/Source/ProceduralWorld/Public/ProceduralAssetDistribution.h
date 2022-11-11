@@ -72,13 +72,13 @@ public:
 	~ProceduralAssetDistribution();
 
 	void spawnAssets(TArray<TSharedPtr<biomeAssets>> biomeSettings, TArray<UTile*> tiles, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, 
-		const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads);
+		const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const int32& landscapeScale);
 
 	void spawnWithNoCollide(UTile* tile, const FVector& Location, const float &scaleValue, const float &density, AStaticMeshActor* MyNewActor, UStaticMesh* Mesh, int& AssetCount);
 
-	void spawnWithNoCollideAndRoadConsider();
+	//void spawnWithNoCollideAndRoadConsider();
 
-	bool roadConsiderCheck(const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const FVector& Location);
+	bool roadConsiderCheck(const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const int32& landscapeScale, const FVector& Location);
 
 	void spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float spread, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int& roadWidth);
 	//Function for spawning object within a tile, objectType is tree/house

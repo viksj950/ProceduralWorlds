@@ -12,7 +12,7 @@ ProceduralAssetDistribution::~ProceduralAssetDistribution()
 }
 
 void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> biomeSettings, TArray<UTile*> tiles, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy,
-	const int32 GridSizeOfProxies, const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads)
+	const int32 GridSizeOfProxies, const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const int32& landscapeScale)
 {
 	UWorld* World = nullptr;
 	FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
@@ -53,12 +53,15 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 					break;
 				}
 
-				//Iterate through the number of assets this tiles should contain
+				//Iterate through the number of assets types this tiles should contain
+				//UE_LOG(LogTemp, Warning, TEXT("Number of assetstypes : %d"), biomeSettings[j]->AssetSettings.Num());
 				for (size_t k = 0; k < biomeSettings[j]->AssetSettings.Num(); k++)
 				{
 					//Iterate through the number of instances of this specific asset the tile should countain
 					AssetCount = 0;
 					while (AssetCount < biomeSettings[j]->AssetSettings[k].assetCount) {
+
+						UE_LOG(LogTemp, Warning, TEXT("Type of asset : %s"), *biomeSettings[j]->AssetSettings[k].ObjectPath);
 
 						//Random coordinates for X,Y within the bounds of the tiles
 						float randomValX = mathInstance.FRandRange(minPos, maxPos);
@@ -120,8 +123,9 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 						}
 						//If considerRoad is true, we have to check range to road spline points and see if it is above threshold
 						if (biomeSettings[j]->AssetSettings[k].considerRoad && !biomeSettings[j]->AssetSettings[k].noCollide) {
-							if (roadConsiderCheck(inRoadCoords, roads, Location)) {
+							if (roadConsiderCheck(inRoadCoords, roads, landscapeScale, Location)) {
 								AssetCount++;
+								culledAssets.Add(MyNewActor);
 							}
 							else {
 								UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
@@ -132,6 +136,26 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 								tiles[i]->tileAssets.Add(MyNewActor);
 								AssetCount++;
 							}
+						}
+						//If both true, check first road dist, then if check if it collides with other object
+						if (biomeSettings[j]->AssetSettings[k].considerRoad && biomeSettings[j]->AssetSettings[k].noCollide) {
+							if (roadConsiderCheck(inRoadCoords, roads, landscapeScale, Location)) {
+								AssetCount++;
+								culledAssets.Add(MyNewActor);
+							}
+							else {
+								spawnWithNoCollide(tiles[i], Location, scaleValue, biomeSettings[j]->AssetSettings[k].density, MyNewActor, Mesh, AssetCount);
+							}
+						}
+						//Both false, spawn without any criterion
+						if (!biomeSettings[j]->AssetSettings[k].considerRoad && !biomeSettings[j]->AssetSettings[k].noCollide) {
+							UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+							if (MeshComponent)
+							{
+								MeshComponent->SetStaticMesh(Mesh);
+							}
+							tiles[i]->tileAssets.Add(MyNewActor);
+							AssetCount++;
 						}
 					}
 					for (auto& t : culledAssets)
@@ -146,7 +170,7 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 				
 			}
 			else {
-				UE_LOG(LogTemp, Warning, TEXT("Something went wrong, no biome type of this tile exists (!)"));
+				/*UE_LOG(LogTemp, Warning, TEXT("Something went wrong, no biome type of this tile exists (!)"));*/
 			}
 		}
 
@@ -205,13 +229,16 @@ void ProceduralAssetDistribution::spawnWithNoCollide(UTile* tile, const FVector&
 	}
 }
 
-bool ProceduralAssetDistribution::roadConsiderCheck(const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const FVector& Location)
+bool ProceduralAssetDistribution::roadConsiderCheck(const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const int32& landscapeScale, const FVector& Location)
 {
 	bool toCloseToRoad{ false };
+	UE_LOG(LogTemp, Warning, TEXT("Number of roads: %d"), roads.Num());
 	for (size_t i = 0; i < roads.Num(); i++)
 	{
-		uint32 maxDistToRoad{ roads[i].Width };
+		
+		uint32 maxDistToRoad{ roads[i].Width * landscapeScale };
 		float Xdiff, Ydiff;
+		UE_LOG(LogTemp, Warning, TEXT("maxDistToRoad: %d"), maxDistToRoad);
 		
 		for (size_t j = 0; j < inRoadCoords.Num(); j++)
 		{
