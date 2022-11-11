@@ -267,8 +267,10 @@ public:
 	 
 	
 	//Storing all settings for each biome regarding its assets
+	/*TArray<TSharedPtr<biomeAssets>> BiomeAssetsData{ MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
+	MakeShareable(new biomeAssets("Mountains",2)) };*/
 	TArray<TSharedPtr<biomeAssets>> BiomeAssetsData{ MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
-	MakeShareable(new biomeAssets("Mountains",2)) };
+	  MakeShareable(new biomeAssets("Mountains",2)) };
 
 	//Some intermediate placeholder used for displaying the settings for each biotop
 	TSharedPtr<STextBlock> ComboBoxTitleBlockBiotopeAsset;
@@ -276,9 +278,9 @@ public:
 
 	TSharedPtr<SNumericEntryBox<float>> myDensityNumBox;
 	//Intermediate setting used as a placeholder when displaying settings for assets.
-	TSharedPtr<biomeAssetSetting> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSetting("asd",0,0,0,false,0,false ));
+	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false ));
 
-	TArray<TSharedPtr<biomeAssetSetting>> IntermediateSettingData{ MakeShareable(new biomeAssetSetting("asd",0,0,0,false,0,false)) };
+	TArray<TSharedPtr<biomeAssetSettings>> IntermediateSettingData{ MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false)) };
 	//IntermediateSettingData.Add(MakeShareable(new biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
 
 	//Functionality for saving asset paths when selecting static meshes
@@ -288,8 +290,8 @@ public:
 
 	FReply addNewAssetSetting() {
 		//BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
-		BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(IntermediateBiomeAssetSetting);
-		UE_LOG(LogTemp, Warning, TEXT("Added an Asset setting"));
+		//BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(IntermediateBiomeAssetSetting);
+		UE_LOG(LogTemp, Warning, TEXT("Not working, needs TSharedPtr!"));
 		return FReply::Handled();
 	};
 	

@@ -756,8 +756,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.MaxValue(1)
 		.MaxSliderValue(1)
 		.MinDesiredValueWidth(0)
-		.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->angleThreshhold; })
-		.OnValueChanged_Lambda([&](const float& inValue) {this->IntermediateBiomeAssetSetting->angleThreshhold = inValue; })
+		.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->angleThreshold; })
+		.OnValueChanged_Lambda([&](const float& inValue) {this->IntermediateBiomeAssetSetting->angleThreshold = inValue; })
 		]
 
 		]
@@ -1023,10 +1023,10 @@ FReply FProceduralWorldModule::Setup()
 		}
 	}
 	//temp
-	TArray<TSharedPtr<biomeAssets>> BiomeAssetsData = { MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
-	  MakeShareable(new biomeAssets("Mountains",2)) };
-	
-	//City biome
+	//TArray<TSharedPtr<biomeAssets>> BiomeAssetsData = { MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
+	//  MakeShareable(new biomeAssets("Mountains",2)) };
+	//
+	////City biome
 	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 4, 0.5f, 0.7f, false, 1.0f, false));
 	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/_GENERATED/viksj950/temp_tree02.temp_tree02'"), 3, 0.3f, 0.5f, false, 1.0f, true));
 	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/house.house'"), 3, 0.2f, 0.4f, true, 1.2f, true));
