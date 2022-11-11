@@ -60,8 +60,10 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 					//Iterate through the number of instances of this specific asset the tile should countain
 					AssetCount = 0;
 					while (AssetCount < biomeSettings[j]->AssetSettings[k].assetCount) {
+						
+						UE_LOG(LogTemp, Warning, TEXT("AssetCountt : %d"), AssetCount);
 
-						UE_LOG(LogTemp, Warning, TEXT("Type of asset : %s"), *biomeSettings[j]->AssetSettings[k].ObjectPath);
+					/*	UE_LOG(LogTemp, Warning, TEXT("Type of asset : %s"), *biomeSettings[j]->AssetSettings[k].ObjectPath);*/
 
 						//Random coordinates for X,Y within the bounds of the tiles
 						float randomValX = mathInstance.FRandRange(minPos, maxPos);
@@ -232,13 +234,13 @@ void ProceduralAssetDistribution::spawnWithNoCollide(UTile* tile, const FVector&
 bool ProceduralAssetDistribution::roadConsiderCheck(const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const int32& landscapeScale, const FVector& Location)
 {
 	bool toCloseToRoad{ false };
-	UE_LOG(LogTemp, Warning, TEXT("Number of roads: %d"), roads.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("Number of roads: %d"), roads.Num());
 	for (size_t i = 0; i < roads.Num(); i++)
 	{
 		
 		uint32 maxDistToRoad{ roads[i].Width * landscapeScale };
 		float Xdiff, Ydiff;
-		UE_LOG(LogTemp, Warning, TEXT("maxDistToRoad: %d"), maxDistToRoad);
+	/*	UE_LOG(LogTemp, Warning, TEXT("maxDistToRoad: %d"), maxDistToRoad);*/
 		
 		for (size_t j = 0; j < inRoadCoords.Num(); j++)
 		{
@@ -252,7 +254,7 @@ bool ProceduralAssetDistribution::roadConsiderCheck(const TArray<ControlPoint>& 
 		}
 
 		if (toCloseToRoad) {
-			UE_LOG(LogTemp, Warning, TEXT("Asset to close to span to road, aborting!"));
+		/*	UE_LOG(LogTemp, Warning, TEXT("Asset to close to span to road, aborting!"));*/
 			continue;
 		}
 	}

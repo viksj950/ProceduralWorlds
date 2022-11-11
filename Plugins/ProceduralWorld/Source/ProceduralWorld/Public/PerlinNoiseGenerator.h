@@ -228,9 +228,9 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 				frequencyLoc *= settings.Lacunarity;
 
 			}
-
+			int32 diff = averageHeight - (sum + averageHeight);
 			if ((sum)+averageHeight < averageHeight) {
-				Data[column * DataSideSize + row] = averageHeight;
+				Data[column * DataSideSize + row] = ((sum + averageHeight) - diff*0.05);
 			}
 			else {
 				Data[column * DataSideSize + row] = (sum)+averageHeight;
