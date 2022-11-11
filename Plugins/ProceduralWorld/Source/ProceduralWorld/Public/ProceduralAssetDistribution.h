@@ -57,7 +57,7 @@ struct biomeAssets
 	biomeAssets(FString inName, int32 inBiotopeIndex) :biotopeName{ inName }, biotopeIndex{ inBiotopeIndex }{};
 	FString biotopeName;
 	int32 biotopeIndex;
-	TArray<biomeAssetSetting> AssetSettings;
+	TArray<TSharedPtr<biomeAssetSetting>> AssetSettings;
 };
 
 class PROCEDURALWORLD_API ProceduralAssetDistribution

@@ -494,20 +494,20 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
-			+ SVerticalBox::Slot()
-				[
-					//SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
-					SNew(SObjectPropertyEntryBox)
-					.AllowedClass(UStaticMesh::StaticClass())
-				.AllowClear(true)
-				.ObjectPath_Lambda([&]() {return this->storedNamePath; })
-				.DisplayUseSelected(true)
-				.DisplayThumbnail(true)
-				.ThumbnailPool(this->myAssetThumbnailPool)
-				.OnObjectChanged_Lambda([&](const FAssetData& inData) {
-				this->storedNamePath = inData.ObjectPath.ToString();			
-						})
-				]
+			//+ SVerticalBox::Slot()
+			//	[
+			//		//SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
+			//		SNew(SObjectPropertyEntryBox)
+			//		.AllowedClass(UStaticMesh::StaticClass())
+			//	.AllowClear(true)
+			//	.ObjectPath_Lambda([&]() {return this->storedNamePath; })
+			//	.DisplayUseSelected(true)
+			//	.DisplayThumbnail(true)
+			//	.ThumbnailPool(this->myAssetThumbnailPool)
+			//	.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+			//	this->storedNamePath = inData.ObjectPath.ToString();			
+			//			})
+			//	]
 		
 			]
 	+ SHorizontalBox::Slot()
@@ -603,24 +603,33 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				{
 					ComboBoxTitleBlockBiotopeAsset->SetText(FText::FromString(*InSelection->biotopeName));
 					this->BiomeAssetSettingSelection = InSelection->biotopeIndex;
+					//this->IntermediateSettingData = BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings;
 
 				}
 
 				})
 					[
-					SAssignNew(ComboBoxTitleBlockBiotopeAsset, STextBlock).Text(LOCTEXT("ComboLabel", "City"))
+					SAssignNew(ComboBoxTitleBlockBiotopeAsset, STextBlock).Text(LOCTEXT("ComboLabel", "Biotope"))
 					]
 
 
 				]
 		]
-		+SVerticalBox::Slot()
-			[
-				SNew(SListView< TSharedPtr<biomeAssets>>)
-				.ItemHeight(24)
-			.ListItemsSource(&BiomeAssetsData)
-			//.OnGenerateRow(SListView< TSharedPtr<biomeAssets>>::))
-			]
+		//+SVerticalBox::Slot()
+		//	[
+		//		SNew(SListView< TSharedPtr<biomeAssetSetting>>)
+		//		.ItemHeight(24)
+		//	.ListItemsSource(&IntermediateSettingData)
+		//	//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
+		//	.OnGenerateRow_Lambda([](TSharedPtr<biomeAssetSetting> item, const TSharedRef<STableViewBase>& OwnerTable) {
+		//	
+		//	
+		//		return SNew(STableRow<TSharedPtr<biomeAssetSetting>>, OwnerTable)[SNew(STextBlock).Text(FText::FromString(item->ObjectPath))];
+		//	
+		//	
+		//	
+		//		})
+		//	]
 			]
 	+SHorizontalBox::Slot()
 		[
@@ -1091,17 +1100,19 @@ FReply FProceduralWorldModule::ListTiles()
 	
 	UE_LOG(LogTemp, Warning, TEXT("storedData Name: %s"),*storedNamePath);
 
-	UE_LOG(LogTemp, Warning, TEXT("Amount of this asset: %d"), IntermediateBiomeAssetSetting->assetCount)
-		if (IntermediateBiomeAssetSetting->noCollide)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("NoCollision is set TRUE"));
 
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("NoCollision is set FALSE"));
-		}
-	
+	UE_LOG(LogTemp, Warning, TEXT("storedData Name: %s"), *storedNamePath);
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Amount of this asset: %d"), IntermediateBiomeAssetSetting->assetCount)
+
+		UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData contains settings for each biotope, size is: %d"), BiomeAssetsData.Num());
+	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData City size is: %d"), BiomeAssetsData[0]->AssetSettings.Num());
+	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Plains size is: %d"), BiomeAssetsData[1]->AssetSettings.Num());
+	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Mountains size is: %d"), BiomeAssetsData[2]->AssetSettings.Num());
+
+
+		
 
 
 	
