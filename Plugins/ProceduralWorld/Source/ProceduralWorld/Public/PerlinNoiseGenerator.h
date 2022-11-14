@@ -196,8 +196,8 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 	int ColumnStartIndex = inStartColumn;
 	//int RowStartIndex = FMath::Floor(TileIndex / inGridSizeOfProxies) * DataSideSize;
 	int RowStartIndex = inStartRow;
-	UE_LOG(LogTemp, Warning, TEXT("ColumnStartIndex %d"), ColumnStartIndex);
-	UE_LOG(LogTemp, Warning, TEXT("RowStartIndex %d"), RowStartIndex);
+	//UE_LOG(LogTemp, Warning, TEXT("ColumnStartIndex %d"), ColumnStartIndex);
+	//UE_LOG(LogTemp, Warning, TEXT("RowStartIndex %d"), RowStartIndex);
 
 	float sum = 0.0f;
 	int averageHeight = 32768;
@@ -242,7 +242,5 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 		endVert = ColumnStartIndex;
 	}
 	return ColumnStartIndex - DataSideSize - 1;
-	
-
 
 }

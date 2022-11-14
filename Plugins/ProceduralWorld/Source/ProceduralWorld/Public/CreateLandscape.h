@@ -70,6 +70,8 @@ public:
 	void roadAnamarphosis(const TArray<Road>& roads,float sigma = 0.3f, int kernelSize = 9, int interpolationPadding = 0);
 	//sugma func
 	void generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads);
+	//With start and end point
+	void generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end);
 
 	//Main function for interpolation between biomes
 	void interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes);

@@ -697,6 +697,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 			//Random Tangent
 			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)35000 });
 
+			UE_LOG(LogTemp, Warning, TEXT("splinePoint coord %s"), *spline.points[0].pos.ToString());
 			//Iterate the new curve segment
 			spline.calcLengths();
 			float heightDifference = 0;
@@ -725,7 +726,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 					concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(nextSP.pos.X), FGenericPlatformMath::RoundToInt(nextSP.pos.Y))])*(100.0f/128.0f);
 			/*	UE_LOG(LogTemp, Warning, TEXT("heightDiff = %f"), heightDifference);*/
 				if (heightDifference > threshold) {
-					UE_LOG(LogTemp, Warning, TEXT("Attempt at creating spline failed, to much height difference!"));
+				/*	UE_LOG(LogTemp, Warning, TEXT("Attempt at creating spline failed, to much height difference!"));*/
 					canSpawn = false;
 					spline.points.RemoveAt(spline.points.Num() - 1);
 					spline.points.RemoveAt(spline.points.Num() - 1);
@@ -754,6 +755,11 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 	}
 
 
+}
+
+void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end)
+{
+	//To be added
 }
 
 void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes)
@@ -1004,7 +1010,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		//Top right adjacent corner
 		if (t->adjacentTiles[0] != nullptr && t->biotope != t->adjacentTiles[0]->biotope && t->adjacentTiles[0]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[0]->biotope == t->adjacentTiles[3]->biotope) {
 
-			UE_LOG(LogTemp, Warning, TEXT("Interpolating top right corner of tile : %d"), t->index);
+			/*UE_LOG(LogTemp, Warning, TEXT("Interpolating top right corner of tile : %d"), t->index);*/
 			X = t->index % gridSizeOfProxies * (TileSize - 1);
 			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -1035,7 +1041,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		//top left adjacent corner
 		if (t->adjacentTiles[2] != nullptr && t->biotope != t->adjacentTiles[2]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[4]->biotope) {
 
-			UE_LOG(LogTemp, Warning, TEXT("Interpolating top left corner of tile : %d"), t->index);
+		/*	UE_LOG(LogTemp, Warning, TEXT("Interpolating top left corner of tile : %d"), t->index);*/
 			X = t->index % gridSizeOfProxies * (TileSize - 1);
 			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -1066,7 +1072,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		//Bottom right adjacent corner
 		if (t->adjacentTiles[5] != nullptr && t->biotope != t->adjacentTiles[5]->biotope && t->adjacentTiles[5]->biotope == t->adjacentTiles[3]->biotope && t->adjacentTiles[5]->biotope == t->adjacentTiles[6]->biotope) {
 
-			UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom right corner of tile : %d"), t->index);
+			//UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom right corner of tile : %d"), t->index);
 			X = t->index % gridSizeOfProxies * (TileSize - 1);
 			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -1097,7 +1103,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		//Bottom left adjacent corner
 		if (t->adjacentTiles[7] != nullptr && t->biotope != t->adjacentTiles[7]->biotope && t->adjacentTiles[7]->biotope == t->adjacentTiles[4]->biotope && t->adjacentTiles[7]->biotope == t->adjacentTiles[6]->biotope) {
 
-			UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom left corner of tile : %d"), t->index);
+		/*	UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom left corner of tile : %d"), t->index);*/
 			X = t->index % gridSizeOfProxies * (TileSize - 1);
 			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
