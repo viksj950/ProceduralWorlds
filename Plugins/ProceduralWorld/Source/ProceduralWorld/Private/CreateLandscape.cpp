@@ -759,7 +759,106 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end)
 {
-	//To be added
+	FMath math;
+	uint16 tileIndex = 0;
+	CRSpline spline;
+	float distToEndX = 0;
+	float distToEndY = 0;
+	float oldDist = 0;
+	float newDist = 0;
+
+	float X = start.X;
+	float Y = start.Y;
+
+	//tangent
+	spline.addControlPoint({X,Y,(float)45000 });
+	//first control point
+	spline.addControlPoint({ X,Y,(float)45000 });
+
+	ControlPoint startCP = spline.points.Last();
+	ControlPoint EndCP;
+	//ControlPoint lastTangent = spline.points.Last();
+	
+	oldDist = abs((end.X -startCP.pos.X) + (end.Y - startCP.pos.Y));
+
+	uint16 startHeight = concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(startCP.pos.X), FGenericPlatformMath::RoundToInt(startCP.pos.Y))];
+
+	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
+	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
+	int maxRoadTiles{ 24 };
+	int AdjTries{ 100 };
+	int randomPointTries = 200;
+	int32 tileSize;
+	int oldTileIndex = 0;
+	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same again
+
+	while (maxRoadTiles > 0 && AdjTries > 0) {
+		AdjTries--;
+
+		int32 adjIndex = math.RandRange(0, 7);
+		if (inTiles[tileIndex]->adjacentTiles[adjIndex] && inTiles[tileIndex]->adjacentTiles[adjIndex]->biotope != 2 && randomPointTries > 0 && !(visitedTiles.Contains(inTiles[tileIndex]->adjacentTiles[adjIndex]->index)))
+		{
+			bool canSpawn = true;
+			randomPointTries--;
+			oldTileIndex = tileIndex;
+			tileIndex = inTiles[tileIndex]->adjacentTiles[adjIndex]->index;
+			tileSize = inTiles[tileIndex]->tileSize;
+			X = tileIndex % gridSizeOfProxies * (tileSize - 1);
+			Y = FMath::Floor(tileIndex / gridSizeOfProxies) * (tileSize - 1);
+
+			//Random cp
+			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 });
+			EndCP = spline.points.Last();
+			newDist = abs((end.X - EndCP.pos.X) + (end.Y - EndCP.pos.Y));
+			//Random Tangent
+			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 });
+			
+			if (oldDist > newDist) {
+				canSpawn = false; //find other location
+			}
+
+			//Iterate the new curve segment
+			spline.calcLengths();
+			/*float heightDifference = 0;*/
+			float startLength = 0;
+			if (spline.points.Num() > 4)
+			{
+				for (int i = 0; i > spline.points.Num() - 2; i++) {
+					startLength += spline.points[i].length;
+				}
+
+			}
+			
+			ControlPoint nextSP;
+			for (; startLength < spline.TotalLength; startLength += 2) {
+				nextSP = spline.GetSplinePoint(spline.GetNormalisedOffset(startLength));
+
+				//Check so that the point exists within the map boundaries
+				if (0 > FGenericPlatformMath::RoundToInt(nextSP.pos.X) || SizeX <= FGenericPlatformMath::RoundToInt(nextSP.pos.X) ||
+					0 > FGenericPlatformMath::RoundToInt(nextSP.pos.Y) || SizeY <= FGenericPlatformMath::RoundToInt(nextSP.pos.Y))
+				{
+					canSpawn = false;
+					break;
+				}
+
+			}
+			if (canSpawn) {
+				UE_LOG(LogTemp, Warning, TEXT("Added a spline segment succesfully"));
+				visitedTiles.Add(tileIndex);
+				spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+				startHeight = concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(spline.points[spline.points.Num() - 2].pos.X), FGenericPlatformMath::RoundToInt(spline.points[spline.points.Num() - 2].pos.Y))];
+				maxRoadTiles--;
+				randomPointTries = 200;
+				AdjTries = 100;
+			}
+
+		}
+
+	}
+
+	if (spline.points.Num() >= 4) {
+		inRoads.Add(spline);
+	}
 }
 
 void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes)
