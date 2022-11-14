@@ -33,6 +33,8 @@
 #include "PropertyEditorModule.h"
 #include "PropertyCustomizationHelpers.h"
 
+//#include "AssetThumbnail.h"
+
 
 class FToolBarBuilder;
 class FMenuBuilder;
@@ -289,6 +291,10 @@ public:
 	//IntermediateSettingData.Add(MakeShareable(new biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
 
 
+	//EXPERIMENTAL THUMBNAIL STUFF
+	TSharedPtr<FAssetThumbnail> slateThumbnail; //= MakeShareable(new FAssetThumbnail());
+	//TSharedRef<SWidget> thumbnailWidget;
+
 
 	TSharedPtr<SListView< TSharedPtr<biomeAssetSettings>>> assetSettingList;
 	
@@ -304,6 +310,7 @@ public:
 		{
 			BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting)));
 			UE_LOG(LogTemp, Warning, TEXT("Tried to add a setting to biotope: %d" ),BiomeAssetSettingSelection);
+			//thumbnailWidget = slateThumbnail->MakeThumbnailWidget();
 			assetSettingList->RebuildList();
 		}
 		else

@@ -656,10 +656,19 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
 		
 		//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
-		.OnGenerateRow_Lambda([](TSharedPtr<biomeAssetSettings> item, const TSharedRef<STableViewBase>& OwnerTable) {
+		.OnGenerateRow_Lambda([&](TSharedPtr<biomeAssetSettings> item, const TSharedRef<STableViewBase>& OwnerTable) {
 
 
-		return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)[SNew(STextBlock).Text(FText::FromString(item->ObjectPath))];
+		return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
+			[
+
+				//SAssignNew(*thumbnailWidget)
+				//slateThumbnail->MakeThumbnailWidget()
+				
+
+
+			SNew(STextBlock).Text(FText::FromString(item->ObjectPath))
+			];
 
 
 
@@ -679,8 +688,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.DisplayThumbnail(true)
 		.ThumbnailPool(this->myAssetThumbnailPool)
 		.OnObjectChanged_Lambda([&](const FAssetData& inData) {
-		
 		this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
+
+		//slateThumbnail = MakeShareable(new FAssetThumbnail(inData,64,64, myAssetThumbnailPool));
+
 			})
 		]
 	+SVerticalBox::Slot()
