@@ -302,7 +302,7 @@ public:
 		//BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
 		if (!BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Contains(IntermediateBiomeAssetSetting))
 		{
-			BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(IntermediateBiomeAssetSetting);
+			BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting)));
 			UE_LOG(LogTemp, Warning, TEXT("Tried to add a setting to biotope: %d" ),BiomeAssetSettingSelection);
 			assetSettingList->RebuildList();
 		}

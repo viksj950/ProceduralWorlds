@@ -596,6 +596,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				[
 				SNew(SComboBox<TSharedPtr<biomeAssets>>)
 				.OptionsSource(&BiomeAssetsData)
+				
 				.OnGenerateWidget_Lambda([](TSharedPtr<biomeAssets> Item)
 				{
 				return SNew(STextBlock).Text(FText::FromString(*Item->biotopeName));
@@ -614,7 +615,13 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 					//this->BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings("Added", 0, 0, 0, false, 0, false)));
 					//Make a copy of the biotope asset settings and then Rebuild list.
 					//this->IntermediateSettingData = this->BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings;
+					
+					//assetSettingList->Clear
+					//assetSettingList->UpdateSelectionSet();
+					assetSettingList->SetListItemsSource(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings);
 					assetSettingList->RebuildList();
+
+					//assetSettingList->ReGenerateItems();
 
 				}
 
@@ -647,6 +654,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			
 			.ItemHeight(24)
 		.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
+		
 		//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
 		.OnGenerateRow_Lambda([](TSharedPtr<biomeAssetSettings> item, const TSharedRef<STableViewBase>& OwnerTable) {
 
@@ -671,6 +679,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.DisplayThumbnail(true)
 		.ThumbnailPool(this->myAssetThumbnailPool)
 		.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+		
 		this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
 			})
 		]
@@ -1162,6 +1171,17 @@ FReply FProceduralWorldModule::ListTiles()
 	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData City size is: %d"), BiomeAssetsData[0]->AssetSettings.Num());
 	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Plains size is: %d"), BiomeAssetsData[1]->AssetSettings.Num());
 	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Mountains size is: %d"), BiomeAssetsData[2]->AssetSettings.Num());
+
+	for (auto& i: BiomeAssetsData)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BIOME: %s"), *i->biotopeName);
+
+		for (auto& t: i->AssetSettings)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Asset settings for: %s"), *t->ObjectPath);
+		}
+
+	}
 
 
 		
