@@ -1029,7 +1029,7 @@ FReply FProceduralWorldModule::Setup()
 	////City biome
 	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 7, 0.5f, 0.7f, false, 1.0f, false));
 	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/Tree_thick01.Tree_thick01'"), 2, 0.5f, 0.4f, false, 1.0f, true));
-	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/house.house'"), 3, 0.2f, 0.1f, true, 1.8f, true));
+	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/house.house'"), 3, 0.2f, 0.2f, true, 1.8f, true));
 	///Plains
 	BiomeAssetsData[1]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 20, 0.5f, 0.7f, false, 1.0f, false));
 	BiomeAssetsData[1]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var15/Var15_LOD0.Var15_LOD0'"), 3, 0.2f, 0.3f, false, 1.0f, true));
@@ -1038,7 +1038,12 @@ FReply FProceduralWorldModule::Setup()
 	//Mountains
 	BiomeAssetsData[2]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Rocks/TinyRock/TinyRockLowPoly01.TinyRockLowPoly01'"), 5, 0.8f, 0.7f, true, 1.0f, false));
 	BiomeAssetsData[2]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"), 2, 0.5f, 0.3f, true, 1.0f, false));
-
+	 
+	////Debug pruposes
+	//BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"), 1, 0.5f, 0.7f, false, 1.0f, false));
+	//BiomeAssetsData[1]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"), 1, 0.5f, 0.7f, false, 1.0f, false));
+	//BiomeAssetsData[2]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"), 1, 0.5f, 0.7f, false, 1.0f, false));
+	
 	int i{ 0 };
 	for (auto& it : LandscapeInfo->Proxies)
 	{
@@ -1058,6 +1063,11 @@ FReply FProceduralWorldModule::Setup()
 	//Procedural Asset placement
 	ProceduralAssetDistribution temp;
 	temp.spawnAssets(BiomeAssetsData, tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), roadCoords, roads, myLand.LandscapeScale.X);
+
+	//Debug pruposes
+	BiomeAssetsData[0]->AssetSettings.Empty();
+	BiomeAssetsData[1]->AssetSettings.Empty();
+	BiomeAssetsData[2]->AssetSettings.Empty();
 	//int32 plainsAssets = 10;
 	//int32 maxHouses = 5;
 	//int32 mountainAssets = 8;

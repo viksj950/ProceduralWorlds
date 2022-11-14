@@ -55,15 +55,13 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 
 				//Iterate through the number of assets types this tiles should contain
 				//UE_LOG(LogTemp, Warning, TEXT("Number of assetstypes : %d"), biomeSettings[j]->AssetSettings.Num());
+	
 				for (size_t k = 0; k < biomeSettings[j]->AssetSettings.Num(); k++)
 				{
+	
 					//Iterate through the number of instances of this specific asset the tile should countain
 					AssetCount = 0;
 					while (AssetCount < biomeSettings[j]->AssetSettings[k].assetCount) {
-						
-						UE_LOG(LogTemp, Warning, TEXT("AssetCountt : %d"), AssetCount);
-
-					/*	UE_LOG(LogTemp, Warning, TEXT("Type of asset : %s"), *biomeSettings[j]->AssetSettings[k].ObjectPath);*/
 
 						//Random coordinates for X,Y within the bounds of the tiles
 						float randomValX = mathInstance.FRandRange(minPos, maxPos);
@@ -124,7 +122,7 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 							spawnWithNoCollide(tiles[i], Location, scaleValue, biomeSettings[j]->AssetSettings[k].density, MyNewActor, Mesh, AssetCount);
 						}
 						//If considerRoad is true, we have to check range to road spline points and see if it is above threshold
-						if (biomeSettings[j]->AssetSettings[k].considerRoad && !biomeSettings[j]->AssetSettings[k].noCollide) {
+						else if (biomeSettings[j]->AssetSettings[k].considerRoad && !biomeSettings[j]->AssetSettings[k].noCollide) {
 							if (roadConsiderCheck(inRoadCoords, roads, landscapeScale, Location)) {
 								AssetCount++;
 								culledAssets.Add(MyNewActor);
@@ -140,7 +138,7 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 							}
 						}
 						//If both true, check first road dist, then if check if it collides with other object
-						if (biomeSettings[j]->AssetSettings[k].considerRoad && biomeSettings[j]->AssetSettings[k].noCollide) {
+						else if (biomeSettings[j]->AssetSettings[k].considerRoad && biomeSettings[j]->AssetSettings[k].noCollide) {
 							if (roadConsiderCheck(inRoadCoords, roads, landscapeScale, Location)) {
 								AssetCount++;
 								culledAssets.Add(MyNewActor);
@@ -150,7 +148,7 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 							}
 						}
 						//Both false, spawn without any criterion
-						if (!biomeSettings[j]->AssetSettings[k].considerRoad && !biomeSettings[j]->AssetSettings[k].noCollide) {
+						else if (!biomeSettings[j]->AssetSettings[k].considerRoad && !biomeSettings[j]->AssetSettings[k].noCollide) {
 							UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
 							if (MeshComponent)
 							{
@@ -158,6 +156,9 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 							}
 							tiles[i]->tileAssets.Add(MyNewActor);
 							AssetCount++;
+						}
+						else {
+							UE_LOG(LogTemp, Warning, TEXT("This should never happen PA.cpp 163"));
 						}
 					}
 					for (auto& t : culledAssets)
