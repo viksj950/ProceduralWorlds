@@ -62,7 +62,7 @@ struct biomeAssets
 
 	FString biotopeName;
 	int32 biotopeIndex;
-	TArray<biomeAssetSettings> AssetSettings;
+	TArray<TSharedPtr<biomeAssetSettings>> AssetSettings;
 };
 
 class PROCEDURALWORLD_API ProceduralAssetDistribution
