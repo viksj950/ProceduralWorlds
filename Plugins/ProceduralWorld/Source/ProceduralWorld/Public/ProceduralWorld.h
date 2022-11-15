@@ -33,6 +33,8 @@
 #include "PropertyEditorModule.h"
 #include "PropertyCustomizationHelpers.h"
 
+//#include "AssetThumbnail.h"
+
 
 class FToolBarBuilder;
 class FMenuBuilder;
@@ -272,6 +274,7 @@ public:
 	TArray<TSharedPtr<biomeAssets>> BiomeAssetsData{ MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
 	  MakeShareable(new biomeAssets("Mountains",2)) };
 
+
 	//Some intermediate placeholder used for displaying the settings for each biotop
 	TSharedPtr<STextBlock> ComboBoxTitleBlockBiotopeAsset;
 	int BiomeAssetSettingSelection{ 0 };
@@ -280,8 +283,17 @@ public:
 	//Intermediate setting used as a placeholder when displaying settings for assets.
 	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false ));
 
-	TArray<TSharedPtr<biomeAssetSettings>> IntermediateSettingData{ MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false)) };
+	//TArray<TSharedPtr<biomeAssetSettings>> IntermediateSettingData{ MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false)) };
 	//IntermediateSettingData.Add(MakeShareable(new biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
+
+
+	//EXPERIMENTAL THUMBNAIL STUFF
+	TSharedPtr<FAssetThumbnail> slateThumbnail; //= MakeShareable(new FAssetThumbnail());
+	//TSharedRef<SWidget> thumbnailWidget;
+
+
+	TSharedPtr<SListView< TSharedPtr<biomeAssetSettings>>> assetSettingList;
+	
 
 	//Functionality for saving asset paths when selecting static meshes
 	FString storedNamePath;
@@ -290,8 +302,21 @@ public:
 
 	FReply addNewAssetSetting() {
 		//BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
-		//BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(IntermediateBiomeAssetSetting);
-		UE_LOG(LogTemp, Warning, TEXT("Not working, needs TSharedPtr!"));
+		if (!BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Contains(IntermediateBiomeAssetSetting))
+		{
+			BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting)));
+			UE_LOG(LogTemp, Warning, TEXT("Tried to add a setting to biotope: %d" ),BiomeAssetSettingSelection);
+			//thumbnailWidget = slateThumbnail->MakeThumbnailWidget();
+			assetSettingList->RebuildList();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cant add two of the same type!"));
+		}
+		
+		
+		
+
 		return FReply::Handled();
 	};
 	

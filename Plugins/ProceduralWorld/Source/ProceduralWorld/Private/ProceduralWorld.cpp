@@ -46,6 +46,7 @@ void FProceduralWorldModule::StartupModule()
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(ProceduralWorldAssetTabName, FOnSpawnTab::CreateRaw(this, &FProceduralWorldModule::OnSpawnPluginAssetTab))
 		.SetDisplayName(LOCTEXT("FProceduralWorldAssetTabTitle", "ProceduralWorldAssets"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
+
 }
 
 void FProceduralWorldModule::ShutdownModule()
@@ -65,6 +66,8 @@ void FProceduralWorldModule::ShutdownModule()
 	FProceduralWorldCommands::Unregister();
 
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(ProceduralWorldTabName);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(ProceduralWorldAssetTabName);
+
 }
 
 TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
@@ -563,6 +566,9 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnTabArgs& SpawnTabArgs)
 {
+	if (BiomeAssetSettingSelection != 0) {
+		
+	}
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
@@ -592,6 +598,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				[
 				SNew(SComboBox<TSharedPtr<biomeAssets>>)
 				.OptionsSource(&BiomeAssetsData)
+				
 				.OnGenerateWidget_Lambda([](TSharedPtr<biomeAssets> Item)
 				{
 				return SNew(STextBlock).Text(FText::FromString(*Item->biotopeName));
@@ -601,9 +608,22 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				{
 				if (InSelection.IsValid() && ComboBoxTitleBlockBiotopeAsset.IsValid())
 				{
+
 					ComboBoxTitleBlockBiotopeAsset->SetText(FText::FromString(*InSelection->biotopeName));
+					//Change to correction Selection, array index for BiomeAssetsData
 					this->BiomeAssetSettingSelection = InSelection->biotopeIndex;
-					//this->IntermediateSettingData = BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings;
+					UE_LOG(LogTemp, Warning, TEXT("Changed BiomeAssetSettingSelection to: %d"), BiomeAssetSettingSelection);
+					
+					//this->BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings("Added", 0, 0, 0, false, 0, false)));
+					//Make a copy of the biotope asset settings and then Rebuild list.
+					//this->IntermediateSettingData = this->BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings;
+					
+					//assetSettingList->Clear
+					//assetSettingList->UpdateSelectionSet();
+					assetSettingList->SetListItemsSource(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings);
+					assetSettingList->RebuildList();
+
+					//assetSettingList->ReGenerateItems();
 
 				}
 
@@ -617,19 +637,45 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		]
 		//+SVerticalBox::Slot()
 		//	[
-		//		SNew(SListView< TSharedPtr<biomeAssetSetting>>)
+		//		SNew(SListView< TSharedPtr<biomeAssetSettings>>)
 		//		.ItemHeight(24)
 		//	.ListItemsSource(&IntermediateSettingData)
 		//	//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
-		//	.OnGenerateRow_Lambda([](TSharedPtr<biomeAssetSetting> item, const TSharedRef<STableViewBase>& OwnerTable) {
+		//	.OnGenerateRow_Lambda([](TSharedPtr<biomeAssetSettings> item, const TSharedRef<STableViewBase>& OwnerTable) {
 		//	
 		//	
-		//		return SNew(STableRow<TSharedPtr<biomeAssetSetting>>, OwnerTable)[SNew(STextBlock).Text(FText::FromString(item->ObjectPath))];
+		//		return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)[SNew(STextBlock).Text(FText::FromString(item->ObjectPath))];
 		//	
 		//	
 		//	
 		//		})
 		//	]
+	+SVerticalBox::Slot()
+		[
+			SAssignNew(assetSettingList, SListView< TSharedPtr<biomeAssetSettings>>)
+			
+			.ItemHeight(24)
+		.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
+		
+		//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
+		.OnGenerateRow_Lambda([&](TSharedPtr<biomeAssetSettings> item, const TSharedRef<STableViewBase>& OwnerTable) {
+
+
+		return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
+			[
+
+				//SAssignNew(*thumbnailWidget)
+				//slateThumbnail->MakeThumbnailWidget()
+				
+
+
+			SNew(STextBlock).Text(FText::FromString(item->ObjectPath))
+			];
+
+
+
+			})
+		]
 			]
 	+SHorizontalBox::Slot()
 		[
@@ -645,6 +691,9 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.ThumbnailPool(this->myAssetThumbnailPool)
 		.OnObjectChanged_Lambda([&](const FAssetData& inData) {
 		this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
+
+		//slateThumbnail = MakeShareable(new FAssetThumbnail(inData,64,64, myAssetThumbnailPool));
+
 			})
 		]
 	+SVerticalBox::Slot()
@@ -1026,18 +1075,18 @@ FReply FProceduralWorldModule::Setup()
 	//TArray<TSharedPtr<biomeAssets>> BiomeAssetsData = { MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
 	//  MakeShareable(new biomeAssets("Mountains",2)) };
 	//
-	////City biome
-	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 7, 0.5f, 0.7f, false, 1.0f, false));
-	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/Tree_thick01.Tree_thick01'"), 2, 0.5f, 0.4f, false, 1.0f, true));
-	BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/house.house'"), 3, 0.2f, 0.2f, true, 1.8f, true));
-	///Plains
-	BiomeAssetsData[1]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 20, 0.5f, 0.7f, false, 1.0f, false));
-	BiomeAssetsData[1]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var15/Var15_LOD0.Var15_LOD0'"), 3, 0.2f, 0.3f, false, 1.0f, true));
-	BiomeAssetsData[1]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/Tree_thick01.Tree_thick01'"), 10, 0.5f, 0.4f, false, 1.0f, true));
-	BiomeAssetsData[1]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Rocks/TinyRock/TinyRockLowPoly01.TinyRockLowPoly01'"), 3, 0.2f, 0.3f, true, 1.0f, true));
-	//Mountains
-	BiomeAssetsData[2]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Rocks/TinyRock/TinyRockLowPoly01.TinyRockLowPoly01'"), 5, 0.8f, 0.7f, true, 1.0f, false));
-	BiomeAssetsData[2]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"), 2, 0.5f, 0.3f, true, 1.0f, false));
+	//////City biome
+	//BiomeAssetsData[0]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 7, 0.5f, 0.7f, false, 1.0f, false)));
+	//BiomeAssetsData[0]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/Tree_thick01.Tree_thick01'"), 2, 0.5f, 0.4f, false, 1.0f, true)));
+	//BiomeAssetsData[0]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/house.house'"), 3, 0.2f, 0.2f, true, 1.8f, true)));
+	/////Plains
+	//BiomeAssetsData[1]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 20, 0.5f, 0.7f, false, 1.0f, false)));
+	//BiomeAssetsData[1]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var15/Var15_LOD0.Var15_LOD0'"), 3, 0.2f, 0.3f, false, 1.0f, true)));
+	//BiomeAssetsData[1]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/Tree_thick01.Tree_thick01'"), 10, 0.5f, 0.4f, false, 1.0f, true)));
+	//BiomeAssetsData[1]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Rocks/TinyRock/TinyRockLowPoly01.TinyRockLowPoly01'"), 3, 0.2f, 0.3f, true, 1.0f, true)));
+	////Mountains
+	//BiomeAssetsData[2]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Rocks/TinyRock/TinyRockLowPoly01.TinyRockLowPoly01'"), 5, 0.8f, 0.7f, true, 1.0f, false)));
+	//BiomeAssetsData[2]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"), 2, 0.5f, 0.3f, true, 1.0f, false)));
 	 
 	////Debug pruposes
 	//BiomeAssetsData[0]->AssetSettings.Add(biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"), 1, 0.5f, 0.7f, false, 1.0f, false));
@@ -1064,10 +1113,6 @@ FReply FProceduralWorldModule::Setup()
 	ProceduralAssetDistribution temp;
 	temp.spawnAssets(BiomeAssetsData, tiles, QuadsPerComponent, ComponentsPerProxy, myLand.GetGridSizeOfProxies(), roadCoords, roads, myLand.LandscapeScale.X);
 
-	//Debug pruposes
-	BiomeAssetsData[0]->AssetSettings.Empty();
-	BiomeAssetsData[1]->AssetSettings.Empty();
-	BiomeAssetsData[2]->AssetSettings.Empty();
 	//int32 plainsAssets = 10;
 	//int32 maxHouses = 5;
 	//int32 mountainAssets = 8;
@@ -1128,6 +1173,7 @@ FReply FProceduralWorldModule::ListTiles()
 	UE_LOG(LogTemp, Warning, TEXT("frequency: %f"), BiotopeSettings[BiomeSettingSelection].Frequency);
 	UE_LOG(LogTemp, Warning, TEXT("Lacuanarity: %f"), BiotopeSettings[BiomeSettingSelection].Lacunarity);*/
 
+
 	/*if (storedData->IsValid())
 	{
 		storedData
@@ -1150,6 +1196,17 @@ FReply FProceduralWorldModule::ListTiles()
 	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData City size is: %d"), BiomeAssetsData[0]->AssetSettings.Num());
 	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Plains size is: %d"), BiomeAssetsData[1]->AssetSettings.Num());
 	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Mountains size is: %d"), BiomeAssetsData[2]->AssetSettings.Num());
+
+	for (auto& i: BiomeAssetsData)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BIOME: %s"), *i->biotopeName);
+
+		for (auto& t: i->AssetSettings)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Asset settings for: %s"), *t->ObjectPath);
+		}
+
+	}
 
 
 		
@@ -1486,6 +1543,22 @@ FLandscapeTextureDataInfo* FProceduralWorldModule::GetTextureDataInfo(UTexture2D
 }
 void FProceduralWorldModule::PluginButtonClicked()
 {
+	//Clean old ass
+	BiomeAssetsData[0]->AssetSettings.Empty();
+	BiomeAssetsData[1]->AssetSettings.Empty();
+	BiomeAssetsData[2]->AssetSettings.Empty();
+	////City biome
+	BiomeAssetsData[0]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 7, 0.5f, 0.7f, false, 1.0f, false)));
+	BiomeAssetsData[0]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/Tree_thick01.Tree_thick01'"), 2, 0.5f, 0.4f, false, 1.0f, true)));
+	BiomeAssetsData[0]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/house.house'"), 3, 0.2f, 0.2f, true, 1.8f, true)));
+	///Plains
+	BiomeAssetsData[1]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 20, 0.5f, 0.7f, false, 1.0f, false)));
+	BiomeAssetsData[1]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var15/Var15_LOD0.Var15_LOD0'"), 3, 0.2f, 0.3f, false, 1.0f, true)));
+	BiomeAssetsData[1]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/Tree_thick01.Tree_thick01'"), 10, 0.5f, 0.4f, false, 1.0f, true)));
+	BiomeAssetsData[1]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Rocks/TinyRock/TinyRockLowPoly01.TinyRockLowPoly01'"), 3, 0.2f, 0.3f, true, 1.0f, true)));
+	//Mountains
+	BiomeAssetsData[2]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Rocks/TinyRock/TinyRockLowPoly01.TinyRockLowPoly01'"), 5, 0.8f, 0.7f, true, 1.0f, false)));
+	BiomeAssetsData[2]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/TreeTrunk01.TreeTrunk01'"), 2, 0.5f, 0.3f, true, 1.0f, false)));
 
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldTabName);
 	FGlobalTabmanager::Get()->TryInvokeTab(ProceduralWorldAssetTabName);

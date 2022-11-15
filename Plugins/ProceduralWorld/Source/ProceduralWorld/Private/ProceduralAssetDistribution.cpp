@@ -55,13 +55,11 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 
 				//Iterate through the number of assets types this tiles should contain
 				//UE_LOG(LogTemp, Warning, TEXT("Number of assetstypes : %d"), biomeSettings[j]->AssetSettings.Num());
-	
 				for (size_t k = 0; k < biomeSettings[j]->AssetSettings.Num(); k++)
 				{
-	
 					//Iterate through the number of instances of this specific asset the tile should countain
 					AssetCount = 0;
-					while (AssetCount < biomeSettings[j]->AssetSettings[k].assetCount) {
+					while (AssetCount < biomeSettings[j]->AssetSettings[k]->assetCount) {
 
 						//Random coordinates for X,Y within the bounds of the tiles
 						float randomValX = mathInstance.FRandRange(minPos, maxPos);
@@ -84,7 +82,7 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 						RotationAngle = acosf(FVector::DotProduct(UpVector, tri.normal));
 
 						//Check if angle is acceptable to spawn the object within
-						if (RotationAngle > biomeSettings[j]->AssetSettings[k].angleThreshold) {
+						if (RotationAngle > biomeSettings[j]->AssetSettings[k]->angleThreshold) {
 							AssetCount++;
 							continue;
 						}
@@ -106,8 +104,8 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 
 						//For scale variance (assumes uniform scale on all axises which "should" be true)
 						FVector defaultScale = MyNewActor->GetActorScale3D();
-						minScale = defaultScale.X - biomeSettings[j]->AssetSettings[k].scaleVar;
-						maxScale = defaultScale.X + biomeSettings[j]->AssetSettings[k].scaleVar;
+						minScale = defaultScale.X - biomeSettings[j]->AssetSettings[k]->scaleVar;
+						maxScale = defaultScale.X + biomeSettings[j]->AssetSettings[k]->scaleVar;
 
 						float scaleValue = mathInstance.FRandRange(minScale, maxScale);
 
@@ -115,14 +113,14 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 
 						MyNewActor->SetActorScale3D(assetScale);
 
-						UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *biomeSettings[j]->AssetSettings[k].ObjectPath);
+						UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *biomeSettings[j]->AssetSettings[k]->ObjectPath);
 
 						//If noCollide is true, we have to check bounding box to all previous spawned objects
-						if (biomeSettings[j]->AssetSettings[k].noCollide && !biomeSettings[j]->AssetSettings[k].considerRoad) {
-							spawnWithNoCollide(tiles[i], Location, scaleValue, biomeSettings[j]->AssetSettings[k].density, MyNewActor, Mesh, AssetCount);
+						if (biomeSettings[j]->AssetSettings[k]->noCollide && !biomeSettings[j]->AssetSettings[k]->considerRoad) {
+							spawnWithNoCollide(tiles[i], Location, scaleValue, biomeSettings[j]->AssetSettings[k]->density, MyNewActor, Mesh, AssetCount);
 						}
 						//If considerRoad is true, we have to check range to road spline points and see if it is above threshold
-						else if (biomeSettings[j]->AssetSettings[k].considerRoad && !biomeSettings[j]->AssetSettings[k].noCollide) {
+						else if (biomeSettings[j]->AssetSettings[k]->considerRoad && !biomeSettings[j]->AssetSettings[k]->noCollide) {
 							if (roadConsiderCheck(inRoadCoords, roads, landscapeScale, Location)) {
 								AssetCount++;
 								culledAssets.Add(MyNewActor);
@@ -138,17 +136,17 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 							}
 						}
 						//If both true, check first road dist, then if check if it collides with other object
-						else if (biomeSettings[j]->AssetSettings[k].considerRoad && biomeSettings[j]->AssetSettings[k].noCollide) {
+						else if (biomeSettings[j]->AssetSettings[k]->considerRoad && biomeSettings[j]->AssetSettings[k]->noCollide) {
 							if (roadConsiderCheck(inRoadCoords, roads, landscapeScale, Location)) {
 								AssetCount++;
 								culledAssets.Add(MyNewActor);
 							}
 							else {
-								spawnWithNoCollide(tiles[i], Location, scaleValue, biomeSettings[j]->AssetSettings[k].density, MyNewActor, Mesh, AssetCount);
+								spawnWithNoCollide(tiles[i], Location, scaleValue, biomeSettings[j]->AssetSettings[k]->density, MyNewActor, Mesh, AssetCount);
 							}
 						}
 						//Both false, spawn without any criterion
-						else if (!biomeSettings[j]->AssetSettings[k].considerRoad && !biomeSettings[j]->AssetSettings[k].noCollide) {
+						else if (!biomeSettings[j]->AssetSettings[k]->considerRoad && !biomeSettings[j]->AssetSettings[k]->noCollide) {
 							UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
 							if (MeshComponent)
 							{
