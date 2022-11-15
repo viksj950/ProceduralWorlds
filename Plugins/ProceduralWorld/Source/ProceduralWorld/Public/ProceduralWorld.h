@@ -243,6 +243,7 @@ public:
 	FText newBiomeName;
 	FReply addNewBiotope() {
 		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(newBiomeName.ToString(), BiotopeSettings.Num(), 64, 4096, 5, 2.3f, 0.92f, 0.0015f, 1.96f)));
+		BiomeAssetsData.Add(MakeShareable(new biomeAssets(newBiomeName.ToString(), BiomeAssetsData.Num())));
 		return FReply::Handled();
 	};
 
@@ -293,7 +294,7 @@ public:
 
 
 	//EXPERIMENTAL THUMBNAIL STUFF
-	TSharedPtr<FAssetThumbnail> slateThumbnail; //= MakeShareable(new FAssetThumbnail());
+	TSharedPtr<FAssetThumbnail> slateThumbnail{nullptr}; //= MakeShareable(new FAssetThumbnail());
 	//TSharedRef<SWidget> thumbnailWidget;
 
 

@@ -618,6 +618,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			[
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
+			.MaxHeight(75)
 				[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
@@ -695,23 +696,52 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 			SAssignNew(assetSettingList, SListView< TSharedPtr<biomeAssetSettings>>)
 			
-			.ItemHeight(24)
+			.ItemHeight(50)
 		.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
 		
 		//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
 		.OnGenerateRow_Lambda([&](TSharedPtr<biomeAssetSettings> item, const TSharedRef<STableViewBase>& OwnerTable) {
 
 
-		return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
-			[
-
-				//SAssignNew(*thumbnailWidget)
-				//slateThumbnail->MakeThumbnailWidget()
-				
 
 
-			SNew(STextBlock).Text(FText::FromString(item->ObjectPath))
+		if (!item->slateThumbnail.IsValid())
+		{
+			return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
+				[
+					SNew(STextBlock).Text(FText::FromString(item->ObjectPath))
+					
+				];
+
+		}
+		else
+		{
+			return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
+				[
+
+			
+			SNew(SHorizontalBox)
+			+SHorizontalBox::Slot()
+				.MaxWidth(50)
+				[
+				SNew(SBox)
+				.MaxDesiredHeight(50)
+				.MaxDesiredWidth(50)
+					[
+					item->slateThumbnail->MakeThumbnailWidget()
+					]
+
+				]
+			+SHorizontalBox::Slot()
+				[
+					SNew(STextBlock).Text(FText::FromString(/*item->ObjectPath*/ item->slateThumbnail->GetAsset()->GetFName().ToString()))
+					
+				]
+			
+			
 			];
+		}
+		
 
 
 
@@ -732,7 +762,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.ThumbnailPool(this->myAssetThumbnailPool)
 		.OnObjectChanged_Lambda([&](const FAssetData& inData) {
 		this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
-
+		this->IntermediateBiomeAssetSetting->slateThumbnail = MakeShareable(new FAssetThumbnail(inData, 64, 64, myAssetThumbnailPool));
 		//slateThumbnail = MakeShareable(new FAssetThumbnail(inData,64,64, myAssetThumbnailPool));
 
 			})
@@ -765,13 +795,14 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.HAlign(HAlign_Left)
 		[
 			SNew(SNumericEntryBox<int32>)
+			.Delta(1)
 			.AllowSpin(true)
-		.MinValue(1)
-		.MaxValue(4096)
-		.MaxSliderValue(4096)
-		.MinDesiredValueWidth(2)
-		.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->assetCount; })
-		.OnValueChanged_Lambda([&](const int32& inValue) {this->IntermediateBiomeAssetSetting->assetCount = inValue; })
+			.MinValue(1)
+			.MaxValue(4096)
+			.MaxSliderValue(4096)
+			//.MinDesiredValueWidth(2)
+			.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->assetCount; })
+			.OnValueChanged_Lambda([&](const int32& inValue) {this->IntermediateBiomeAssetSetting->assetCount = inValue; })
 		]
 
 		]

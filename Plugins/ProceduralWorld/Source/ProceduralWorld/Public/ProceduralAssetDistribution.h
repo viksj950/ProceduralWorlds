@@ -49,8 +49,11 @@ struct biomeAssetSettings
 		inSettings.noCollide }, density{ inSettings.density }, considerRoad{ inSettings.considerRoad }
 
 	{
+		slateThumbnail = inSettings.slateThumbnail;
 	};
 	
+	TSharedPtr<FAssetThumbnail> slateThumbnail{ nullptr };
+
 	FString ObjectPath;
 	int32 assetCount;
 	float scaleVar;
