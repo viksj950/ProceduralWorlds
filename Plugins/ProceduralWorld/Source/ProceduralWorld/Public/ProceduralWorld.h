@@ -131,9 +131,13 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
-	FReply Setup();
+	FReply Setup(); //old generate landscape
+	FReply GenerateTerrain();
+	FReply PlaceAssets();
 	FReply ListTiles();
 	FReply DeleteLandscape();
+	FReply DeleteTerrain();//old
+	FReply DeleteAssets();
 
 	void GetHeightMapData(ULandscapeInfo* inLandscapeInfo,const int32 X1, const int32 Y1, const int32 X2, const int32 Y2, TArray<uint16>& StoreData, UTexture2D* InHeightmap);
 	void createTextureFromArray(const int32 SrcWidth, const int32 SrcHeight, TArray<FColor> inData);
@@ -148,6 +152,7 @@ public:
 	//member variable for landscape we are creating   
 	
 	ALandscape* landscapePtr{nullptr};
+	CreateLandscape* ptrToTerrain{nullptr};
 	TMap<UTexture2D*, FLandscapeTextureDataInfo*> TextureDataMap;
 	bool bShouldDirtyPackage;
 	/*UPROPERTY()*/
