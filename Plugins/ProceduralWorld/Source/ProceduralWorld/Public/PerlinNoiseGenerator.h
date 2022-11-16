@@ -230,7 +230,8 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 			}
 			int32 diff = averageHeight - (sum + averageHeight);
 			if ((sum)+averageHeight < averageHeight) {
-				Data[column * DataSideSize + row] = ((sum + averageHeight) - diff*0.01);
+				//Data[column * DataSideSize + row] = ((sum + averageHeight) - diff*0.01);
+				Data[column * DataSideSize + row] = averageHeight;
 			}
 			else {
 				Data[column * DataSideSize + row] = (sum)+averageHeight;

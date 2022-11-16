@@ -762,6 +762,7 @@ void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, floa
 	for (int i = 0; i < passes; i++) {
 
 		interpGaussianBlur(inTiles, kernelSize, sigma / (i + 1), dynamicStep);
+		//interpGaussianBlur(inTiles, kernelSize, sigma , interpWidth);
 		dynamicStep -= dynamicStep / passes;
 
 	}

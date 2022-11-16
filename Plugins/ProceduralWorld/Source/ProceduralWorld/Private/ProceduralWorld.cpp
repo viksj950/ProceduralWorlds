@@ -734,7 +734,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				]
 			+SHorizontalBox::Slot()
 				[
-					SNew(STextBlock).Text(FText::FromString(/*item->ObjectPath*/ item->slateThumbnail->GetAsset()->GetFName().ToString()))
+					SNew(STextBlock).Text(FText::FromString(item->ObjectPath /*item->slateThumbnail->GetAsset()->GetFName().ToString()*/))
 					
 				]
 			
