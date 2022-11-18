@@ -695,9 +695,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 	+SVerticalBox::Slot()
 		[
 			SAssignNew(assetSettingList, SListView< TSharedPtr<biomeAssetSettings>>)
-			
+			.SelectionMode(ESelectionMode::Single)
 			.ItemHeight(50)
-		.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
+			.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
+			
 		
 		//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
 		.OnGenerateRow_Lambda([&](TSharedPtr<biomeAssetSettings> item, const TSharedRef<STableViewBase>& OwnerTable) {
@@ -735,6 +736,42 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			+SHorizontalBox::Slot()
 				[
 					SNew(STextBlock).Text(FText::FromString(item->ObjectPath /*item->slateThumbnail->GetAsset()->GetFName().ToString()*/))
+					
+				]
+
+			+ SHorizontalBox::Slot()
+				[
+					SNew(SButton)
+					.OnClicked_Lambda([&]() {
+				for (auto& it: assetSettingList->GetSelectedItems())
+				{	
+					for (int i{0}; i < BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Num(); i++)
+					{
+						if (it->ObjectPath.Equals(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings[i]->ObjectPath))
+						{
+							BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.RemoveAt(i);
+							BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Shrink();
+						}
+
+					}
+					
+				}
+
+			
+				
+				
+				assetSettingList->RebuildList();
+				return FReply::Handled();
+						
+						})
+				[
+					SNew(SImage)
+
+					.ColorAndOpacity(FSlateColor::UseForeground())
+							.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+				]
+					
+
 					
 				]
 			

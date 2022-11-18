@@ -65,11 +65,19 @@ struct biomeAssetSettings
 	//Compare paths
 	bool operator==(const biomeAssetSettings& rhs) const {
 
+		UE_LOG(LogTemp, Warning, TEXT("Comparing this->ObjectPath %s"), *this->ObjectPath);
+		UE_LOG(LogTemp, Warning, TEXT("rhs.ObjectPath: %s"), *rhs.ObjectPath);
+
+
 		return(this->ObjectPath.Equals(rhs.ObjectPath));
-		
+	};
+	bool operator==( TSharedPtr<biomeAssetSettings>& rhs) const {
 
-		
+		UE_LOG(LogTemp, Warning, TEXT("Comparing this->ObjectPath %s"), *this->ObjectPath);
+		UE_LOG(LogTemp, Warning, TEXT("rhs.ObjectPath: %s"), *rhs->ObjectPath);
 
+
+		return(this->ObjectPath.Equals(rhs->ObjectPath));
 	};
 
 };

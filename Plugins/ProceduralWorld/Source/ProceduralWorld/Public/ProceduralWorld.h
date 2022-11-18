@@ -308,17 +308,41 @@ public:
 
 	FReply addNewAssetSetting() {
 		//BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
-		if (!BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Contains(IntermediateBiomeAssetSetting))
+		bool exists{ false };
+		for (auto& it : BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
+		{
+			if (it->ObjectPath.Equals(IntermediateBiomeAssetSetting->ObjectPath) )
+			{
+				exists = true;
+				break;
+			}
+		}
+
+		if (!exists)
 		{
 			BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting)));
 			UE_LOG(LogTemp, Warning, TEXT("Tried to add a setting to biotope: %d" ),BiomeAssetSettingSelection);
 			//thumbnailWidget = slateThumbnail->MakeThumbnailWidget();
 			assetSettingList->RebuildList();
+		
 		}
 		else
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Cant add two of the same type!"));
 		}
+
+
+		//if (!BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Contains(IntermediateBiomeAssetSetting))
+		//{
+		//	BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting)));
+		//	UE_LOG(LogTemp, Warning, TEXT("Tried to add a setting to biotope: %d" ),BiomeAssetSettingSelection);
+		//	//thumbnailWidget = slateThumbnail->MakeThumbnailWidget();
+		//	assetSettingList->RebuildList();
+		//}
+		//else
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("Cant add two of the same type!"));
+		//}
 		
 		
 		
