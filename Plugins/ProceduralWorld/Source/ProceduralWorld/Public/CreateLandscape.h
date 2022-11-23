@@ -73,6 +73,8 @@ public:
 	//With start and end point
 	void generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end);
 
+	float calcDist(const FVector& p1, const FVector& p2);
+
 	//Main function for interpolation between biomes
 	void interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes);
 

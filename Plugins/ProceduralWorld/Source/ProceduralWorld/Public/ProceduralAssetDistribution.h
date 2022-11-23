@@ -43,6 +43,13 @@ struct biomeAssetSettings
 
 	{
 	};
+
+	biomeAssetSettings(const biomeAssetSettings& inSettings):ObjectPath{ inSettings.ObjectPath },
+		assetCount{ inSettings.assetCount }, scaleVar{ inSettings.scaleVar }, angleThreshold{ inSettings.angleThreshold }, noCollide{
+		inSettings.noCollide }, density{ inSettings.density }, considerRoad{ inSettings.considerRoad }
+
+	{
+	};
 	
 	FString ObjectPath;
 	int32 assetCount;
@@ -51,6 +58,16 @@ struct biomeAssetSettings
 	bool noCollide;
 	float density;
 	bool considerRoad;
+
+	//Compare paths
+	bool operator==(const biomeAssetSettings& rhs) const {
+
+		return(this->ObjectPath.Equals(rhs.ObjectPath));
+		
+
+		
+
+	};
 
 };
 
@@ -62,7 +79,7 @@ struct biomeAssets
 
 	FString biotopeName;
 	int32 biotopeIndex;
-	TArray<biomeAssetSettings> AssetSettings;
+	TArray<TSharedPtr<biomeAssetSettings>> AssetSettings;
 };
 
 class PROCEDURALWORLD_API ProceduralAssetDistribution

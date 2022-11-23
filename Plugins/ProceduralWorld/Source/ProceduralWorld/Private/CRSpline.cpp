@@ -155,7 +155,7 @@ void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 
 	float scaleValue = 0.9;
 
-	for (int i = 0; i < points.Num(); i++) //Control Points
+	for (int i = 0; i < points.Num(); i++) //Control points, changed from i = 0 and i ++ to i+=2
 	{
 
 		Location = points[i].pos;
@@ -181,7 +181,7 @@ void CRSpline::visualizeSpline(const FVector &inLandscapeScale)
 
 	}
 	scaleValue = 0.7;
-	float steplength = TotalLength / 150.0f; 
+	float steplength = TotalLength / 250.0f; 
 	//UE_LOG(LogTemp, Warning, TEXT("Number of spline points for the total spline should be:  %f"), steplength);
 
 	int counter = 0;
