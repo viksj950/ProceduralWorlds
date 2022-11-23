@@ -698,17 +698,41 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			.SelectionMode(ESelectionMode::Single)
 			.ItemHeight(50)
 			.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
+		.OnSelectionChanged_Lambda([&](TSharedPtr<biomeAssetSettings> item, ESelectInfo::Type) {
+
+		addAssetButton->SetEnabled(false);
+		modifyAssetButton->SetEnabled(true);
+		if (item.IsValid())
+		{
+			//IntermediateBiomeAssetSetting = MakeShareable(new biomeAssetSettings(*item));
+			IntermediateBiomeAssetSetting = item;
+		}
+		else
+		{
+			modifyAssetButton->SetEnabled(false);
+			addAssetButton->SetEnabled(true);
+			IntermediateBiomeAssetSetting = MakeShareable(new biomeAssetSettings("", 0, 0, 0, false, 0, false));
+		}
+		
+		
+		//assetSettingList->RebuildList();
+
+				})
+			
+			
 			
 		
 		//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
 		.OnGenerateRow_Lambda([&](TSharedPtr<biomeAssetSettings> item, const TSharedRef<STableViewBase>& OwnerTable) {
 
-
-
+		
+		
 
 		if (!item->slateThumbnail.IsValid())
 		{
 			return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
+				
+				
 				[
 					SNew(STextBlock).Text(FText::FromString(item->ObjectPath))
 					
@@ -719,7 +743,6 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		{
 			return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
 				[
-
 			
 			SNew(SHorizontalBox)
 			+SHorizontalBox::Slot()
@@ -740,6 +763,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				]
 
 			+ SHorizontalBox::Slot()
+				
 				[
 					SNew(SButton)
 					.OnClicked_Lambda([&]() {
@@ -798,8 +822,12 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.DisplayThumbnail(true)
 		.ThumbnailPool(this->myAssetThumbnailPool)
 		.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+
 		this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
 		this->IntermediateBiomeAssetSetting->slateThumbnail = MakeShareable(new FAssetThumbnail(inData, 64, 64, myAssetThumbnailPool));
+		if (modifyAssetButton->IsEnabled()) {
+			assetSettingList->RebuildList();
+		}
 		//slateThumbnail = MakeShareable(new FAssetThumbnail(inData,64,64, myAssetThumbnailPool));
 
 			})
@@ -1036,11 +1064,11 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 
 			SNew(STextBlock)
-			.Text(FText::FromString("Add Asset"))
+			.Text(FText::FromString("Add/modify Asset"))
 		]
 	+SHorizontalBox::Slot()
 		[
-			SNew(SButton)
+			/*SNew(SButton)
 			.Text(LOCTEXT("AddBiotopeButton", "Add"))
 		.OnClicked_Raw(this, &FProceduralWorldModule::addNewAssetSetting)
 		[
@@ -1054,8 +1082,43 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			.ColorAndOpacity(FSlateColor::UseForeground())
 		.Image(FAppStyle::Get().GetBrush("Icons.plus"))
 		]
+		]*/
+
+			SAssignNew(addAssetButton,SButton)
+			.Text(LOCTEXT("AddBiotopeButton", "Add"))
+			.OnClicked_Raw(this, &FProceduralWorldModule::addNewAssetSetting)
+		[
+			SNew(SBox)
+			.WidthOverride(50)
+			.HeightOverride(25)
+
+		[
+			SNew(SImage)
+
+			.ColorAndOpacity(FSlateColor::UseForeground())
+			.Image(FAppStyle::Get().GetBrush("Icons.plus"))
 		]
 		]
+		]
+		+ SHorizontalBox::Slot()
+			[
+				SAssignNew(modifyAssetButton, SButton)
+				.IsEnabled(false)
+				.Text(LOCTEXT("AddBiotopeButton", "Add"))
+			.OnClicked_Raw(this, &FProceduralWorldModule::modifyAssetSetting)
+			[
+				SNew(SBox)
+				.WidthOverride(50)
+			.HeightOverride(25)
+
+			[
+				SNew(SImage)
+
+				.ColorAndOpacity(FSlateColor::UseForeground())
+			.Image(FAppStyle::Get().GetBrush("Icons.plus"))
+			]
+			]
+			]
 
 		]
 		]

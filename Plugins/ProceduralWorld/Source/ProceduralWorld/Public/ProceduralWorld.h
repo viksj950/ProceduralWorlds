@@ -287,7 +287,7 @@ public:
 
 	TSharedPtr<SNumericEntryBox<float>> myDensityNumBox;
 	//Intermediate setting used as a placeholder when displaying settings for assets.
-	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false ));
+	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("",0,0,0,false,0,false ));
 
 	//TArray<TSharedPtr<biomeAssetSettings>> IntermediateSettingData{ MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false)) };
 	//IntermediateSettingData.Add(MakeShareable(new biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
@@ -299,8 +299,11 @@ public:
 
 
 	TSharedPtr<SListView< TSharedPtr<biomeAssetSettings>>> assetSettingList;
-	
+	TSharedPtr<SButton> addAssetButton;
+	TSharedPtr<SButton> modifyAssetButton;
 
+	
+	
 	//Functionality for saving asset paths when selecting static meshes
 	FString storedNamePath;
 	//Saving Thumbnails for the asset selection functionality in the UI (Set to store up to 50 thumbnaails)
@@ -331,23 +334,24 @@ public:
 			UE_LOG(LogTemp, Warning, TEXT("Cant add two of the same type!"));
 		}
 
-
-		//if (!BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Contains(IntermediateBiomeAssetSetting))
-		//{
-		//	BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting)));
-		//	UE_LOG(LogTemp, Warning, TEXT("Tried to add a setting to biotope: %d" ),BiomeAssetSettingSelection);
-		//	//thumbnailWidget = slateThumbnail->MakeThumbnailWidget();
-		//	assetSettingList->RebuildList();
-		//}
-		//else
-		//{
-		//	UE_LOG(LogTemp, Warning, TEXT("Cant add two of the same type!"));
-		//}
-		
-		
-		
-
 		return FReply::Handled();
+	};
+
+
+	FReply modifyAssetSetting() {
+
+		
+		//assetSettingList->GetSelectedItems()[0] = MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting));
+		UE_LOG(LogTemp, Warning, TEXT("Tried modifying selected item:"));
+		
+		IntermediateBiomeAssetSetting = MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting));
+
+		modifyAssetButton->SetEnabled(false);
+		addAssetButton->SetEnabled(true);
+		assetSettingList->ClearSelection();
+		assetSettingList->RebuildList();
+
+			return FReply::Handled();
 	};
 	
 	//List element function
