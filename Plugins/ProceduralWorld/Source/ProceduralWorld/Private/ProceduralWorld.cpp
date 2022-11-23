@@ -497,7 +497,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
-			+ SVerticalBox::Slot()
+			/*+ SVerticalBox::Slot()
 				[
 					
 					SNew(SImage)
@@ -505,7 +505,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				
 
 					
-				]
+				]*/
 		
 			]
 	+ SHorizontalBox::Slot()
@@ -729,7 +729,62 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				
 				
 				[
-					SNew(STextBlock).Text(FText::FromString(item->ObjectPath))
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+				.MaxWidth(50)
+				[
+					SNew(SBox)
+					.MaxDesiredHeight(50)
+					.MaxDesiredWidth(50)
+				[
+					SNew(SImage)
+					.ColorAndOpacity(FSlateColor::UseForeground())
+					.Image(FAppStyle::Get().GetBrush("Icons.HighResolutionScreenshot.svg"))
+				]
+
+				]
+			+ SHorizontalBox::Slot()
+				[
+					SNew(STextBlock).Text(FText::FromString(item->ObjectPath /*item->slateThumbnail->GetAsset()->GetFName().ToString()*/))
+
+				]
+
+			+ SHorizontalBox::Slot()
+
+				[
+					SNew(SButton)
+					.OnClicked_Lambda([&]() {
+				for (auto& it : assetSettingList->GetSelectedItems())
+				{
+					for (int i{ 0 }; i < BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Num(); i++)
+					{
+						if (it->ObjectPath.Equals(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings[i]->ObjectPath))
+						{
+							BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.RemoveAt(i);
+							BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Shrink();
+						}
+
+					}
+
+				}
+
+
+
+
+				assetSettingList->RebuildList();
+				return FReply::Handled();
+
+						})
+				[
+					SNew(SImage)
+
+					.ColorAndOpacity(FSlateColor::UseForeground())
+							.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+				]
+
+
+
+				]
 					
 				];
 
@@ -1088,10 +1143,12 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			.HeightOverride(25)
 
 		[
-			SNew(SImage)
+			SNew(STextBlock)
+			.Text(FText::FromString("Add"))
+			/*SNew(SImage)
 
 			.ColorAndOpacity(FSlateColor::UseForeground())
-			.Image(FAppStyle::Get().GetBrush("Icons.plus"))
+			.Image(FAppStyle::Get().GetBrush("Icons.plus"))*/
 		]
 		]
 		]
@@ -1107,10 +1164,13 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			.HeightOverride(25)
 
 			[
-				SNew(SImage)
+				SNew(STextBlock)
+				.Text(FText::FromString("Modify"))
+
+				/*SNew(SImage)
 
 				.ColorAndOpacity(FSlateColor::UseForeground())
-			.Image(FAppStyle::Get().GetBrush("Icons.plus"))
+			.Image(FAppStyle::Get().GetBrush("Icons.plus"))*/
 			]
 			]
 			]
