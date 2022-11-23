@@ -497,20 +497,15 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
-			//+ SVerticalBox::Slot()
-			//	[
-			//		//SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
-			//		SNew(SObjectPropertyEntryBox)
-			//		.AllowedClass(UStaticMesh::StaticClass())
-			//	.AllowClear(true)
-			//	.ObjectPath_Lambda([&]() {return this->storedNamePath; })
-			//	.DisplayUseSelected(true)
-			//	.DisplayThumbnail(true)
-			//	.ThumbnailPool(this->myAssetThumbnailPool)
-			//	.OnObjectChanged_Lambda([&](const FAssetData& inData) {
-			//	this->storedNamePath = inData.ObjectPath.ToString();			
-			//			})
-			//	]
+			+ SVerticalBox::Slot()
+				[
+					
+					SNew(SImage)
+					.Image(ItemBrush)
+				
+
+					
+				]
 		
 			]
 	+ SHorizontalBox::Slot()
@@ -1215,6 +1210,7 @@ FReply FProceduralWorldModule::Setup()
 
 	//Currently only imports the landscape settings to the landscape "mesh"mountainAssets
 	landscapePtr = myLand.generateFromTileData(tiles);
+	createTextureFromArray(myLand.SizeX,myLand.SizeY,myLand.concatedHeightData);
 
 	//createTextureFromArray(500, 500, myLand.concatedHeightData);
 	//LandscapeInfo used for accessing proxies
@@ -1808,9 +1804,15 @@ void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const 
 		for (int x = 0; x < width; x++)
 		{
 
+			//pixels[y * 4 * width + x * 4 + 0] = inData[y * 4 * width + x * 4 + 0]; // R
+			//pixels[y * 4 * width + x * 4 + 1] = inData[y * 4 * width + x * 4 + 1];  // G
+			//pixels[y * 4 * width + x * 4 + 2] = inData[y * 4 * width + x * 4 + 2];   // B
+			//pixels[y * 4 * width + x * 4 + 3] = 255;				  // A
+			//counter++;
+
 			pixels[y * 4 * width + x * 4 + 0] = inData[y * 4 * width + x * 4 + 0]; // R
-			pixels[y * 4 * width + x * 4 + 1] = inData[y * 4 * width + x * 4 + 1];  // G
-			pixels[y * 4 * width + x * 4 + 2] = inData[y * 4 * width + x * 4 + 2];   // B
+			pixels[y * 4 * width + x * 4 + 1] = inData[y * 4 * width + x * 4 + 0];  // G
+			pixels[y * 4 * width + x * 4 + 2] = inData[y * 4 * width + x * 4 + 0];   // B
 			pixels[y * 4 * width + x * 4 + 3] = 255;				  // A
 			counter++;
 

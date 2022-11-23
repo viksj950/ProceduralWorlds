@@ -33,6 +33,9 @@
 #include "PropertyEditorModule.h"
 #include "PropertyCustomizationHelpers.h"
 
+#include "Brushes/SlateImageBrush.h"
+#include "Widgets/SCanvas.h"
+
 //#include "AssetThumbnail.h"
 
 
@@ -271,6 +274,18 @@ public:
 	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
 
+	//UI 2D INTERFACE----------------------------------------------------------------------------------------------
+	FSlateDynamicImageBrush* ItemBrush = new FSlateDynamicImageBrush("test_texture2", FVector2D(64, 64), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f),ESlateBrushTileType::Both);
+	
+	//TSharedPtr<const FSlateDynamicImageBrush> ItemBrush = FSlateDynamicImageBrush::CreateWithImageData("test",FVector2D(64,64),TArray<uint8>{128,0,128,0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0}, FLinearColor(1.0f, 1.0f, 1.0f, 1.0f),ESlateBrushTileType::Both);
+	
+	/*UTexture2D *Texture = UTexture2D::CreateTransient(128, 128);
+	FTexture2DMipMap& Mip = Texture->PlatformData->Mips[0];
+	void* Data = Mip.BulkData.Lock(LOCK_READ_WRITE);
+	FMemory::Memcpy(Data, TArray<uint8>{128, 0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0}, 16);*/
+
+
+
 	//UI Asset Distribution ---------------------------------------------------------------------------------------
 	 
 	
@@ -354,10 +369,6 @@ public:
 			return FReply::Handled();
 	};
 	
-	//List element function
-	/*TSharedRef<SWidget> OnGenerateWidgetForList(TSharedPtr<biomeAssets> inItem, const TSharedRef<STableViewBase>& ownerTable) {
-		return SNew(STextBlock).Text(inItem->biotopeName);
-	};*/
 	
 private:
 
