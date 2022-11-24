@@ -275,8 +275,11 @@ public:
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
 
 	//UI 2D INTERFACE----------------------------------------------------------------------------------------------
-	FSlateDynamicImageBrush* ItemBrush = new FSlateDynamicImageBrush("test_texture2", FVector2D(64, 64), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f),ESlateBrushTileType::Both);
+	FSlateDynamicImageBrush* ItemBrush; // = new FSlateDynamicImageBrush("test_texture2", FVector2D(64, 64), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
 	UTexture2D* CustomTexture;
+
+	TSharedPtr<SBorder> previewTextureBorder;
+	TSharedPtr<FSlateImageBrush> myImageBrush;
 	//TSharedPtr<const FSlateDynamicImageBrush> ItemBrush = FSlateDynamicImageBrush::CreateWithImageData("test",FVector2D(64,64),TArray<uint8>{128,0,128,0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0}, FLinearColor(1.0f, 1.0f, 1.0f, 1.0f),ESlateBrushTileType::Both);
 	
 	/*UTexture2D *Texture = UTexture2D::CreateTransient(128, 128);

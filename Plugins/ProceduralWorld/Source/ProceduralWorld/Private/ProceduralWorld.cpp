@@ -497,15 +497,22 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
-			/*+ SVerticalBox::Slot()
+			+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
+					SAssignNew(previewTextureBorder, SBorder)
+					.IsEnabled(false)
 					
-					SNew(SImage)
-					.Image(CustomTexture)
+					
+					/*[
+						SNew(SImage)
+							.Image(myImageBrush.Get())
+					]*/
+					
 				
 
 					
-				]*/
+				]
 		
 			]
 	+ SHorizontalBox::Slot()
@@ -1575,16 +1582,16 @@ FReply FProceduralWorldModule::ListTiles()
 
 		// Create the Texture
 		FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
-		UTexture2D* Texture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
+		CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
 
 		// Texture Settings
-		Texture->PlatformData = new FTexturePlatformData();
-		Texture->PlatformData->SizeX = width;
-		Texture->PlatformData->SizeY = height;
-		Texture->PlatformData->PixelFormat = PF_R8G8B8A8;
+		CustomTexture->PlatformData = new FTexturePlatformData();
+		CustomTexture->PlatformData->SizeX = width;
+		CustomTexture->PlatformData->SizeY = height;
+		CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
 
 		// Passing the pixels information to the texture
-		FTexture2DMipMap* Mip = new(Texture->PlatformData->Mips) FTexture2DMipMap();
+		FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
 		Mip->SizeX = width;
 		Mip->SizeY = height;
 		Mip->BulkData.Lock(LOCK_READ_WRITE);
@@ -1593,17 +1600,21 @@ FReply FProceduralWorldModule::ListTiles()
 		Mip->BulkData.Unlock();
 
 		// Updating Texture & mark it as unsaved
-		Texture->AddToRoot();
-		Texture->UpdateResource();
+		CustomTexture->AddToRoot();
+		CustomTexture->UpdateResource();
 		Package->MarkPackageDirty();
 
-		UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), &FileName);
+		UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), *FileName);
 
 		free(pixels);
 		pixels = NULL;
+		UE_LOG(LogTemp, Log, TEXT("Texture FetFName: %s"), *CustomTexture->GetFName().ToString());
+		//ItemBrush = new FSlateDynamicImageBrush(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
 
+		myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
 
-
+		previewTextureBorder->SetContent(SNew(SBox).MinAspectRatio(1)[SNew(SImage).Image(myImageBrush.Get())]);
+		previewTextureBorder->SetEnabled(true);
 
 		//CustomTexture = UTexture2D::CreateTransient(SizeX, SizeY);
 		//FTexture2DMipMap* MipMap = &CustomTexture->PlatformData->Mips[0];
