@@ -501,7 +501,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				[
 					
 					SNew(SImage)
-					.Image(ItemBrush)
+					.Image(CustomTexture)
 				
 
 					
@@ -1527,7 +1527,109 @@ FReply FProceduralWorldModule::ListTiles()
 	}
 
 
-		
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if (ptrToTerrain != nullptr && !ptrToTerrain->rawConcatData.IsEmpty())
+	{
+		// Texture Information
+		FString FileName = FString("MyTexture");
+		int width = SizeX;
+		int height = SizeY;
+		uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+
+		// filling the pixels with dummy data (4 boxes: red, green, blue and white)
+		int counter{ 0 };
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+						
+				/*ptrToTerrain->concatedHeightData;*/
+						//pixels[y * 4 * width + x * 4 + 0] = 255; // R
+						//pixels[y * 4 * width + x * 4 + 1] = 0;   // G
+						//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
+						//pixels[y * 4 * width + x * 4 + 3] = 255; // A
+					
+
+
+						pixels[y * 4 * width + x * 4 + 0] = (uint8)(ptrToTerrain->rawConcatData[counter] / 255); // R
+						pixels[y * 4 * width + x * 4 + 1] = (uint8)(ptrToTerrain->rawConcatData[counter] / 255);  // G
+						pixels[y * 4 * width + x * 4 + 2] = (uint8)(ptrToTerrain->rawConcatData[counter] / 255);   // B
+						pixels[y * 4 * width + x * 4 + 3] = 255; // A
+
+						counter++;
+					
+				
+			}
+		}
+		FString pathPackage = TEXT("/Game/Content/");
+		pathPackage += "test_texture";
+
+		// Create Package
+		//FString pathPackage = FString("/Game/MyTextures/");
+		//FString absolutePathPackage = FPaths::G + "/MyTextures/";
+
+		//FPackageName::RegisterMountPoint(*pathPackage, *absolutePathPackage);
+
+		UPackage* Package = CreatePackage(nullptr, *pathPackage);
+
+		// Create the Texture
+		FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
+		UTexture2D* Texture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
+
+		// Texture Settings
+		Texture->PlatformData = new FTexturePlatformData();
+		Texture->PlatformData->SizeX = width;
+		Texture->PlatformData->SizeY = height;
+		Texture->PlatformData->PixelFormat = PF_R8G8B8A8;
+
+		// Passing the pixels information to the texture
+		FTexture2DMipMap* Mip = new(Texture->PlatformData->Mips) FTexture2DMipMap();
+		Mip->SizeX = width;
+		Mip->SizeY = height;
+		Mip->BulkData.Lock(LOCK_READ_WRITE);
+		uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
+		FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+		Mip->BulkData.Unlock();
+
+		// Updating Texture & mark it as unsaved
+		Texture->AddToRoot();
+		Texture->UpdateResource();
+		Package->MarkPackageDirty();
+
+		UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), &FileName);
+
+		free(pixels);
+		pixels = NULL;
+
+
+
+
+		//CustomTexture = UTexture2D::CreateTransient(SizeX, SizeY);
+		//FTexture2DMipMap* MipMap = &CustomTexture->PlatformData->Mips[0];
+		//FByteBulkData* ImageData = &MipMap->BulkData;
+		//uint8* RawImageData = (uint8*)ImageData->Lock(LOCK_READ_WRITE);
+
+		//for (int y = 0; y < SizeY; y++)
+		//{
+		//	for (int x = 0; x < SizeY; x++)
+		//	{
+
+		//		RawImageData[y * 4 * SizeY + x * 4 + 0] = 255;//inData[counter].R; // R
+		//		RawImageData[y * 4 * SizeY + x * 4 + 1] = 0;//inData[counter].G;  // G
+		//		RawImageData[y * 4 * SizeY + x * 4 + 2] = 0;//inData[counter].B;   // B
+		//		RawImageData[y * 4 * SizeY + x * 4 + 3] = 255;				  // A
+
+
+		//	}
+		//}
+
+		//ImageData->Unlock();
+		//CustomTexture->UpdateResource();
+
+		//CustomTexture->
+
+	}
 
 
 	
