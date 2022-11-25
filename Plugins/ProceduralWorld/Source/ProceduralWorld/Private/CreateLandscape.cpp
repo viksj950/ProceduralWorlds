@@ -778,20 +778,24 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 
 	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
 	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
-	int maxRoadTiles{ 15 };
-	int AdjTries{ 50 };
+	int maxRoadTiles{ 25 };
+	int Tries{ 50 };
 	int32 adjIndex = 0;
 	int32 tileSize = inTiles[tileIndex]->tileSize;
 	int oldTileIndex = 0;
 	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same tile again
 	bool canSpawn;
+
 	TArray<ControlPoint> candidates; //used for choosing which control point makes most sense to extend road to
 
-	while (maxRoadTiles > 0 && AdjTries > 0 && !(calcDist(EndCP.pos, end) < tileSize*1.5)) {
-		AdjTries--;
-
-		adjIndex = math.RandRange(0, 7); 
-		
+	while (maxRoadTiles > 0 && Tries > 0 && !(calcDist(EndCP.pos, end) < tileSize*1.5)) {
+		Tries--;
+		if (adjIndex + 1 == 8) {
+			break;
+		}
+		else {
+			adjIndex++;
+		}
 		if (inTiles[tileIndex]->adjacentTiles[adjIndex] && !(visitedTiles.Contains(inTiles[tileIndex]->adjacentTiles[adjIndex]->index)))
 		{
 			canSpawn = true;
@@ -800,7 +804,7 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			tileIndex = inTiles[tileIndex]->adjacentTiles[adjIndex]->index;
 			X = tileIndex % gridSizeOfProxies * (tileSize - 1);
 			Y = FMath::Floor(tileIndex / gridSizeOfProxies) * (tileSize - 1);
-
+			
 			//Random cp
 			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 });
 
@@ -819,7 +823,7 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			float maxPeak = 0;
 			float peakAcceptance = 1800;
 			FVector Location;
-			for (float i = 0; i < spline.TotalLength; i += steplength)
+			for (float i = 0; i < spline.TotalLength - steplength; i += steplength)
 			{
 				Location = spline.GetSplinePoint(spline.GetNormalisedOffset(i)).pos;
 				Location.Z = concatedHeightData[GetVertexIndex(SizeX, (int)Location.X, (int)Location.Y)];
@@ -866,14 +870,17 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 					}
 
 				}
+				UE_LOG(LogTemp, Warning, TEXT("Number of candiates : "));
 				for (auto t : candidates) {
-
+				
 				}
 				if (canSpawn) {
 					UE_LOG(LogTemp, Warning, TEXT("Added a spline segment succesfully"));
 					spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+					//spline.points.RemoveAt(spline.points.Num() - 1); //remove CP
 					maxRoadTiles--;
-					AdjTries = 50;
+					adjIndex = 0;
+					Tries = 50;
 
 				}
 			}
@@ -1398,7 +1405,6 @@ ALandscape* CreateLandscape::generate()
 	//Original map template:505x505 1 63x63 64 2
 	//Smaller map template: 253x253 1 63x63 16 2
 
-
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
@@ -1416,16 +1422,6 @@ ALandscape* CreateLandscape::generate()
 
 	Landscape->bCanHaveLayersContent = true;
 	Landscape->LandscapeMaterial = nullptr;
-	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Materials/YourMaterialName.YourMaterialName'"));
-	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'"));
-
-	//if (Material.Object != NULL)
-	//{
-	//	Landscape->LandscapeMaterial = (UMaterial*)Material.Object;
-	//	//TheMaterial = (UMaterial*)Material.Object;
-	//}else{ 
-	//	Landscape->LandscapeMaterial = nullptr; 
-	//}
 
 	Landscape->SetActorTransform(LandscapeTransform);
 	Landscape->Import(FGuid::NewGuid(), 0, 0, SizeX - 1, SizeY - 1, SectionsPerComponent, QuadsPerComponent,
@@ -1444,15 +1440,15 @@ ALandscape* CreateLandscape::generate()
 	Landscape->PostEditChangeProperty(MaterialPropertyChangedEvent);
 	Landscape->PostEditChange();
 
-	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
+	//Changing Gridsize which will create LandscapestreamProxies, 
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
 
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent) * ComponentsPerProxy);
 	
-	//LandscapeInfo->export
 	return Landscape;
 
 }
+//Look at file : LandscapeEditorDetailCustomization_NewLandscape.cpp line 800 for SUBSYSTEM
 
 ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 {
