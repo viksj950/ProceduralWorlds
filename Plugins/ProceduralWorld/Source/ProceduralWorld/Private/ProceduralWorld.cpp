@@ -499,17 +499,21 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				
 			+ SVerticalBox::Slot()
 				.AutoHeight()
+				
 				[
 					SAssignNew(previewTextureBorder, SBorder)
-					.IsEnabled(false)
-					
-					
-					/*[
-						SNew(SImage)
-							.Image(myImageBrush.Get())
-					]*/
+					.ContentScale(1)
+					.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry,const FPointerEvent& MouseEvent) {
+					//Need to fix this, when the image is scaled the coordinates varry, possible solution: find image slate size, and clicked coordinates, calculate the % 
+					//and then use the selected size of the landscape/heightmap to get correct coordinates.
+				UE_LOG(LogTemp, Log, TEXT("Clicked Texture at: %s"), *inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).ToString());
 					
 				
+					return FReply::Handled(); 
+						
+						})
+					.IsEnabled(false)
+					
 
 					
 				]
@@ -1611,9 +1615,16 @@ FReply FProceduralWorldModule::ListTiles()
 		UE_LOG(LogTemp, Log, TEXT("Texture FetFName: %s"), *CustomTexture->GetFName().ToString());
 		//ItemBrush = new FSlateDynamicImageBrush(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
 
-		myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
+		myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 
-		previewTextureBorder->SetContent(SNew(SBox).MinAspectRatio(1)[SNew(SImage).Image(myImageBrush.Get())]);
+		previewTextureBorder->SetContent(
+			SNew(SBox)
+			.MinAspectRatio(1)
+			[
+				SNew(SImage)
+				.Image(myImageBrush.Get())
+			]);
+		
 		previewTextureBorder->SetEnabled(true);
 
 		//CustomTexture = UTexture2D::CreateTransient(SizeX, SizeY);
