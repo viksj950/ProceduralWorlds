@@ -463,6 +463,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 			]
 			+SVerticalBox::Slot()
+			.AutoHeight()
+			.MaxHeight(50)
 			[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
@@ -501,18 +503,41 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.AutoHeight()
 				
 				[
-					SAssignNew(previewTextureBorder, SBorder)
-					.ContentScale(1)
-					.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry,const FPointerEvent& MouseEvent) {
-					//Need to fix this, when the image is scaled the coordinates varry, possible solution: find image slate size, and clicked coordinates, calculate the % 
-					//and then use the selected size of the landscape/heightmap to get correct coordinates.
-				UE_LOG(LogTemp, Log, TEXT("Clicked Texture at: %s"), *inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).ToString());
+					SNew(SBox)
+					.HeightOverride(505)
+					.MaxAspectRatio(1)
+					.MinAspectRatio(1)
 					
+					[
+						SAssignNew(previewTextureBorder, SBorder)
+
+						.DesiredSizeScale(1)
+				.ContentScale(1)
+				.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry, const FPointerEvent& MouseEvent) {
+				//Need to fix this, when the image is scaled the coordinates varry, possible solution: find image slate size, and clicked coordinates, calculate the % 
+				//and then use the selected size of the landscape/heightmap to get correct coordinates.
+				FVector2D absSize = inGeometry.GetAbsoluteSize();
 				
-					return FReply::Handled(); 
-						
-						})
-					.IsEnabled(false)
+				
+
+
+
+
+				//MouseEvent.
+				FVector2D heightmapPosition = (inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) / absSize) * SizeX;
+
+				heightmapPosition.X = FMath::Abs((heightmapPosition.X - SizeX));
+
+				
+				UE_LOG(LogTemp, Log, TEXT("Clicked Texture at: %s"), *heightmapPosition.ToString());
+
+
+				return FReply::Handled();
+
+					})
+				.IsEnabled(false)
+					]
+					
 					
 
 					
@@ -1549,7 +1574,7 @@ FReply FProceduralWorldModule::ListTiles()
 		uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
 
 		// filling the pixels with dummy data (4 boxes: red, green, blue and white)
-		int counter{ 0 };
+		
 		for (int y = 0; y < height; y++)
 		{
 			for (int x = 0; x < width; x++)
@@ -1560,19 +1585,37 @@ FReply FProceduralWorldModule::ListTiles()
 						//pixels[y * 4 * width + x * 4 + 1] = 0;   // G
 						//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
 						//pixels[y * 4 * width + x * 4 + 3] = 255; // A
+				
+				if (x % (TileSize -1) == 0 || y % (TileSize - 1) == 0)
+				{
+
+					pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 255;
+					pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
+					pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 0;
+					pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
+
+
+				}
+				else
+				{
+					pixels[x * 4 * width + (height - y - 1) * 4 + 0] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255); // R
+					pixels[x * 4 * width + (height - y - 1) * 4 + 1] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);  // G
+					pixels[x * 4 * width + (height - y - 1) * 4 + 2] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);   // B
+					pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255; // A
+
+				}
 					
 
 
-						pixels[y * 4 * width + x * 4 + 0] = (uint8)(ptrToTerrain->rawConcatData[counter] / 255); // R
-						pixels[y * 4 * width + x * 4 + 1] = (uint8)(ptrToTerrain->rawConcatData[counter] / 255);  // G
-						pixels[y * 4 * width + x * 4 + 2] = (uint8)(ptrToTerrain->rawConcatData[counter] / 255);   // B
-						pixels[y * 4 * width + x * 4 + 3] = 255; // A
+						
 
-						counter++;
+						
 					
 				
 			}
 		}
+
+
 		FString pathPackage = TEXT("/Game/Content/");
 		pathPackage += "test_texture";
 
@@ -1614,7 +1657,7 @@ FReply FProceduralWorldModule::ListTiles()
 		pixels = NULL;
 		UE_LOG(LogTemp, Log, TEXT("Texture FetFName: %s"), *CustomTexture->GetFName().ToString());
 		//ItemBrush = new FSlateDynamicImageBrush(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
-
+		
 		myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 
 		previewTextureBorder->SetContent(

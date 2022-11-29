@@ -36,6 +36,7 @@
 #include "Brushes/SlateImageBrush.h"
 #include "Widgets/SCanvas.h"
 
+
 //#include "AssetThumbnail.h"
 
 
