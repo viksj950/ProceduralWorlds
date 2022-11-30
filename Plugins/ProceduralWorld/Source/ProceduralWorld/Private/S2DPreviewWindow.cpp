@@ -7,6 +7,21 @@ S2DPreviewWindow::S2DPreviewWindow(const int32& inSizeX, const int32& inSizeY, c
 	const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize): SizeX{inSizeX}, SizeY{inSizeY}, QuadsPerComponent{inQuadsPerComponent},
 	ComponentsPerProxy{inComponentsPerProxy}, SectionsPerComponent{inSectionsPerComponent}, TileSize{inTilesSize}
 {
+	//First two slots are always populated by default? heightmap and grid:
+	textures.Add(nullptr);
+	textures.Add(nullptr);
+	brushes.Add(nullptr);
+	brushes.Add(nullptr);
+}
+
+void S2DPreviewWindow::UpdateLandscapeSettings(const int32& inSizeX, const int32& inSizeY, const int32& inQuadsPerComponent, const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize)
+{
+	SizeX = inSizeX;
+	SizeY = inSizeY;
+	QuadsPerComponent = inQuadsPerComponent;
+	ComponentsPerProxy = inComponentsPerProxy;
+	SectionsPerComponent = SectionsPerComponent;
+	TileSize = inTilesSize;
 }
 
 void S2DPreviewWindow::CreateHeightmapTexture(const TArray<uint16>& inData)
@@ -49,8 +64,16 @@ void S2DPreviewWindow::CreateHeightmapTexture(const TArray<uint16>& inData)
 	pixels = NULL;
 
 	//add texture to array of textures //TEMPORARY TO SEE UPDATES!!
-	textures.Empty();
-	textures.Add(tempTexturePtr);
+
+	if (textures.IsValidIndex(0))
+	{
+		textures[0] = tempTexturePtr;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Default pointer for heightmap in texture array is missing"));
+	}
+
 
 
 }
@@ -113,22 +136,35 @@ void S2DPreviewWindow::CreateGridTexture()
 	pixels = NULL;
 
 	//add texture to array of textures
-	textures.Add(tempTexturePtr);
+	if (textures.IsValidIndex(1))
+	{
+		textures[1] = tempTexturePtr;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Default pointer for gridTexture in texture array is missing"));
+	}
 
 }
 
 void S2DPreviewWindow::AssembleWidget()
 {
 	//TSharedPtr<FSlateImageBrush> tempImageBrush = MakeShared<FSlateImageBrush>(textures[0], FVector2D(textures[0]->GetSizeX(), textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
-	brushes.Add(MakeShared<FSlateImageBrush>(textures[0], FVector2D(textures[0]->GetSizeX(), textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile));
-	brushes.Add(MakeShared<FSlateImageBrush>(textures[1], FVector2D(textures[1]->GetSizeX(), textures[1]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile));
+	brushes[0] = MakeShared<FSlateImageBrush>(textures[0], FVector2D(textures[0]->GetSizeX(), textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
+	brushes[1] = MakeShared<FSlateImageBrush>(textures[1], FVector2D(textures[1]->GetSizeX(), textures[1]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
+	
+	//brushes.Add(MakeShared<FSlateImageBrush>(textures[1], FVector2D(textures[1]->GetSizeX(), textures[1]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile));
 
 	previewContext->SetContent(
-
+		
+		
 		SNew(SOverlay)
+		.Cursor(EMouseCursor::Crosshairs)
+		
 		+SOverlay::Slot()
 		[
 			SNew(SBox)
+			
 			.MinAspectRatio(1)
 			[
 			SNew(SImage)
@@ -147,7 +183,7 @@ void S2DPreviewWindow::AssembleWidget()
 			]
 
 		]
-
+		
 
 		);
 

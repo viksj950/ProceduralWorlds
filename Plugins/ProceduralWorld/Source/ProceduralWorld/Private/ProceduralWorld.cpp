@@ -387,6 +387,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
 					this->SetLandscapeSettings(InSelection);
 
+					
+
 				}
 
 			})
@@ -536,7 +538,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				return FReply::Handled();
 
 					})
-				.IsEnabled(false)
+				
 					]
 					
 					
@@ -768,15 +770,19 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
-				.MaxWidth(50)
+					.MaxWidth(50)
 				[
 					SNew(SBox)
+					.MaxAspectRatio(1)
+					.MinAspectRatio(1)
 					.MaxDesiredHeight(50)
 					.MaxDesiredWidth(50)
+					.MinDesiredHeight(50)
+					.MinDesiredWidth(50)
 				[
 					SNew(SImage)
 					.ColorAndOpacity(FSlateColor::UseForeground())
-					.Image(FAppStyle::Get().GetBrush("Icons.HighResolutionScreenshot.svg"))
+					.Image(FAppStyle::Get().GetBrush("Icons.box-perspective"))
 				]
 
 				]
@@ -787,39 +793,41 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				]
 
 			+ SHorizontalBox::Slot()
-
+				
 				[
-					SNew(SButton)
-					.OnClicked_Lambda([&]() {
-				for (auto& it : assetSettingList->GetSelectedItems())
-				{
-					for (int i{ 0 }; i < BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Num(); i++)
-					{
-						if (it->ObjectPath.Equals(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings[i]->ObjectPath))
-						{
-							BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.RemoveAt(i);
-							BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Shrink();
-						}
+					SNew(SBox)
 
-					}
+					.MaxAspectRatio(1)
+					.MinAspectRatio(1)
+					[
+					
+						SNew(SButton)
+						.ContentScale(1)
+						.OnClicked_Lambda([&](){
+							for (auto& it : assetSettingList->GetSelectedItems())
+							{
+								for (int i{ 0 }; i < BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Num(); i++)
+								{
+									if (it->ObjectPath.Equals(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings[i]->ObjectPath))
+									{
+										BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.RemoveAt(i);
+										BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Shrink();
+									}
 
-				}
+								}
 
-
-
-
-				assetSettingList->RebuildList();
-				return FReply::Handled();
+							}
+							assetSettingList->RebuildList();
+							return FReply::Handled();
 
 						})
-				[
-					SNew(SImage)
-
-					.ColorAndOpacity(FSlateColor::UseForeground())
+						[
+							SNew(SImage)
+							.ColorAndOpacity(FSlateColor::UseForeground())
 							.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
-				]
+						]
 
-
+					]
 
 				]
 					
@@ -836,8 +844,12 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 				.MaxWidth(50)
 				[
 				SNew(SBox)
+				.MaxAspectRatio(1)
+				.MinAspectRatio(1)
 				.MaxDesiredHeight(50)
 				.MaxDesiredWidth(50)
+				.MinDesiredHeight(50)
+				.MinDesiredWidth(50)
 					[
 					item->slateThumbnail->MakeThumbnailWidget()
 					]
@@ -852,34 +864,37 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			+ SHorizontalBox::Slot()
 				
 				[
+					SNew(SBox)
+					.MaxAspectRatio(1)
+					.MinAspectRatio(1)
+					[
+
 					SNew(SButton)
+					.ContentScale(1)
 					.OnClicked_Lambda([&]() {
-				for (auto& it: assetSettingList->GetSelectedItems())
-				{	
-					for (int i{0}; i < BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Num(); i++)
-					{
-						if (it->ObjectPath.Equals(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings[i]->ObjectPath))
-						{
-							BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.RemoveAt(i);
-							BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Shrink();
-						}
+						for (auto& it: assetSettingList->GetSelectedItems())
+						{	
+							for (int i{0}; i < BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Num(); i++)
+							{
+								if (it->ObjectPath.Equals(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings[i]->ObjectPath))
+								{
+								BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.RemoveAt(i);
+								BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Shrink();
+								}
 
-					}
+							}
 					
-				}
-
-			
-				
-				
-				assetSettingList->RebuildList();
-				return FReply::Handled();
+						}
+						assetSettingList->RebuildList();
+						return FReply::Handled();
 						
-						})
+					})
 				[
 					SNew(SImage)
-
+					
 					.ColorAndOpacity(FSlateColor::UseForeground())
 							.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+				]
 				]
 					
 
@@ -1677,6 +1692,7 @@ FReply FProceduralWorldModule::ListTiles()
 		previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);
 		previewWindow.CreateGridTexture();
 		previewWindow.AssembleWidget();
+		UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
 		//myImageBrush = MakeShared<FSlateImageBrush>(previewWindow.textures[0], FVector2D(previewWindow.textures[0]->GetSizeX(), previewWindow.textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 		//myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 		

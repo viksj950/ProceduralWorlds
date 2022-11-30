@@ -219,6 +219,9 @@ public:
 		SectionsPerComponent = inSettings->SectionsPerComponent;
 		TileSize = inSettings->TileSize;
 
+		//Update settings for 2D Preview when the landscape dimensions are changed.
+		previewWindow.UpdateLandscapeSettings(inSettings->SizeX,inSettings->SizeY,inSettings->QuadsPerComponent,inSettings->ComponentsPerProxy,inSettings->SectionsPerComponent,inSettings->TileSize);
+
 	};
 
 	
