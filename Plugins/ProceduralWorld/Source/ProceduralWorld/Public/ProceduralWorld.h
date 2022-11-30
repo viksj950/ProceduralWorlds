@@ -167,7 +167,7 @@ public:
 	int32 SizeY{505};
 	int32 QuadsPerComponent{63};
 	int32 ComponentsPerProxy{1};
-	int32 SectionsPerComponent{63};
+	int32 SectionsPerComponent{1};
 	int32 TileSize{ 64 };
 	
 	//UI STUFF ---------------------------------------------------------------------------------------

@@ -391,7 +391,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 			})
 				[
-					SAssignNew(ComboBoxTitleBlock, STextBlock).Text(LOCTEXT("ComboLabel", "Please select a size!"))
+					//SAssignNew(ComboBoxTitleBlock, STextBlock).Text(LOCTEXT("ComboLabel", "Please select a size!"))
+					SAssignNew(ComboBoxTitleBlock, STextBlock).Text(FText::FromString(*LandscapeComboSettings[0].Get()->Description))
 				]
 
 
@@ -1586,13 +1587,26 @@ FReply FProceduralWorldModule::ListTiles()
 						//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
 						//pixels[y * 4 * width + x * 4 + 3] = 255; // A
 				
-				if (x % (TileSize -1) == 0 || y % (TileSize - 1) == 0)
+				if (x % (TileSize -1) == 0 || y % (TileSize - 1) == 0 || x % (TileSize -1) == 1 || y % (TileSize - 1) == (TileSize-2))
 				{
+					if (x > (SizeX / 2)) {
 
-					pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 255;
-					pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
-					pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 0;
-					pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
+						pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 0;
+						pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
+						pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 255;
+						pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
+
+					}
+					else {
+
+						pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 255;
+						pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
+						pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 0;
+						pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
+
+					}
+
+					
 
 
 				}
@@ -1659,13 +1673,17 @@ FReply FProceduralWorldModule::ListTiles()
 		//ItemBrush = new FSlateDynamicImageBrush(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
 		
 		myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
-
+		
 		previewTextureBorder->SetContent(
 			SNew(SBox)
 			.MinAspectRatio(1)
 			[
 				SNew(SImage)
+				
 				.Image(myImageBrush.Get())
+
+				
+
 			]);
 		
 		previewTextureBorder->SetEnabled(true);
