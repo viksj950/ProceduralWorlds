@@ -14,6 +14,8 @@
 #include "CreateLandscape.h" //includes setup for landscape properties
 #include "CRSpline.h"
 #include "Road.h"
+#include "S2DPreviewWindow.h" //class for constructing our 2D previes along with functions
+
 
 #include "AssetRegistry/AssetRegistryModule.h"
 //utility to create UTexture2D
@@ -282,6 +284,9 @@ public:
 
 	TSharedPtr<SBorder> previewTextureBorder;
 	TSharedPtr<FSlateImageBrush> myImageBrush;
+
+	//Some default values
+	S2DPreviewWindow previewWindow{ 505,505,63,1,1,64 };
 	
 	//UI Asset Distribution ---------------------------------------------------------------------------------------
 	 

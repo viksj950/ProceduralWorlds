@@ -510,7 +510,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					.MinAspectRatio(1)
 					
 					[
-						SAssignNew(previewTextureBorder, SBorder)
+						SAssignNew(previewWindow.previewContext, SBorder)
 
 						.DesiredSizeScale(1)
 				.ContentScale(1)
@@ -1569,115 +1569,118 @@ FReply FProceduralWorldModule::ListTiles()
 	if (ptrToTerrain != nullptr && !ptrToTerrain->rawConcatData.IsEmpty())
 	{
 		
-		int width = SizeX;
-		int height = SizeY;
-		uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+		//int width = SizeX;
+		//int height = SizeY;
+		//uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
 
-		// filling the pixels with dummy data (4 boxes: red, green, blue and white)
-		
-		for (int y = 0; y < height; y++)
-		{
-			for (int x = 0; x < width; x++)
-			{
-						
-				/*ptrToTerrain->concatedHeightData;*/
-						//pixels[y * 4 * width + x * 4 + 0] = 255; // R
-						//pixels[y * 4 * width + x * 4 + 1] = 0;   // G
-						//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
-						//pixels[y * 4 * width + x * 4 + 3] = 255; // A
-				
-				if (x % (TileSize -1) == 0 || y % (TileSize - 1) == 0 || x % (TileSize -1) == 1 || y % (TileSize - 1) == (TileSize-2))
-				{
-					if (x > (SizeX / 2)) {
+		//// filling the pixels with dummy data (4 boxes: red, green, blue and white)
+		//
+		//for (int y = 0; y < height; y++)
+		//{
+		//	for (int x = 0; x < width; x++)
+		//	{
+		//				
+		//		/*ptrToTerrain->concatedHeightData;*/
+		//				//pixels[y * 4 * width + x * 4 + 0] = 255; // R
+		//				//pixels[y * 4 * width + x * 4 + 1] = 0;   // G
+		//				//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
+		//				//pixels[y * 4 * width + x * 4 + 3] = 255; // A
+		//		
+		//		if (x % (TileSize -1) == 0 || y % (TileSize - 1) == 0 || x % (TileSize -1) == 1 || y % (TileSize - 1) == (TileSize-2))
+		//		{
+		//			if (x > (SizeX / 2)) {
 
-						pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 0;
-						pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
-						pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 255;
-						pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 0;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 255;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
 
-					}
-					else {
+		//			}
+		//			else {
 
-						pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 255;
-						pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
-						pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 0;
-						pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 255;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 0;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
 
-					}
+		//			}
 
-					
-
-
-				}
-				else
-				{
-					pixels[x * 4 * width + (height - y - 1) * 4 + 0] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255); // R
-					pixels[x * 4 * width + (height - y - 1) * 4 + 1] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);  // G
-					pixels[x * 4 * width + (height - y - 1) * 4 + 2] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);   // B
-					pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255; // A
-
-				}
-					
+		//			
 
 
-						
+		//		}
+		//		else
+		//		{
+		//			pixels[x * 4 * width + (height - y - 1) * 4 + 0] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255); // R
+		//			pixels[x * 4 * width + (height - y - 1) * 4 + 1] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);  // G
+		//			pixels[x * 4 * width + (height - y - 1) * 4 + 2] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);   // B
+		//			pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255; // A
 
-						
-					
-				
-			}
-		}
+		//		}
+		//			
 
-		// Texture Information
-		FString FileName = FString("MyTexture");
-		FString pathPackage = TEXT("/Game/Content/");
-		pathPackage += "test_texture";
 
-		
+		//				
 
-		//UPackage* Package = CreatePackage(nullptr, *pathPackage);
+		//				
+		//			
+		//		
+		//	}
+		//}
 
-		//// Create the Texture
-		//FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
-		//CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
+		//// Texture Information
+		//FString FileName = FString("MyTexture");
+		//FString pathPackage = TEXT("/Game/Content/");
+		//pathPackage += "test_texture";
 
-		//// Texture Settings
-		//CustomTexture->PlatformData = new FTexturePlatformData();
-		//CustomTexture->PlatformData->SizeX = width;
-		//CustomTexture->PlatformData->SizeY = height;
-		//CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
-		//TEST AT CREATING A UTEXTURE2D withot saving to "drawer"-------------------------------
-		CustomTexture = UTexture2D::CreateTransient(width, height, PF_R8G8B8A8);
-		//CustomTexture->Compres
-		//CustomTexture
-		//-------------------------------------------------------------------------------
+		//
 
-		// Passing the pixels information to the texture
-		FTexture2DMipMap* Mip = &CustomTexture->GetPlatformData()->Mips[0];
-		//FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
-		Mip->SizeX = width;
-		Mip->SizeY = height;
-		Mip->BulkData.Lock(LOCK_READ_WRITE);
-		uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
-		FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
-		Mip->BulkData.Unlock();
+		////UPackage* Package = CreatePackage(nullptr, *pathPackage);
 
-		// Updating Texture & mark it as unsaved
-		CustomTexture->AddToRoot();
-		CustomTexture->UpdateResource();
-		//Package->MarkPackageDirty();
+		////// Create the Texture
+		////FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
+		////CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
 
-		UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), *FileName);
+		////// Texture Settings
+		////CustomTexture->PlatformData = new FTexturePlatformData();
+		////CustomTexture->PlatformData->SizeX = width;
+		////CustomTexture->PlatformData->SizeY = height;
+		////CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
+		////TEST AT CREATING A UTEXTURE2D withot saving to "drawer"-------------------------------
+		//CustomTexture = UTexture2D::CreateTransient(width, height, PF_R8G8B8A8);
+		////CustomTexture->Compres
+		////CustomTexture
+		////-------------------------------------------------------------------------------
 
-		free(pixels);
-		pixels = NULL;
+		//// Passing the pixels information to the texture
+		//FTexture2DMipMap* Mip = &CustomTexture->GetPlatformData()->Mips[0];
+		////FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
+		//Mip->SizeX = width;
+		//Mip->SizeY = height;
+		//Mip->BulkData.Lock(LOCK_READ_WRITE);
+		//uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
+		//FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+		//Mip->BulkData.Unlock();
+
+		//// Updating Texture & mark it as unsaved
+		//CustomTexture->AddToRoot();
+		//CustomTexture->UpdateResource();
+		////Package->MarkPackageDirty();
+
+		//UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), *FileName);
+
+		//free(pixels);
+		//pixels = NULL;
 
 		//UE_LOG(LogTemp, Log, TEXT("Texture FetFName: %s"), *CustomTexture->GetFName().ToString());
 		//ItemBrush = new FSlateDynamicImageBrush(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
+		previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);
+		previewWindow.CreateGridTexture();
+		previewWindow.AssembleWidget();
+		//myImageBrush = MakeShared<FSlateImageBrush>(previewWindow.textures[0], FVector2D(previewWindow.textures[0]->GetSizeX(), previewWindow.textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
+		//myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 		
-		myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
-		
-		previewTextureBorder->SetContent(
+		/*previewTextureBorder->SetContent(
 			SNew(SBox)
 			.MinAspectRatio(1)
 			[
@@ -1690,7 +1693,7 @@ FReply FProceduralWorldModule::ListTiles()
 
 			]);
 		
-		previewTextureBorder->SetEnabled(true);
+		previewTextureBorder->SetEnabled(true);*/
 
 		//CustomTexture = UTexture2D::CreateTransient(SizeX, SizeY);
 		//FTexture2DMipMap* MipMap = &CustomTexture->PlatformData->Mips[0];
