@@ -1568,8 +1568,7 @@ FReply FProceduralWorldModule::ListTiles()
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (ptrToTerrain != nullptr && !ptrToTerrain->rawConcatData.IsEmpty())
 	{
-		// Texture Information
-		FString FileName = FString("MyTexture");
+		
 		int width = SizeX;
 		int height = SizeY;
 		uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
@@ -1629,30 +1628,33 @@ FReply FProceduralWorldModule::ListTiles()
 			}
 		}
 
-
+		// Texture Information
+		FString FileName = FString("MyTexture");
 		FString pathPackage = TEXT("/Game/Content/");
 		pathPackage += "test_texture";
 
-		// Create Package
-		//FString pathPackage = FString("/Game/MyTextures/");
-		//FString absolutePathPackage = FPaths::G + "/MyTextures/";
+		
 
-		//FPackageName::RegisterMountPoint(*pathPackage, *absolutePathPackage);
+		//UPackage* Package = CreatePackage(nullptr, *pathPackage);
 
-		UPackage* Package = CreatePackage(nullptr, *pathPackage);
+		//// Create the Texture
+		//FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
+		//CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
 
-		// Create the Texture
-		FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
-		CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
-
-		// Texture Settings
-		CustomTexture->PlatformData = new FTexturePlatformData();
-		CustomTexture->PlatformData->SizeX = width;
-		CustomTexture->PlatformData->SizeY = height;
-		CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
+		//// Texture Settings
+		//CustomTexture->PlatformData = new FTexturePlatformData();
+		//CustomTexture->PlatformData->SizeX = width;
+		//CustomTexture->PlatformData->SizeY = height;
+		//CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
+		//TEST AT CREATING A UTEXTURE2D withot saving to "drawer"-------------------------------
+		CustomTexture = UTexture2D::CreateTransient(width, height, PF_R8G8B8A8);
+		//CustomTexture->Compres
+		//CustomTexture
+		//-------------------------------------------------------------------------------
 
 		// Passing the pixels information to the texture
-		FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
+		FTexture2DMipMap* Mip = &CustomTexture->GetPlatformData()->Mips[0];
+		//FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
 		Mip->SizeX = width;
 		Mip->SizeY = height;
 		Mip->BulkData.Lock(LOCK_READ_WRITE);
@@ -1663,13 +1665,14 @@ FReply FProceduralWorldModule::ListTiles()
 		// Updating Texture & mark it as unsaved
 		CustomTexture->AddToRoot();
 		CustomTexture->UpdateResource();
-		Package->MarkPackageDirty();
+		//Package->MarkPackageDirty();
 
 		UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), *FileName);
 
 		free(pixels);
 		pixels = NULL;
-		UE_LOG(LogTemp, Log, TEXT("Texture FetFName: %s"), *CustomTexture->GetFName().ToString());
+
+		//UE_LOG(LogTemp, Log, TEXT("Texture FetFName: %s"), *CustomTexture->GetFName().ToString());
 		//ItemBrush = new FSlateDynamicImageBrush(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
 		
 		myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
@@ -1681,6 +1684,7 @@ FReply FProceduralWorldModule::ListTiles()
 				SNew(SImage)
 				
 				.Image(myImageBrush.Get())
+				
 
 				
 

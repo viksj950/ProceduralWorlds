@@ -276,26 +276,17 @@ public:
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
 
 	//UI 2D INTERFACE----------------------------------------------------------------------------------------------
-	FSlateDynamicImageBrush* ItemBrush; // = new FSlateDynamicImageBrush("test_texture2", FVector2D(64, 64), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
+	
+	UPROPERTY()
 	UTexture2D* CustomTexture;
 
 	TSharedPtr<SBorder> previewTextureBorder;
 	TSharedPtr<FSlateImageBrush> myImageBrush;
-	//TSharedPtr<const FSlateDynamicImageBrush> ItemBrush = FSlateDynamicImageBrush::CreateWithImageData("test",FVector2D(64,64),TArray<uint8>{128,0,128,0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0}, FLinearColor(1.0f, 1.0f, 1.0f, 1.0f),ESlateBrushTileType::Both);
 	
-	/*UTexture2D *Texture = UTexture2D::CreateTransient(128, 128);
-	FTexture2DMipMap& Mip = Texture->PlatformData->Mips[0];
-	void* Data = Mip.BulkData.Lock(LOCK_READ_WRITE);
-	FMemory::Memcpy(Data, TArray<uint8>{128, 0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0, 128, 0}, 16);*/
-
-
-
 	//UI Asset Distribution ---------------------------------------------------------------------------------------
 	 
 	
 	//Storing all settings for each biome regarding its assets
-	/*TArray<TSharedPtr<biomeAssets>> BiomeAssetsData{ MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
-	MakeShareable(new biomeAssets("Mountains",2)) };*/
 	TArray<TSharedPtr<biomeAssets>> BiomeAssetsData{ MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
 	  MakeShareable(new biomeAssets("Mountains",2)) };
 
@@ -307,10 +298,6 @@ public:
 	TSharedPtr<SNumericEntryBox<float>> myDensityNumBox;
 	//Intermediate setting used as a placeholder when displaying settings for assets.
 	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("",0,0,0,false,0,false ));
-
-	//TArray<TSharedPtr<biomeAssetSettings>> IntermediateSettingData{ MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false)) };
-	//IntermediateSettingData.Add(MakeShareable(new biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
-
 
 	//EXPERIMENTAL THUMBNAIL STUFF
 	TSharedPtr<FAssetThumbnail> slateThumbnail{nullptr}; //= MakeShareable(new FAssetThumbnail());
