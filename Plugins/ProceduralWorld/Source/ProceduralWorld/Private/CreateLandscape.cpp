@@ -773,17 +773,14 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	ControlPoint startCP = spline.points.Last();
 	ControlPoint EndCP;
 
-	uint16 startHeight = concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(startCP.pos.X), FGenericPlatformMath::RoundToInt(startCP.pos.Y))];
-
 	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
 	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
 	int maxRoadTiles{ 25 };
-	int Tries{ 70 };
+	int Tries{ 500 };
 	int32 adjIndex = 0;
 	int32 tileSize = inTiles[tileIndex]->tileSize;
-	int oldTileIndex = 0;
+	uint16 oldTileIndex = 0;
 	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same tile again
-	bool canSpawn;
 
 	TMap<float, ControlPoint> candidates; //used for choosing which control point makes most sense to extend road to
 
@@ -793,135 +790,68 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 		while(adjIndex < 8) {
 			if (inTiles[tileIndex]->adjacentTiles[adjIndex] && !(visitedTiles.Contains(inTiles[tileIndex]->adjacentTiles[adjIndex]->index)))
 			{
-				canSpawn = true;
+				UE_LOG(LogTemp, Warning, TEXT("[CHECKING FROM TILE] TileIndex =  %d"), tileIndex);
 				visitedTiles.Add(tileIndex);
-				oldTileIndex = tileIndex;
+				//THIS SHIT IS NOT RIGHT
 				tileIndex = inTiles[tileIndex]->adjacentTiles[adjIndex]->index;
+				tileSize = inTiles[tileIndex]->tileSize;
+				UE_LOG(LogTemp, Warning, TEXT("[CHECKING NEW ADJACENT] TileIndex =  %d"), tileIndex);
 				X = tileIndex % gridSizeOfProxies * (tileSize - 1);
 				Y = FMath::Floor(tileIndex / gridSizeOfProxies) * (tileSize - 1);
 			
-				//Random cp
-				spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 });
-
-				if (spline.points.Num() - 2 >= 0) { //Crashes if this isnt true, bad fix but it uses the old oldistl, so the results isnt as bad
-					oldDist = calcDist(spline.points[spline.points.Num() - 2].pos, end);
-				}
-				//UE_LOG(LogTemp, Warning, TEXT("oldDist =  %f"), oldDist);
-
-				EndCP = spline.points.Last();
-				newDist = calcDist(EndCP.pos, end);
-				//UE_LOG(LogTemp, Warning, TEXT("Newdist =  %f"), newDist);
-
-				//Random Tangent
-				spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 });
-
-				spline.calcLengths();
-
-				float steplength = spline.TotalLength / 100.0f;
-				float maxSlope = 0;
-				float slopeThreshold = 200;
-				FVector Location, prevLocation;
-				for (float i = steplength; i < spline.TotalLength - steplength; i += steplength)
-				{
-					prevLocation = spline.GetSplinePoint(spline.GetNormalisedOffset(i-steplength)).pos;
-					Location = spline.GetSplinePoint(spline.GetNormalisedOffset(i)).pos;
-					
-					if ((int)Location.X >= 0 && (int)Location.Y >= 0) { //Avoids crashing
-						Location.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(Location.X), FMath::RoundToInt(Location.Y))];
-						prevLocation.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(prevLocation.X), FMath::RoundToInt(prevLocation.Y))];
-		
-						if (abs(Location.Z - prevLocation.Z) > maxSlope) {
-							maxSlope = abs(Location.Z - prevLocation.Z);
-						
-						}
-					}
-					else {
-						UE_LOG(LogTemp, Warning, TEXT("Coords are out of bounds, not computing these!"));
-					}
-
-					//UE_LOG(LogTemp, Warning, TEXT("Height value of spline point : %f"), Location.Z);
-				}
-				UE_LOG(LogTemp, Warning, TEXT("Max Slope = %f"), maxSlope);
-
-				if (oldDist < newDist || maxSlope > slopeThreshold) {
-					UE_LOG(LogTemp, Warning, TEXT("Bad fit for new point"));
-					spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
-					spline.points.RemoveAt(spline.points.Num() - 1); //remove control point
-					tileIndex = oldTileIndex;
-					canSpawn = false;
-				}
-				else {
-					UE_LOG(LogTemp, Warning, TEXT("Good fit for new point, keeping the nodes as road"));
-					candidates.Add(newDist,EndCP);
-					spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
-					//spline.points.RemoveAt(spline.points.Num() - 1); //remove control point
-					
-				}
+				GetCandidates(candidates,spline,X,Y,tileSize,oldDist,newDist,end,tileIndex, oldTileIndex, indexArray);
 
 			}
 			adjIndex++;
 		} //while adjIndex < 8 end
-		UE_LOG(LogTemp, Warning, TEXT("Number of candiates : %d"), candidates.Num());
+	
 		if (!candidates.IsEmpty()) {
-			float lowestDist = 0;
+			UE_LOG(LogTemp, Warning, TEXT("Number of candiates : %d"), candidates.Num());
+			float lowestDist = 100000;
 			ControlPoint temp;
 
+			int tempcounter = 0;
+			int actualBest = 0;
+
 			for (auto t : candidates) {
+				tempcounter++;
 				if (t.Key < lowestDist) {
 					lowestDist = t.Key;
 					temp = t.Value;
+					actualBest = tempcounter;
 				}
 			}
-			UE_LOG(LogTemp, Warning, TEXT("temp X = %f"), temp.pos.X);
+			UE_LOG(LogTemp, Warning, TEXT("Choose candidate nr : %d"), actualBest);
 			spline.addControlPoint({ (float)temp.pos.X, (float)temp.pos.Y,(float)45000 }); //add that shit
 			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 }); //some random taangent
 
 			//Iterate the new curve segment
 			spline.calcLengths();
-			float startLength = 0;
-			if (spline.points.Num() > 4)
-			{
-				for (int i = 0; i > spline.points.Num() - 2; i++) {
-					startLength += spline.points[i].length;
-				}
 
+			if (checkBounds(spline)) {
+				UE_LOG(LogTemp, Warning, TEXT("[BIG ISSUE]The new point choosen does create a spline out of bounds!!"));
+				spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+				spline.points.RemoveAt(spline.points.Num() - 1); //remove CP
 			}
-
-			ControlPoint nextSP;
-			for (; startLength < spline.TotalLength; startLength += 2) {
-				nextSP = spline.GetSplinePoint(spline.GetNormalisedOffset(startLength));
-
-				//Check so that the point exists within the map boundaries
-				if (0 > FGenericPlatformMath::RoundToInt(nextSP.pos.X) || SizeX <= FGenericPlatformMath::RoundToInt(nextSP.pos.X) ||
-					0 > FGenericPlatformMath::RoundToInt(nextSP.pos.Y) || SizeY <= FGenericPlatformMath::RoundToInt(nextSP.pos.Y))
-				{
-					UE_LOG(LogTemp, Warning, TEXT("[BIG ISSUE]The new point choosen does create a spline out of bounds!!"));
-					//Might be a good idea to remove the added cp's but no issue so far.
-					spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
-					spline.points.RemoveAt(spline.points.Num() - 1); //C0 removal
-					canSpawn = false;
-					break;
-				}
-
-			}
-
+			
 			UE_LOG(LogTemp, Warning, TEXT("Added a spline segment succesfully"));
-			spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
-			spline.points.RemoveAt(spline.points.Num() - 1); //remove CP
+			//spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+			//spline.points.RemoveAt(spline.points.Num() - 1); //remove CP
 			maxRoadTiles--;
 			adjIndex = 0;
-			Tries = 50;
+			Tries = 500;
 			candidates.Empty();
 
 			
 		}
 		else {
-			UE_LOG(LogTemp, Warning, TEXT("No candidates!!!!"));
+			//adjIndex = 0;
+			//Add find tile without distance
 		}
 
 	}
 	//temp solution to always end in end point
-	if (calcDist(EndCP.pos, end) < 100) {
+	if (calcDist(EndCP.pos, end) < tileSize+(tileSize/5)) {
 		spline.addControlPoint({ (float)end.X,(float)end.Y,(float)45000 });
 		spline.addControlPoint({ (float)end.X - 50, (float)end.Y + 50,(float)45000 });
 		spline.calcLengths();
@@ -948,6 +878,97 @@ float CreateLandscape::calcDist(const FVector& p1, const FVector& p2)
 	int straightSteps = max - min;
 
 	return sqrt(2) * diagonalSteps + straightSteps;
+}
+
+void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpline& spline, const float& X, const float& Y, const int32& tileSize,
+	float& oldDist, float& newDist, const FVector& end, uint16& tileIndex, uint16& oldTileIndex, TArray<int32>& indexArray)
+{
+	FMath math;
+	ControlPoint EndCP;
+
+	//Random cp
+	spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 });
+
+	if (spline.points.Num() - 2 >= 0) { //Crashes if this isnt true, bad fix but it uses the old oldistl, so the results isnt as bad
+		oldDist = calcDist(spline.points[spline.points.Num() - 2].pos, end);
+	}
+
+	EndCP = spline.points.Last();
+	newDist = calcDist(EndCP.pos, end);
+
+	//Random Tangent
+	spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1), (float)45000 });
+
+	spline.calcLengths();
+
+	float steplength = spline.TotalLength / 100.0f;
+	float maxSlope = 0;
+	float slopeThreshold = 300;
+	FVector Location, prevLocation;
+	for (float i = steplength; i < spline.TotalLength - steplength; i += steplength)
+	{
+		prevLocation = spline.GetSplinePoint(spline.GetNormalisedOffset(i - steplength)).pos;
+		Location = spline.GetSplinePoint(spline.GetNormalisedOffset(i)).pos;
+
+		if (FMath::RoundToInt(Location.X) >= 0 && FMath::RoundToInt(Location.Y) >= 0 && FMath::RoundToInt(prevLocation.X) >= 0 && FMath::RoundToInt(prevLocation.Y) >= 0) { //Avoids crashing
+			Location.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(Location.X), FMath::RoundToInt(Location.Y))];
+			prevLocation.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(prevLocation.X), FMath::RoundToInt(prevLocation.Y))];
+
+			if (abs(Location.Z - prevLocation.Z) > maxSlope) {
+				maxSlope = abs(Location.Z - prevLocation.Z);
+			}
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Coords are out of bounds, not computing these!"));
+		}
+
+	}
+	//UE_LOG(LogTemp, Warning, TEXT("Max Slope = %f"), maxSlope);
+
+	if (oldDist < newDist || maxSlope > slopeThreshold) {
+		UE_LOG(LogTemp, Warning, TEXT("Bad fit for new point"));
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove control point
+		//tileIndex = oldTileIndex;
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Good fit for new point, keeping as candidate path"));
+		candidates.Add(newDist, EndCP);
+		//indexArray.Add(inTiles[tileIndex]->adjacentTiles[adjIndex]->index);
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove control point
+
+	}
+}
+
+bool CreateLandscape::checkBounds(const CRSpline& spline)
+{
+
+	float startLength = 0;
+	if (spline.points.Num() > 4)
+	{
+		for (int i = 0; i > spline.points.Num() - 2; i++) {
+			startLength += spline.points[i].length;
+		}
+
+	}
+
+	ControlPoint nextSP;
+	for (; startLength < spline.TotalLength; startLength += 2) {
+		nextSP = spline.GetSplinePoint(spline.GetNormalisedOffset(startLength));
+
+		//Check so that the points exists within the map boundaries
+		if (0 > FGenericPlatformMath::RoundToInt(nextSP.pos.X) || SizeX <= FGenericPlatformMath::RoundToInt(nextSP.pos.X) ||
+			0 > FGenericPlatformMath::RoundToInt(nextSP.pos.Y) || SizeY <= FGenericPlatformMath::RoundToInt(nextSP.pos.Y))
+		{
+			return true;
+		}
+	
+
+	}
+	return false;
+
+
 }
 
 void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes)

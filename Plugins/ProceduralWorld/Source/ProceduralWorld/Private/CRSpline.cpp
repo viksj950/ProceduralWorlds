@@ -128,7 +128,7 @@ float CRSpline::GetNormalisedOffset(float p) const
 void CRSpline::calcLengths()
 {
 	TotalLength = 0;
-	UE_LOG(LogTemp, Warning, TEXT("Number of control points:  %d"), points.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("Number of control points:  %d"), points.Num());
 	for (size_t i = 1; i < points.Num()-2; i++)
 	{
 		points[i].length = calcSegmentLength(i);

@@ -75,6 +75,11 @@ public:
 
 	float calcDist(const FVector& p1, const FVector& p2);
 
+	void GetCandidates(TMap<float, ControlPoint>& candidates, CRSpline& inSpline, const float& X, const float& Y, const int32& tileSize, 
+		float &oldDist, float &newDist, const FVector& end, uint16 &tileIndex, uint16 &oldtileIndex, TArray<int32> &indexArray);
+
+	bool checkBounds(const CRSpline& spline);
+
 	//Main function for interpolation between biomes
 	void interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes);
 
