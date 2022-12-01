@@ -80,6 +80,8 @@ public:
 
 	bool checkBounds(const CRSpline& spline);
 
+	int16 GetTileIndex(const int32& X, const int32& Y);
+
 	//Main function for interpolation between biomes
 	void interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes);
 

@@ -758,7 +758,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end)
 {
-	FMath math;
+	//FMath math;
 	uint16 tileIndex = 0;
 	CRSpline spline;
 	float oldDist = 0;
@@ -782,6 +782,7 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	uint16 oldTileIndex = 0;
 	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same tile again
 
+	TArray<int32> indexArray;
 	TMap<float, ControlPoint> candidates; //used for choosing which control point makes most sense to extend road to
 
 	while (maxRoadTiles > 0 && Tries > 0 && !(calcDist(EndCP.pos, end) < tileSize)) {
@@ -790,14 +791,11 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 		while(adjIndex < 8) {
 			if (inTiles[tileIndex]->adjacentTiles[adjIndex] && !(visitedTiles.Contains(inTiles[tileIndex]->adjacentTiles[adjIndex]->index)))
 			{
+				int32 adjTileIndex = inTiles[tileIndex]->adjacentTiles[adjIndex]->index;
 				UE_LOG(LogTemp, Warning, TEXT("[CHECKING FROM TILE] TileIndex =  %d"), tileIndex);
-				visitedTiles.Add(tileIndex);
-				//THIS SHIT IS NOT RIGHT
-				tileIndex = inTiles[tileIndex]->adjacentTiles[adjIndex]->index;
-				tileSize = inTiles[tileIndex]->tileSize;
-				UE_LOG(LogTemp, Warning, TEXT("[CHECKING NEW ADJACENT] TileIndex =  %d"), tileIndex);
-				X = tileIndex % gridSizeOfProxies * (tileSize - 1);
-				Y = FMath::Floor(tileIndex / gridSizeOfProxies) * (tileSize - 1);
+				UE_LOG(LogTemp, Warning, TEXT("[CHECKING NEW ADJACENT] TileIndex =  %d"), inTiles[tileIndex]->adjacentTiles[adjIndex]->index);
+				X = adjTileIndex % gridSizeOfProxies * (tileSize - 1);
+				Y = FMath::Floor(adjTileIndex / gridSizeOfProxies) * (tileSize - 1);
 			
 				GetCandidates(candidates,spline,X,Y,tileSize,oldDist,newDist,end,tileIndex, oldTileIndex, indexArray);
 
@@ -808,8 +806,9 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 		if (!candidates.IsEmpty()) {
 			UE_LOG(LogTemp, Warning, TEXT("Number of candiates : %d"), candidates.Num());
 			float lowestDist = 100000;
-			ControlPoint temp;
+			ControlPoint bestCandidate;
 
+			//debug
 			int tempcounter = 0;
 			int actualBest = 0;
 
@@ -817,30 +816,33 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 				tempcounter++;
 				if (t.Key < lowestDist) {
 					lowestDist = t.Key;
-					temp = t.Value;
+					bestCandidate = t.Value;
 					actualBest = tempcounter;
 				}
 			}
 			UE_LOG(LogTemp, Warning, TEXT("Choose candidate nr : %d"), actualBest);
-			spline.addControlPoint({ (float)temp.pos.X, (float)temp.pos.Y,(float)45000 }); //add that shit
-			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 }); //some random taangent
+			spline.addControlPoint({ (float)bestCandidate.pos.X, (float)bestCandidate.pos.Y,(float)45000 }); //add that shit
+			//spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 }); //some random taangent
 
 			//Iterate the new curve segment
-			spline.calcLengths();
+			//spline.calcLengths();
 
-			if (checkBounds(spline)) {
-				UE_LOG(LogTemp, Warning, TEXT("[BIG ISSUE]The new point choosen does create a spline out of bounds!!"));
-				spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
-				spline.points.RemoveAt(spline.points.Num() - 1); //remove CP
-			}
-			
+			//if (checkBounds(spline)) {
+			//	UE_LOG(LogTemp, Warning, TEXT("[BIG ISSUE]The new point choosen does create a spline out of bounds!!"));
+			//	spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+			//	spline.points.RemoveAt(spline.points.Num() - 1); //remove CP
+			//}
+
 			UE_LOG(LogTemp, Warning, TEXT("Added a spline segment succesfully"));
 			//spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
 			//spline.points.RemoveAt(spline.points.Num() - 1); //remove CP
 			maxRoadTiles--;
-			adjIndex = 0;
 			Tries = 500;
 			candidates.Empty();
+			tileIndex = GetTileIndex(bestCandidate.pos.X, bestCandidate.pos.Y);
+			visitedTiles.Add(tileIndex);
+			adjIndex = 0;
+			
 
 			
 		}
@@ -926,7 +928,13 @@ void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpl
 	//UE_LOG(LogTemp, Warning, TEXT("Max Slope = %f"), maxSlope);
 
 	if (oldDist < newDist || maxSlope > slopeThreshold) {
-		UE_LOG(LogTemp, Warning, TEXT("Bad fit for new point"));
+		
+		if (maxSlope > slopeThreshold) {
+			UE_LOG(LogTemp, Warning, TEXT("To much slope!"));
+		}
+		if (oldDist < newDist) {
+			UE_LOG(LogTemp, Warning, TEXT("To much distance!"));
+		}
 		spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
 		spline.points.RemoveAt(spline.points.Num() - 1); //remove control point
 		//tileIndex = oldTileIndex;
@@ -970,6 +978,16 @@ bool CreateLandscape::checkBounds(const CRSpline& spline)
 
 
 }
+
+int16 CreateLandscape::GetTileIndex(const int32& X, const int32& Y)
+{
+	int32 x_floor = floor(X / TileSize);
+	int32 y_floor = floor(Y / TileSize);
+
+	return (y_floor * GetGridSizeOfProxies()) + x_floor;
+}
+
+	
 
 void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes)
 {
