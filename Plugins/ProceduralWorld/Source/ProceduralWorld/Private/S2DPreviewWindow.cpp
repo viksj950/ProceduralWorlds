@@ -81,6 +81,9 @@ void S2DPreviewWindow::CreateHeightmapTexture(const TArray<uint16>& inData)
 void S2DPreviewWindow::CreateGridTexture()
 {
 
+	/*int32 gridTextureSize = 505;
+	int32 tileScale = SizeX - ( SizeX % gridTextureSize)*/
+
 	uint8* pixels = (uint8*)malloc(SizeX * SizeY * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
 
 	for (int y = 0; y < SizeY; y++)
@@ -89,7 +92,7 @@ void S2DPreviewWindow::CreateGridTexture()
 		{
 
 			//3 pixel thick grid
-			if (x % (TileSize - 1) == 0 || y % (TileSize - 1) == 0 || x % (TileSize - 1) == 1 || y % (TileSize - 1) == (TileSize - 2))
+			if (x % (TileSize - 1) == 0 || y % (TileSize - 1) == 0 || x % (TileSize - 1) == 1 || y % (TileSize - 1) == 1 || x % (TileSize - 1) == (TileSize - 2) || y % (TileSize - 1) == (TileSize - 2))
 			{
 				
 				
