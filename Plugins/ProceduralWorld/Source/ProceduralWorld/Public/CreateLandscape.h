@@ -76,7 +76,7 @@ public:
 	float calcDist(const FVector& p1, const FVector& p2);
 
 	void GetCandidates(TMap<float, ControlPoint>& candidates, CRSpline& inSpline, const float& X, const float& Y, const int32& tileSize, 
-		float &oldDist, float &newDist, const FVector& end, uint16 &tileIndex, uint16 &oldtileIndex, TArray<int32> &indexArray);
+		float &oldDist, float &newDist, const FVector& end, const int32& slopeThreshold, bool &regardDist);
 
 	bool checkBounds(const CRSpline& spline);
 
