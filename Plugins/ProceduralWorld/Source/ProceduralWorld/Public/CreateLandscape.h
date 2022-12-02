@@ -141,7 +141,7 @@ public:
 	int32 ComponentsPerProxy;
 	int32 SectionsPerComponent;
 	int32 TileSize;
-	FVector LandscapeScale = {100,100,100};
+	FVector LandscapeScale{100,100,100};
 
 	
 private:

@@ -14,6 +14,8 @@
 #include "CreateLandscape.h" //includes setup for landscape properties
 #include "CRSpline.h"
 #include "Road.h"
+#include "S2DPreviewWindow.h" //class for constructing our 2D previes along with functions
+
 
 #include "AssetRegistry/AssetRegistryModule.h"
 //utility to create UTexture2D
@@ -32,6 +34,10 @@
 
 #include "PropertyEditorModule.h"
 #include "PropertyCustomizationHelpers.h"
+
+#include "Brushes/SlateImageBrush.h"
+#include "Widgets/SCanvas.h"
+
 
 //#include "AssetThumbnail.h"
 
@@ -163,7 +169,7 @@ public:
 	int32 SizeY{505};
 	int32 QuadsPerComponent{63};
 	int32 ComponentsPerProxy{1};
-	int32 SectionsPerComponent{63};
+	int32 SectionsPerComponent{1};
 	int32 TileSize{ 64 };
 	
 	//UI STUFF ---------------------------------------------------------------------------------------
@@ -213,6 +219,9 @@ public:
 		SectionsPerComponent = inSettings->SectionsPerComponent;
 		TileSize = inSettings->TileSize;
 
+		//Update settings for 2D Preview when the landscape dimensions are changed.
+		previewWindow.UpdateLandscapeSettings(inSettings->SizeX,inSettings->SizeY,inSettings->QuadsPerComponent,inSettings->ComponentsPerProxy,inSettings->SectionsPerComponent,inSettings->TileSize);
+
 	};
 
 	
@@ -243,6 +252,7 @@ public:
 	FText newBiomeName;
 	FReply addNewBiotope() {
 		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(newBiomeName.ToString(), BiotopeSettings.Num(), 64, 4096, 5, 2.3f, 0.92f, 0.0015f, 1.96f)));
+		BiomeAssetsData.Add(MakeShareable(new biomeAssets(newBiomeName.ToString(), BiomeAssetsData.Num())));
 		return FReply::Handled();
 	};
 
@@ -270,12 +280,21 @@ public:
 	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
 
+	//UI 2D INTERFACE----------------------------------------------------------------------------------------------
+	
+	UPROPERTY()
+	UTexture2D* CustomTexture;
+
+	TSharedPtr<SBorder> previewTextureBorder;
+	TSharedPtr<FSlateImageBrush> myImageBrush;
+
+	//Some default values
+	S2DPreviewWindow previewWindow{ 505,505,63,1,1,64 };
+	
 	//UI Asset Distribution ---------------------------------------------------------------------------------------
 	 
 	
 	//Storing all settings for each biome regarding its assets
-	/*TArray<TSharedPtr<biomeAssets>> BiomeAssetsData{ MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
-	MakeShareable(new biomeAssets("Mountains",2)) };*/
 	TArray<TSharedPtr<biomeAssets>> BiomeAssetsData{ MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
 	  MakeShareable(new biomeAssets("Mountains",2)) };
 
@@ -286,20 +305,19 @@ public:
 
 	TSharedPtr<SNumericEntryBox<float>> myDensityNumBox;
 	//Intermediate setting used as a placeholder when displaying settings for assets.
-	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false ));
-
-	//TArray<TSharedPtr<biomeAssetSettings>> IntermediateSettingData{ MakeShareable(new biomeAssetSettings("asd",0,0,0,false,0,false)) };
-	//IntermediateSettingData.Add(MakeShareable(new biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
-
+	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("",0,0,0,false,0,false ));
 
 	//EXPERIMENTAL THUMBNAIL STUFF
-	TSharedPtr<FAssetThumbnail> slateThumbnail; //= MakeShareable(new FAssetThumbnail());
+	TSharedPtr<FAssetThumbnail> slateThumbnail{nullptr}; //= MakeShareable(new FAssetThumbnail());
 	//TSharedRef<SWidget> thumbnailWidget;
 
 
 	TSharedPtr<SListView< TSharedPtr<biomeAssetSettings>>> assetSettingList;
-	
+	TSharedPtr<SButton> addAssetButton;
+	TSharedPtr<SButton> modifyAssetButton;
 
+	
+	
 	//Functionality for saving asset paths when selecting static meshes
 	FString storedNamePath;
 	//Saving Thumbnails for the asset selection functionality in the UI (Set to store up to 50 thumbnaails)
@@ -307,28 +325,49 @@ public:
 
 	FReply addNewAssetSetting() {
 		//BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(biomeAssetSetting("asd", 0, 0, 0, false, 0, false));
-		if (!BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Contains(IntermediateBiomeAssetSetting))
+		bool exists{ false };
+		for (auto& it : BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
+		{
+			if (it->ObjectPath.Equals(IntermediateBiomeAssetSetting->ObjectPath) )
+			{
+				exists = true;
+				break;
+			}
+		}
+
+		if (!exists)
 		{
 			BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting)));
 			UE_LOG(LogTemp, Warning, TEXT("Tried to add a setting to biotope: %d" ),BiomeAssetSettingSelection);
 			//thumbnailWidget = slateThumbnail->MakeThumbnailWidget();
 			assetSettingList->RebuildList();
+		
 		}
 		else
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Cant add two of the same type!"));
 		}
-		
-		
-		
 
 		return FReply::Handled();
 	};
+
+
+	FReply modifyAssetSetting() {
+
+		
+		//assetSettingList->GetSelectedItems()[0] = MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting));
+		UE_LOG(LogTemp, Warning, TEXT("Tried modifying selected item:"));
+		
+		IntermediateBiomeAssetSetting = MakeShareable(new biomeAssetSettings(*IntermediateBiomeAssetSetting));
+
+		modifyAssetButton->SetEnabled(false);
+		addAssetButton->SetEnabled(true);
+		assetSettingList->ClearSelection();
+		assetSettingList->RebuildList();
+
+			return FReply::Handled();
+	};
 	
-	//List element function
-	/*TSharedRef<SWidget> OnGenerateWidgetForList(TSharedPtr<biomeAssets> inItem, const TSharedRef<STableViewBase>& ownerTable) {
-		return SNew(STextBlock).Text(inItem->biotopeName);
-	};*/
 	
 private:
 

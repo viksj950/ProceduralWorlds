@@ -1010,6 +1010,7 @@ void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, floa
 	for (int i = 0; i < passes; i++) {
 
 		interpGaussianBlur(inTiles, kernelSize, sigma / (i + 1), dynamicStep);
+		//interpGaussianBlur(inTiles, kernelSize, sigma , interpWidth);
 		dynamicStep -= dynamicStep / passes;
 
 	}
@@ -1544,10 +1545,11 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
-	
-
+	rawConcatData = concatedHeightData;
+	UE_LOG(LogTemp, Warning, TEXT("Size of Conc before moveTemo: %d"), concatedHeightData.Num());
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(concatedHeightData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
+	UE_LOG(LogTemp, Warning, TEXT("Size of Conc efter moveTemo: %d"), concatedHeightData.Num());
 
 	UWorld* World = nullptr;
 

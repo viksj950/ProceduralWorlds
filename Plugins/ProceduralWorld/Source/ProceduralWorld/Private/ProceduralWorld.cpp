@@ -387,11 +387,14 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
 					this->SetLandscapeSettings(InSelection);
 
+					
+
 				}
 
 			})
 				[
-					SAssignNew(ComboBoxTitleBlock, STextBlock).Text(LOCTEXT("ComboLabel", "Please select a size!"))
+					//SAssignNew(ComboBoxTitleBlock, STextBlock).Text(LOCTEXT("ComboLabel", "Please select a size!"))
+					SAssignNew(ComboBoxTitleBlock, STextBlock).Text(FText::FromString(*LandscapeComboSettings[0].Get()->Description))
 				]
 
 
@@ -463,6 +466,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 			]
 			+SVerticalBox::Slot()
+			.AutoHeight()
+			.MaxHeight(50)
 			[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
@@ -497,20 +502,49 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
-			//+ SVerticalBox::Slot()
-			//	[
-			//		//SAssignNew(MyObjectPropertyEntryBox, SObjectPropertyEntryBox)
-			//		SNew(SObjectPropertyEntryBox)
-			//		.AllowedClass(UStaticMesh::StaticClass())
-			//	.AllowClear(true)
-			//	.ObjectPath_Lambda([&]() {return this->storedNamePath; })
-			//	.DisplayUseSelected(true)
-			//	.DisplayThumbnail(true)
-			//	.ThumbnailPool(this->myAssetThumbnailPool)
-			//	.OnObjectChanged_Lambda([&](const FAssetData& inData) {
-			//	this->storedNamePath = inData.ObjectPath.ToString();			
-			//			})
-			//	]
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				
+				[
+					SNew(SBox)
+					.HeightOverride(505)
+					.MaxAspectRatio(1)
+					.MinAspectRatio(1)
+					
+					[
+						SAssignNew(previewWindow.previewContext, SBorder)
+
+						.DesiredSizeScale(1)
+				.ContentScale(1)
+				.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry, const FPointerEvent& MouseEvent) {
+				//Need to fix this, when the image is scaled the coordinates varry, possible solution: find image slate size, and clicked coordinates, calculate the % 
+				//and then use the selected size of the landscape/heightmap to get correct coordinates.
+				FVector2D absSize = inGeometry.GetAbsoluteSize();
+				
+				
+
+
+
+
+				//MouseEvent.
+				FVector2D heightmapPosition = (inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) / absSize) * SizeX;
+
+				heightmapPosition.X = FMath::Abs((heightmapPosition.X - SizeX));
+
+				
+				UE_LOG(LogTemp, Log, TEXT("Clicked Texture at: %s"), *heightmapPosition.ToString());
+
+
+				return FReply::Handled();
+
+					})
+				
+					]
+					
+					
+
+					
+				]
 		
 			]
 	+ SHorizontalBox::Slot()
@@ -618,6 +652,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			[
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
+			.MaxHeight(75)
 				[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
@@ -694,24 +729,182 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 	+SVerticalBox::Slot()
 		[
 			SAssignNew(assetSettingList, SListView< TSharedPtr<biomeAssetSettings>>)
+			.SelectionMode(ESelectionMode::Single)
+			.ItemHeight(50)
+			.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
+		.OnSelectionChanged_Lambda([&](TSharedPtr<biomeAssetSettings> item, ESelectInfo::Type) {
+
+		addAssetButton->SetEnabled(false);
+		modifyAssetButton->SetEnabled(true);
+		if (item.IsValid())
+		{
+			//IntermediateBiomeAssetSetting = MakeShareable(new biomeAssetSettings(*item));
+			IntermediateBiomeAssetSetting = item;
+		}
+		else
+		{
+			modifyAssetButton->SetEnabled(false);
+			addAssetButton->SetEnabled(true);
+			IntermediateBiomeAssetSetting = MakeShareable(new biomeAssetSettings("", 0, 0, 0, false, 0, false));
+		}
+		
+		
+		//assetSettingList->RebuildList();
+
+				})
 			
-			.ItemHeight(24)
-		.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
+			
+			
 		
 		//.OnGenerateRow(FProceduralWorldModule::OnGenerateWidgetForList)
 		.OnGenerateRow_Lambda([&](TSharedPtr<biomeAssetSettings> item, const TSharedRef<STableViewBase>& OwnerTable) {
 
+		
+		
 
-		return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
-			[
-
-				//SAssignNew(*thumbnailWidget)
-				//slateThumbnail->MakeThumbnailWidget()
+		if (!item->slateThumbnail.IsValid())
+		{
+			return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
 				
+				
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.MaxWidth(50)
+				[
+					SNew(SBox)
+					.MaxAspectRatio(1)
+					.MinAspectRatio(1)
+					.MaxDesiredHeight(50)
+					.MaxDesiredWidth(50)
+					.MinDesiredHeight(50)
+					.MinDesiredWidth(50)
+				[
+					SNew(SImage)
+					.ColorAndOpacity(FSlateColor::UseForeground())
+					.Image(FAppStyle::Get().GetBrush("Icons.box-perspective"))
+				]
 
+				]
+			+ SHorizontalBox::Slot()
+				[
+					SNew(STextBlock).Text(FText::FromString(item->ObjectPath /*item->slateThumbnail->GetAsset()->GetFName().ToString()*/))
 
-			SNew(STextBlock).Text(FText::FromString(item->ObjectPath))
+				]
+
+			+ SHorizontalBox::Slot()
+				
+				[
+					SNew(SBox)
+
+					.MaxAspectRatio(1)
+					.MinAspectRatio(1)
+					[
+					
+						SNew(SButton)
+						.ContentScale(1)
+						.OnClicked_Lambda([&](){
+							for (auto& it : assetSettingList->GetSelectedItems())
+							{
+								for (int i{ 0 }; i < BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Num(); i++)
+								{
+									if (it->ObjectPath.Equals(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings[i]->ObjectPath))
+									{
+										BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.RemoveAt(i);
+										BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Shrink();
+									}
+
+								}
+
+							}
+							assetSettingList->RebuildList();
+							return FReply::Handled();
+
+						})
+						[
+							SNew(SImage)
+							.ColorAndOpacity(FSlateColor::UseForeground())
+							.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+						]
+
+					]
+
+				]
+					
+				];
+
+		}
+		else
+		{
+			return SNew(STableRow<TSharedPtr<biomeAssetSettings>>, OwnerTable)
+				[
+			
+			SNew(SHorizontalBox)
+			+SHorizontalBox::Slot()
+				.MaxWidth(50)
+				[
+				SNew(SBox)
+				.MaxAspectRatio(1)
+				.MinAspectRatio(1)
+				.MaxDesiredHeight(50)
+				.MaxDesiredWidth(50)
+				.MinDesiredHeight(50)
+				.MinDesiredWidth(50)
+					[
+					item->slateThumbnail->MakeThumbnailWidget()
+					]
+
+				]
+			+SHorizontalBox::Slot()
+				[
+					SNew(STextBlock).Text(FText::FromString(item->ObjectPath /*item->slateThumbnail->GetAsset()->GetFName().ToString()*/))
+					
+				]
+
+			+ SHorizontalBox::Slot()
+				
+				[
+					SNew(SBox)
+					.MaxAspectRatio(1)
+					.MinAspectRatio(1)
+					[
+
+					SNew(SButton)
+					.ContentScale(1)
+					.OnClicked_Lambda([&]() {
+						for (auto& it: assetSettingList->GetSelectedItems())
+						{	
+							for (int i{0}; i < BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Num(); i++)
+							{
+								if (it->ObjectPath.Equals(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings[i]->ObjectPath))
+								{
+								BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.RemoveAt(i);
+								BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Shrink();
+								}
+
+							}
+					
+						}
+						assetSettingList->RebuildList();
+						return FReply::Handled();
+						
+					})
+				[
+					SNew(SImage)
+					
+					.ColorAndOpacity(FSlateColor::UseForeground())
+							.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+				]
+				]
+					
+
+					
+				]
+			
+			
 			];
+		}
+		
 
 
 
@@ -731,8 +924,12 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.DisplayThumbnail(true)
 		.ThumbnailPool(this->myAssetThumbnailPool)
 		.OnObjectChanged_Lambda([&](const FAssetData& inData) {
-		this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
 
+		this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
+		this->IntermediateBiomeAssetSetting->slateThumbnail = MakeShareable(new FAssetThumbnail(inData, 64, 64, myAssetThumbnailPool));
+		if (modifyAssetButton->IsEnabled()) {
+			assetSettingList->RebuildList();
+		}
 		//slateThumbnail = MakeShareable(new FAssetThumbnail(inData,64,64, myAssetThumbnailPool));
 
 			})
@@ -765,13 +962,14 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.HAlign(HAlign_Left)
 		[
 			SNew(SNumericEntryBox<int32>)
+			.Delta(1)
 			.AllowSpin(true)
-		.MinValue(1)
-		.MaxValue(4096)
-		.MaxSliderValue(4096)
-		.MinDesiredValueWidth(2)
-		.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->assetCount; })
-		.OnValueChanged_Lambda([&](const int32& inValue) {this->IntermediateBiomeAssetSetting->assetCount = inValue; })
+			.MinValue(1)
+			.MaxValue(4096)
+			.MaxSliderValue(4096)
+			//.MinDesiredValueWidth(2)
+			.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->assetCount; })
+			.OnValueChanged_Lambda([&](const int32& inValue) {this->IntermediateBiomeAssetSetting->assetCount = inValue; })
 		]
 
 		]
@@ -968,11 +1166,11 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 
 			SNew(STextBlock)
-			.Text(FText::FromString("Add Asset"))
+			.Text(FText::FromString("Add/modify Asset"))
 		]
 	+SHorizontalBox::Slot()
 		[
-			SNew(SButton)
+			/*SNew(SButton)
 			.Text(LOCTEXT("AddBiotopeButton", "Add"))
 		.OnClicked_Raw(this, &FProceduralWorldModule::addNewAssetSetting)
 		[
@@ -986,8 +1184,48 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			.ColorAndOpacity(FSlateColor::UseForeground())
 		.Image(FAppStyle::Get().GetBrush("Icons.plus"))
 		]
+		]*/
+
+			SAssignNew(addAssetButton,SButton)
+			.Text(LOCTEXT("AddBiotopeButton", "Add"))
+			.OnClicked_Raw(this, &FProceduralWorldModule::addNewAssetSetting)
+		[
+			SNew(SBox)
+			.WidthOverride(50)
+			.HeightOverride(25)
+
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString("Add"))
+			/*SNew(SImage)
+
+			.ColorAndOpacity(FSlateColor::UseForeground())
+			.Image(FAppStyle::Get().GetBrush("Icons.plus"))*/
 		]
 		]
+		]
+		+ SHorizontalBox::Slot()
+			[
+				SAssignNew(modifyAssetButton, SButton)
+				.IsEnabled(false)
+				.Text(LOCTEXT("AddBiotopeButton", "Add"))
+			.OnClicked_Raw(this, &FProceduralWorldModule::modifyAssetSetting)
+			[
+				SNew(SBox)
+				.WidthOverride(50)
+			.HeightOverride(25)
+
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Modify"))
+
+				/*SNew(SImage)
+
+				.ColorAndOpacity(FSlateColor::UseForeground())
+			.Image(FAppStyle::Get().GetBrush("Icons.plus"))*/
+			]
+			]
+			]
 
 		]
 		]
@@ -1087,6 +1325,7 @@ FReply FProceduralWorldModule::Setup()
 
 	//Currently only imports the landscape settings to the landscape "mesh"mountainAssets
 	landscapePtr = myLand.generateFromTileData(tiles);
+	createTextureFromArray(myLand.SizeX,myLand.SizeY,myLand.concatedHeightData);
 
 	//createTextureFromArray(500, 500, myLand.concatedHeightData);
 	//LandscapeInfo used for accessing proxies
@@ -1333,6 +1572,177 @@ FReply FProceduralWorldModule::ListTiles()
 	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData City size is: %d"), BiomeAssetsData[0]->AssetSettings.Num());
 	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Plains size is: %d"), BiomeAssetsData[1]->AssetSettings.Num());
 	UE_LOG(LogTemp, Warning, TEXT("BiomeAssetsData Mountains size is: %d"), BiomeAssetsData[2]->AssetSettings.Num());
+
+	for (auto& i: BiomeAssetsData)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BIOME: %s"), *i->biotopeName);
+
+		for (auto& t: i->AssetSettings)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Asset settings for: %s"), *t->ObjectPath);
+		}
+
+	}
+
+
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if (ptrToTerrain != nullptr && !ptrToTerrain->rawConcatData.IsEmpty())
+	{
+		
+		//int width = SizeX;
+		//int height = SizeY;
+		//uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+
+		//// filling the pixels with dummy data (4 boxes: red, green, blue and white)
+		//
+		//for (int y = 0; y < height; y++)
+		//{
+		//	for (int x = 0; x < width; x++)
+		//	{
+		//				
+		//		/*ptrToTerrain->concatedHeightData;*/
+		//				//pixels[y * 4 * width + x * 4 + 0] = 255; // R
+		//				//pixels[y * 4 * width + x * 4 + 1] = 0;   // G
+		//				//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
+		//				//pixels[y * 4 * width + x * 4 + 3] = 255; // A
+		//		
+		//		if (x % (TileSize -1) == 0 || y % (TileSize - 1) == 0 || x % (TileSize -1) == 1 || y % (TileSize - 1) == (TileSize-2))
+		//		{
+		//			if (x > (SizeX / 2)) {
+
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 0;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 255;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
+
+		//			}
+		//			else {
+
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 255;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 0;
+		//				pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
+
+		//			}
+
+		//			
+
+
+		//		}
+		//		else
+		//		{
+		//			pixels[x * 4 * width + (height - y - 1) * 4 + 0] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255); // R
+		//			pixels[x * 4 * width + (height - y - 1) * 4 + 1] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);  // G
+		//			pixels[x * 4 * width + (height - y - 1) * 4 + 2] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);   // B
+		//			pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255; // A
+
+		//		}
+		//			
+
+
+		//				
+
+		//				
+		//			
+		//		
+		//	}
+		//}
+
+		//// Texture Information
+		//FString FileName = FString("MyTexture");
+		//FString pathPackage = TEXT("/Game/Content/");
+		//pathPackage += "test_texture";
+
+		//
+
+		////UPackage* Package = CreatePackage(nullptr, *pathPackage);
+
+		////// Create the Texture
+		////FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
+		////CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
+
+		////// Texture Settings
+		////CustomTexture->PlatformData = new FTexturePlatformData();
+		////CustomTexture->PlatformData->SizeX = width;
+		////CustomTexture->PlatformData->SizeY = height;
+		////CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
+		////TEST AT CREATING A UTEXTURE2D withot saving to "drawer"-------------------------------
+		//CustomTexture = UTexture2D::CreateTransient(width, height, PF_R8G8B8A8);
+		////CustomTexture->Compres
+		////CustomTexture
+		////-------------------------------------------------------------------------------
+
+		//// Passing the pixels information to the texture
+		//FTexture2DMipMap* Mip = &CustomTexture->GetPlatformData()->Mips[0];
+		////FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
+		//Mip->SizeX = width;
+		//Mip->SizeY = height;
+		//Mip->BulkData.Lock(LOCK_READ_WRITE);
+		//uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
+		//FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+		//Mip->BulkData.Unlock();
+
+		//// Updating Texture & mark it as unsaved
+		//CustomTexture->AddToRoot();
+		//CustomTexture->UpdateResource();
+		////Package->MarkPackageDirty();
+
+		//UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), *FileName);
+
+		//free(pixels);
+		//pixels = NULL;
+
+		//UE_LOG(LogTemp, Log, TEXT("Texture FetFName: %s"), *CustomTexture->GetFName().ToString());
+		//ItemBrush = new FSlateDynamicImageBrush(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
+		previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);
+		previewWindow.CreateGridTexture();
+		previewWindow.AssembleWidget();
+		UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
+		//myImageBrush = MakeShared<FSlateImageBrush>(previewWindow.textures[0], FVector2D(previewWindow.textures[0]->GetSizeX(), previewWindow.textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
+		//myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
+		
+		/*previewTextureBorder->SetContent(
+			SNew(SBox)
+			.MinAspectRatio(1)
+			[
+				SNew(SImage)
+				
+				.Image(myImageBrush.Get())
+				
+
+				
+
+			]);
+		
+		previewTextureBorder->SetEnabled(true);*/
+
+		//CustomTexture = UTexture2D::CreateTransient(SizeX, SizeY);
+		//FTexture2DMipMap* MipMap = &CustomTexture->PlatformData->Mips[0];
+		//FByteBulkData* ImageData = &MipMap->BulkData;
+		//uint8* RawImageData = (uint8*)ImageData->Lock(LOCK_READ_WRITE);
+
+		//for (int y = 0; y < SizeY; y++)
+		//{
+		//	for (int x = 0; x < SizeY; x++)
+		//	{
+
+		//		RawImageData[y * 4 * SizeY + x * 4 + 0] = 255;//inData[counter].R; // R
+		//		RawImageData[y * 4 * SizeY + x * 4 + 1] = 0;//inData[counter].G;  // G
+		//		RawImageData[y * 4 * SizeY + x * 4 + 2] = 0;//inData[counter].B;   // B
+		//		RawImageData[y * 4 * SizeY + x * 4 + 3] = 255;				  // A
+
+
+		//	}
+		//}
+
+		//ImageData->Unlock();
+		//CustomTexture->UpdateResource();
+
+		//CustomTexture->
+
+	}
+
 
 	
 	return FReply::Handled();
@@ -1668,9 +2078,15 @@ void FProceduralWorldModule::createTextureFromArray(const int32 SrcWidth, const 
 		for (int x = 0; x < width; x++)
 		{
 
+			//pixels[y * 4 * width + x * 4 + 0] = inData[y * 4 * width + x * 4 + 0]; // R
+			//pixels[y * 4 * width + x * 4 + 1] = inData[y * 4 * width + x * 4 + 1];  // G
+			//pixels[y * 4 * width + x * 4 + 2] = inData[y * 4 * width + x * 4 + 2];   // B
+			//pixels[y * 4 * width + x * 4 + 3] = 255;				  // A
+			//counter++;
+
 			pixels[y * 4 * width + x * 4 + 0] = inData[y * 4 * width + x * 4 + 0]; // R
-			pixels[y * 4 * width + x * 4 + 1] = inData[y * 4 * width + x * 4 + 1];  // G
-			pixels[y * 4 * width + x * 4 + 2] = inData[y * 4 * width + x * 4 + 2];   // B
+			pixels[y * 4 * width + x * 4 + 1] = inData[y * 4 * width + x * 4 + 0];  // G
+			pixels[y * 4 * width + x * 4 + 2] = inData[y * 4 * width + x * 4 + 0];   // B
 			pixels[y * 4 * width + x * 4 + 3] = 255;				  // A
 			counter++;
 
