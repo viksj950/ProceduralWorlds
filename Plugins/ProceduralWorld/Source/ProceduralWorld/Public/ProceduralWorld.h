@@ -138,6 +138,8 @@ public:
 	virtual void ShutdownModule() override;
 
 	FReply Setup(); //old generate landscape
+
+	FReply GenerateTerrainData();
 	FReply GenerateTerrain();
 	FReply PlaceAssets();
 	FReply ListTiles();
@@ -255,6 +257,36 @@ public:
 		BiomeAssetsData.Add(MakeShareable(new biomeAssets(newBiomeName.ToString(), BiomeAssetsData.Num())));
 		return FReply::Handled();
 	};
+
+	FReply deleteBiotope() {
+
+		UE_LOG(LogTemp, Warning, TEXT("Deleting Biotope %s"), *BiotopeSettings[BiomeSettingSelection]->Biotope);
+		FString biotopeToDelete = BiotopeSettings[BiomeSettingSelection]->Biotope;
+		
+		//Remove noise settings for the biotope and change the selection aswell
+		BiotopeSettings.RemoveAt(BiomeSettingSelection);
+		BiomeSettingSelection = 0;
+
+		//Remove asset placement for the deleted biotope
+		for (size_t i = 0; i < BiomeAssetsData.Num(); i++)
+		{
+			if (biotopeToDelete.Equals(BiomeAssetsData[i]->biotopeName))
+			{
+				BiomeAssetsData.RemoveAt(i);
+				break;
+			}
+		}
+
+		//BiomeAssetsData.RemoveAt(BiomeAssetSettingSelection);
+
+
+
+
+
+		BiomeAssetSettingSelection = 0;
+		assetSettingList->RebuildList();
+		return FReply::Handled();
+	}
 
 	TSharedPtr<STextBlock> ComboBoxTitleBlockNoise;
 	int BiomeSettingSelection{ 0 };

@@ -192,6 +192,7 @@ void S2DPreviewWindow::AssembleWidget()
 
 }
 
+
 S2DPreviewWindow::~S2DPreviewWindow()
 {
 }

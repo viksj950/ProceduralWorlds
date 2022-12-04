@@ -480,6 +480,11 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 	}
 }
 
+void CreateLandscape::copyToRawConcatData()
+{
+	rawConcatData = concatedHeightData;
+}
+
 void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, float const sigma, int kernelSize, int interpolationPadding)
 {
 	//Create kernel
@@ -1545,7 +1550,6 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
-	rawConcatData = concatedHeightData;
 	UE_LOG(LogTemp, Warning, TEXT("Size of Conc before moveTemo: %d"), concatedHeightData.Num());
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(concatedHeightData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));

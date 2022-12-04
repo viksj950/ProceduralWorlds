@@ -32,6 +32,7 @@ public:
 	void CreateHeightmapTexture(const TArray<uint16>& inData);
 	void CreateGridTexture();
 	void AssembleWidget();
+	
 
 	~S2DPreviewWindow();
 };

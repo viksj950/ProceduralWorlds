@@ -351,6 +351,22 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 
 		]
+
+	+ SVerticalBox::Slot()
+		[
+			
+
+			SNew(SButton)
+			.Text(FText::FromString("Delete Biotope"))
+		.OnClicked_Raw(this,&FProceduralWorldModule::deleteBiotope)
+
+
+		
+
+	
+
+
+		]
 	+ SVerticalBox::Slot()
 		.MaxHeight(100)
 		[
@@ -551,6 +567,34 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		[
 
 			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.Padding(1.0f)
+			.HAlign(HAlign_Center)
+			[
+
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("If you press this when aldready having created a landscape, you will loose connection to the already created"))
+			]
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SBox)
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Center)
+				[
+				SNew(SButton)
+				.Text(FText::FromString("Generate Heightmap"))
+				.OnClicked_Raw(this, &FProceduralWorldModule::GenerateTerrainData) //Setup
+				]
+			]
+		]
+
+
+
+
+
 			+ SVerticalBox::Slot()
 		.Padding(1.0f)
 		.HAlign(HAlign_Center)
@@ -1426,7 +1470,7 @@ FReply FProceduralWorldModule::Setup()
 	return FReply::Handled();
 }
 
-FReply FProceduralWorldModule::GenerateTerrain()
+FReply FProceduralWorldModule::GenerateTerrainData()
 {
 	//Call to CreateLandscape and generate its properties 
 	ptrToTerrain = new CreateLandscape(SizeX, SizeY, QuadsPerComponent, ComponentsPerProxy, SectionsPerComponent, TileSize);
@@ -1434,8 +1478,16 @@ FReply FProceduralWorldModule::GenerateTerrain()
 	//DO THIS BETTER----------------
 	int32 nmbrOfTilesInARow = (SizeX - 1) / (QuadsPerComponent * ComponentsPerProxy);
 
-	//tiles.Init(new UTile(QuadsPerComponent, ComponentsPerProxy), nmbrOfTilesInARow * nmbrOfTilesInARow);
 
+	if (!tiles.IsEmpty())
+	{
+		tiles.Empty();
+	}
+
+	if (!roads.IsEmpty())
+	{
+		roads.Empty();
+	}
 	for (size_t i{ 0 }; i < nmbrOfTilesInARow * nmbrOfTilesInARow; i++)
 	{
 
@@ -1462,6 +1514,62 @@ FReply FProceduralWorldModule::GenerateTerrain()
 	ptrToTerrain->concatHeightData(tiles);
 	//Interpolate using gaussian blur
 	ptrToTerrain->interpBiomes(tiles, 3, 1.0, 30, 20);
+
+	
+	ptrToTerrain->copyToRawConcatData();
+	
+	previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);
+	previewWindow.CreateGridTexture();
+	previewWindow.AssembleWidget();
+	UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
+
+
+
+	return FReply::Handled();
+}
+
+FReply FProceduralWorldModule::GenerateTerrain()
+{
+	////Call to CreateLandscape and generate its properties 
+	//ptrToTerrain = new CreateLandscape(SizeX, SizeY, QuadsPerComponent, ComponentsPerProxy, SectionsPerComponent, TileSize);
+
+	////DO THIS BETTER----------------
+	//int32 nmbrOfTilesInARow = (SizeX - 1) / (QuadsPerComponent * ComponentsPerProxy);
+
+	////tiles.Init(new UTile(QuadsPerComponent, ComponentsPerProxy), nmbrOfTilesInARow * nmbrOfTilesInARow);
+
+	//for (size_t i{ 0 }; i < nmbrOfTilesInARow * nmbrOfTilesInARow; i++)
+	//{
+
+	//	UTile* temp = new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize);
+	//	temp->index = i;
+	//	tiles.Add(temp);
+	//}
+
+	//for (size_t i = 0; i < tiles.Num(); i++)
+	//{
+
+	//	tiles[i]->updateAdjacentTiles(tiles, nmbrOfTilesInARow);
+
+	//}
+
+	//ptrToTerrain->AssignBiotopesToTiles(tiles, nmbrOfBiomes, BiotopeSettings);
+	////Generate Perlin Noise and assign it to all tiles
+	////myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
+
+	////Creates proxies used in world partioning
+	//ptrToTerrain->GenerateAndAssignHeightData(tiles, BiotopeSettings);
+
+	////Concatinate heightData from all tiles and spawn a landscape
+	//ptrToTerrain->concatHeightData(tiles);
+	////Interpolate using gaussian blur
+	//ptrToTerrain->interpBiomes(tiles, 3, 1.0, 30, 20);
+
+	//Check if we already have created data and just want to generate raods and spawn the landscape
+	if (ptrToTerrain == nullptr) 
+	{
+		GenerateTerrainData();
+	}
 
 	FVector start{ 50,50,0 };
 	FVector end{ 399,477,0 };
@@ -1695,10 +1803,7 @@ FReply FProceduralWorldModule::ListTiles()
 
 		//UE_LOG(LogTemp, Log, TEXT("Texture FetFName: %s"), *CustomTexture->GetFName().ToString());
 		//ItemBrush = new FSlateDynamicImageBrush(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
-		previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);
-		previewWindow.CreateGridTexture();
-		previewWindow.AssembleWidget();
-		UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
+		
 		//myImageBrush = MakeShared<FSlateImageBrush>(previewWindow.textures[0], FVector2D(previewWindow.textures[0]->GetSizeX(), previewWindow.textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 		//myImageBrush = MakeShared<FSlateImageBrush>(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 		
