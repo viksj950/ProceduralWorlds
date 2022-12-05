@@ -756,7 +756,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 }
 
-void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end)
+void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries)
 {
 	//FMath math;
 	uint16 tileIndex = 0;
@@ -776,16 +776,16 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
 	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
 	int maxRoadTiles{ 25 };
-	int Tries{ 10 };
+	int Tries{ maxTries };
 	int32 adjIndex = 0;
-	int32 tileSize = inTiles[tileIndex]->tileSize;
-	int32 slopeThreshold = 450;
+	//int32 tileSize = inTiles[tileIndex]->tileSize;
+	int32 slopeThreshold = 400;
 	bool regardDist = true;
 	uint16 oldTileIndex = 0;
 	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same tile again
 	TMap<float, ControlPoint> candidates; //used for choosing which control point makes most sense to extend road to
 
-	while (maxRoadTiles > 0 && Tries > 0 && !(calcDist(EndCP.pos, end) < tileSize*2)) {
+	while (maxRoadTiles > 0 && Tries > 0 && !(calcDist(EndCP.pos, end) < TileSize*2)) {
 		Tries--;
 
 		while(adjIndex < 8) {
@@ -794,10 +794,10 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 				int32 adjTileIndex = inTiles[tileIndex]->adjacentTiles[adjIndex]->index;
 				UE_LOG(LogTemp, Warning, TEXT("[CHECKING FROM TILE] TileIndex =  %d"), tileIndex);
 				UE_LOG(LogTemp, Warning, TEXT("[CHECKING NEW ADJACENT] TileIndex =  %d"), inTiles[tileIndex]->adjacentTiles[adjIndex]->index);
-				X = adjTileIndex % gridSizeOfProxies * (tileSize - 1);
-				Y = FMath::Floor(adjTileIndex / gridSizeOfProxies) * (tileSize - 1);
+				X = adjTileIndex % gridSizeOfProxies * (TileSize - 1);
+				Y = FMath::Floor(adjTileIndex / gridSizeOfProxies) * (TileSize - 1);
 			
-				GetCandidates(candidates,spline,X,Y,tileSize,oldDist,newDist,end, slopeThreshold, regardDist);
+				GetCandidates(candidates,spline,X,Y,TileSize,oldDist,newDist,end, EndCP,  slopeThreshold, regardDist);
 
 			}
 			adjIndex++;
@@ -808,16 +808,10 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			float lowestDist = 100000;
 			ControlPoint bestCandidate;
 
-			//debug
-			int tempcounter = 0;
-			int actualBest = 0;
-
 			for (auto t : candidates) {
-				tempcounter++;
 				if (t.Key < lowestDist) {
 					lowestDist = t.Key;
 					bestCandidate = t.Value;
-					actualBest = tempcounter;
 				}
 			}
 			//UE_LOG(LogTemp, Warning, TEXT("Choose candidate nr : %d"), actualBest);
@@ -837,7 +831,7 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			//spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
 			//spline.points.RemoveAt(spline.points.Num() - 1); //remove CP
 			maxRoadTiles--;
-			Tries = 10;
+			Tries = maxTries;
 			candidates.Empty();
 			tileIndex = GetTileIndex(bestCandidate.pos.X, bestCandidate.pos.Y);
 			visitedTiles.Add(tileIndex);
@@ -845,22 +839,22 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			regardDist = true;
 			
 		}
-		else if(candidates.IsEmpty() && Tries == 5) {
-			UE_LOG(LogTemp, Warning, TEXT("Turning off distance check as the path cant seem to ideal path!"));
+		else if(candidates.IsEmpty() && Tries == (maxTries/2)) {
+			UE_LOG(LogTemp, Warning, TEXT("Turning off distance check as the path cant seem to ideal path!")); 
 			regardDist = false;
 			adjIndex = 0;
 		}
 		else {
 			adjIndex = 0;
-			//Add find tile without distance
 		}
 
 	}
 	//temp solution to always end in end point
-	if (calcDist(EndCP.pos, end) < tileSize*2) {
+	if (calcDist(EndCP.pos, end) < TileSize) {
 		spline.addControlPoint({ (float)end.X,(float)end.Y,(float)45000 });
 		spline.addControlPoint({ (float)end.X - 50, (float)end.Y + 50,(float)45000 });
 		spline.calcLengths();
+		UE_LOG(LogTemp, Warning, TEXT("Road succesfully reached end point!"));
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("Road cannot reach end point!"));
@@ -887,10 +881,9 @@ float CreateLandscape::calcDist(const FVector& p1, const FVector& p2)
 }
 
 void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpline& spline, const float& X, const float& Y, const int32& tileSize,
-	float& oldDist, float& newDist, const FVector& end, const int32& slopeThreshold, bool &regardDist)
+	float& oldDist, float& newDist, const FVector& end, ControlPoint& EndCP, const int32& slopeThreshold, bool &regardDist)
 {
 	FMath math;
-	ControlPoint EndCP;
 
 	//Random cp
 	spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 });
@@ -907,7 +900,7 @@ void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpl
 
 	spline.calcLengths();
 
-	float steplength = spline.TotalLength / 100.0f;
+	float steplength = spline.TotalLength / 150.0f;
 	float maxSlope = 0;
 	FVector Location, prevLocation;
 	for (float i = steplength; i < spline.TotalLength - steplength; i += steplength)
@@ -921,6 +914,8 @@ void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpl
 
 			if (abs(Location.Z - prevLocation.Z) > maxSlope) {
 				maxSlope = abs(Location.Z - prevLocation.Z);
+				//UE_LOG(LogTemp, Warning, TEXT("Location.Z = %f"), Location.Z);
+				//UE_LOG(LogTemp, Warning, TEXT("prevLocation.Z = %f"), prevLocation.Z);
 			}
 		}
 		else {
@@ -928,7 +923,8 @@ void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpl
 		}
 
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("Max Slope = %f"), maxSlope);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Max Slope = %f"), maxSlope);
 
 	if (regardDist && (oldDist < newDist || maxSlope > slopeThreshold)) {
 		
