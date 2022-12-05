@@ -124,6 +124,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
 					this->BiomeSettingSelection = InSelection->BiotopeIndex;
 
+					
+					
+
+
 				}
 
 			})
@@ -532,6 +536,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 						.DesiredSizeScale(1)
 				.ContentScale(1)
+				
 				.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry, const FPointerEvent& MouseEvent) {
 				//Need to fix this, when the image is scaled the coordinates varry, possible solution: find image slate size, and clicked coordinates, calculate the % 
 				//and then use the selected size of the landscape/heightmap to get correct coordinates.
@@ -539,16 +544,13 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				
 				
 
-
-
-
 				//MouseEvent.
 				FVector2D heightmapPosition = (inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) / absSize) * SizeX;
 
 				heightmapPosition.X = FMath::Abs((heightmapPosition.X - SizeX));
 
 				
-				UE_LOG(LogTemp, Log, TEXT("Clicked Texture at: %s"), *heightmapPosition.ToString());
+				UE_LOG(LogTemp, Log, TEXT("Clicked Texture at tile index: %d"), previewWindow.FromCoordToTileIndex(heightmapPosition));
 
 
 				return FReply::Handled();
@@ -734,9 +736,11 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 					this->BiomeAssetSettingSelection = InSelection->biotopeIndex;
 					UE_LOG(LogTemp, Warning, TEXT("Changed BiomeAssetSettingSelection to: %d"), BiomeAssetSettingSelection);
 					
-					//this->BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.Add(MakeShareable(new biomeAssetSettings("Added", 0, 0, 0, false, 0, false)));
-					//Make a copy of the biotope asset settings and then Rebuild list.
-					//this->IntermediateSettingData = this->BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings;
+
+					//If the user is currently modifying an asset settings when changing biotope, 
+					if (modifyAssetButton->IsEnabled()) {
+						modifyAssetSetting();
+					}
 					
 					//assetSettingList->Clear
 					//assetSettingList->UpdateSelectionSet();
@@ -2240,10 +2244,16 @@ FLandscapeTextureDataInfo* FProceduralWorldModule::GetTextureDataInfo(UTexture2D
 }
 void FProceduralWorldModule::PluginButtonClicked()
 {
+
+
+	BiomeAssetsData = { MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
+		 MakeShareable(new biomeAssets("Mountains",2)) };
 	//Clean old ass
 	BiomeAssetsData[0]->AssetSettings.Empty();
 	BiomeAssetsData[1]->AssetSettings.Empty();
 	BiomeAssetsData[2]->AssetSettings.Empty();
+
+	
 	////City biome
 	BiomeAssetsData[0]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Quixel/Var9/Var9_LOD3.Var9_LOD3'"), 7, 0.5f, 0.7f, false, 1.0f, false)));
 	BiomeAssetsData[0]->AssetSettings.Add(MakeShareable(new biomeAssetSettings(FString("StaticMesh'/Game/Test_assets/Tree/Tree_thick01.Tree_thick01'"), 2, 0.5f, 0.4f, false, 1.0f, true)));

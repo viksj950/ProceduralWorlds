@@ -32,7 +32,11 @@ public:
 	void CreateHeightmapTexture(const TArray<uint16>& inData);
 	void CreateGridTexture();
 	void AssembleWidget();
+	int32 FromCoordToTileIndex(FVector2D inCoords);
 	
 
 	~S2DPreviewWindow();
+
+private:
+	uint32 gridSizeOfProxies{ 0 };
 };

@@ -7,6 +7,7 @@ S2DPreviewWindow::S2DPreviewWindow(const int32& inSizeX, const int32& inSizeY, c
 	const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize): SizeX{inSizeX}, SizeY{inSizeY}, QuadsPerComponent{inQuadsPerComponent},
 	ComponentsPerProxy{inComponentsPerProxy}, SectionsPerComponent{inSectionsPerComponent}, TileSize{inTilesSize}
 {
+	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * ComponentsPerProxy));
 	//First two slots are always populated by default? heightmap and grid:
 	textures.Add(nullptr);
 	textures.Add(nullptr);
@@ -22,6 +23,8 @@ void S2DPreviewWindow::UpdateLandscapeSettings(const int32& inSizeX, const int32
 	ComponentsPerProxy = inComponentsPerProxy;
 	SectionsPerComponent = SectionsPerComponent;
 	TileSize = inTilesSize;
+
+	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * ComponentsPerProxy));
 }
 
 void S2DPreviewWindow::CreateHeightmapTexture(const TArray<uint16>& inData)
@@ -190,6 +193,13 @@ void S2DPreviewWindow::AssembleWidget()
 
 		);
 
+}
+int32 S2DPreviewWindow::FromCoordToTileIndex(FVector2D inCoords)
+{
+	int32 x_floor = floor(inCoords.X / TileSize);
+	int32 y_floor = floor(inCoords.Y / TileSize);
+
+	return (y_floor * gridSizeOfProxies) + x_floor;
 }
 
 
