@@ -73,12 +73,12 @@ public:
 	//sugma func
 	void generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads);
 	//With start and end point
-	void generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end);
+	void generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries);
 
 	float calcDist(const FVector& p1, const FVector& p2);
 
 	void GetCandidates(TMap<float, ControlPoint>& candidates, CRSpline& inSpline, const float& X, const float& Y, const int32& tileSize, 
-		float &oldDist, float &newDist, const FVector& end, const int32& slopeThreshold, bool &regardDist);
+		float &oldDist, float &newDist, const FVector& end, ControlPoint& EndCP, const int32& slopeThreshold, bool &regardDist);
 
 	bool checkBounds(const CRSpline& spline);
 

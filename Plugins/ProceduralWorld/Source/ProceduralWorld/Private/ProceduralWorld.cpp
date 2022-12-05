@@ -1356,7 +1356,7 @@ FReply FProceduralWorldModule::Setup()
 	FVector startPoint{ 50, 50, 0 };
 	FVector endPoint{ 500, 500, 0 };
 
-	myLand.generateRoadSmarter(tiles, roads, startPoint, endPoint);
+	myLand.generateRoadSmarter(tiles, roads, startPoint, endPoint, 10);
 	if (!roads.IsEmpty()) {
 		roads[0].calcLengthsSplines();
 		roads[0].vizualizeRoad(myLand.LandscapeScale);
@@ -1578,7 +1578,7 @@ FReply FProceduralWorldModule::GenerateTerrain()
 	FVector start{ 50,50,0 };
 	FVector end{ 399,477,0 };
 
-	ptrToTerrain->generateRoadSmarter(tiles, roads,start,end);
+	ptrToTerrain->generateRoadSmarter(tiles, roads,start,end,50);
 	if (!roads.IsEmpty()) {
 		roads[0].calcLengthsSplines();
 		roads[0].vizualizeRoad(ptrToTerrain->LandscapeScale);
