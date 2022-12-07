@@ -522,6 +522,34 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 				
+			+SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SSegmentedControl<int32>)
+					.OnValueChanged_Lambda([&](auto newValue){
+						
+				UE_LOG(LogTemp, Warning, TEXT("Changed value to: %d"), newValue);
+
+
+						})
+					.Value(0)
+					+ SSegmentedControl<int32>::Slot(0)
+				.Icon(FAppStyle::Get().GetBrush("Icons.box-perspective"))
+				.Text(LOCTEXT("Voronoi", "Random Voroni"))
+
+				+ SSegmentedControl<int32>::Slot(1)
+				.Icon(FAppStyle::Get().GetBrush("Icons.cylinder"))
+				.Text(LOCTEXT("Manual", "Full Manual"))
+
+				+ SSegmentedControl<int32>::Slot(2)
+				.Icon(FAppStyle::Get().GetBrush("Icons.pyramid"))
+				.Text(LOCTEXT("ManVoronoi", "TODO"))
+
+				/*+ SSegmentedControl<int32>::Slot(3)
+				.Icon(FAppStyle::Get().GetBrush("Icons.sphere"))
+				.Text(LOCTEXT("Sphere", "Sphere"))*/
+				]
+
 			+ SVerticalBox::Slot()
 				.AutoHeight()
 				

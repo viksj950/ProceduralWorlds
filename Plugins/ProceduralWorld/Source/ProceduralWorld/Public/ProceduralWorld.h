@@ -31,6 +31,7 @@
 #include "Widgets/Input/SSpinBox.h"
 #include "Widgets/Input/SComboButton.h"
 #include "Types/SlateEnums.h"
+#include "Widgets/Input/SSegmentedControl.h"
 
 #include "PropertyEditorModule.h"
 #include "PropertyCustomizationHelpers.h"
