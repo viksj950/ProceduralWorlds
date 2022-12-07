@@ -784,13 +784,13 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	int Tries{ maxTries };
 	int32 adjIndex = 0;
 	//int32 tileSize = inTiles[tileIndex]->tileSize;
-	int32 slopeThreshold = 400;
+	int32 slopeThreshold = 300;
 	bool regardDist = true;
 	uint16 oldTileIndex = 0;
 	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same tile again
 	TMap<float, ControlPoint> candidates; //used for choosing which control point makes most sense to extend road to
 
-	while (maxRoadTiles > 0 && Tries > 0 && !(calcDist(EndCP.pos, end) < TileSize*2)) {
+	while (maxRoadTiles > 0 && Tries > 0 && !(calcDist(EndCP.pos, end) < TileSize/4)) {
 		Tries--;
 
 		while(adjIndex < 8) {
@@ -855,7 +855,7 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 
 	}
 	//temp solution to always end in end point
-	if (calcDist(EndCP.pos, end) < TileSize) {
+	if (calcDist(EndCP.pos, end) < TileSize/4) {
 		spline.addControlPoint({ (float)end.X,(float)end.Y,(float)45000 });
 		spline.addControlPoint({ (float)end.X - 50, (float)end.Y + 50,(float)45000 });
 		spline.calcLengths();
