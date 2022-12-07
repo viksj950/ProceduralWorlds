@@ -26,7 +26,7 @@
 #include "math.h"
 #include "Math/IntVector.h"
 #include "CoreFwd.h"
-
+#include "Containers/Map.h"
 //Tile system
 #include"Tile.h" 
 
@@ -90,7 +90,11 @@ public:
 	//new and improved gaussian blur 
 	void interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth);
 
+	//Randomly placing biotopes depending on nmbrOfBiomes and then fillin by Voronoi
 	void AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>&BiotopeSettings) const;
+
+	//Assign biotopes by using the data where the user manually place biotopes.
+	void AssignBiotopesToTiles(TArray<UTile*>& inTiles, const TMap<int32,int32>&inMarkedTiles) const;
 
 	//For now creating Perlin Noise and assigning it to the internal variable heightData asdwell as divide it among tiles
 	void GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);

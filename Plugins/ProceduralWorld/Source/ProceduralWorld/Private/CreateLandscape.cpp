@@ -1436,6 +1436,16 @@ void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &
 	}
 }
 
+void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const TMap<int32, int32>& inMarkedTiles) const
+{
+
+	for (auto& it : inMarkedTiles)
+	{
+		inTiles[it.Key]->biotope = it.Value;
+	}
+
+}
+
 void CreateLandscape::GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
 {
 	//NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles

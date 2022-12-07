@@ -548,7 +548,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				FVector2D heightmapPosition = (inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) / absSize) * SizeX;
 
 				heightmapPosition.X = FMath::Abs((heightmapPosition.X - SizeX));
-
+				previewWindow.MarkTile(BiomeSettingSelection,heightmapPosition);
 				
 				UE_LOG(LogTemp, Log, TEXT("Clicked Texture at tile index: %d"), previewWindow.FromCoordToTileIndex(heightmapPosition));
 
@@ -1507,7 +1507,9 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 
 	}
 
-	ptrToTerrain->AssignBiotopesToTiles(tiles, nmbrOfBiomes, BiotopeSettings);
+	//ptrToTerrain->AssignBiotopesToTiles(tiles, nmbrOfBiomes, BiotopeSettings);
+	ptrToTerrain->AssignBiotopesToTiles(tiles, previewWindow.markedTiles);
+
 	//Generate Perlin Noise and assign it to all tiles
 	//myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
 
@@ -1524,6 +1526,7 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	
 	previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);
 	previewWindow.CreateGridTexture();
+	previewWindow.CreateBiotopeTexture();
 	previewWindow.AssembleWidget();
 	UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
 
@@ -2246,9 +2249,15 @@ void FProceduralWorldModule::PluginButtonClicked()
 {
 
 
-	BiomeAssetsData = { MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
-		 MakeShareable(new biomeAssets("Mountains",2)) };
+	/*BiomeAssetsData = { MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
+		 MakeShareable(new biomeAssets("Mountains",2)) };*/
 	//Clean old ass
+
+	BiomeAssetsData.Empty();
+	BiomeAssetsData.Add(MakeShareable(new biomeAssets("City", 0)));
+	BiomeAssetsData.Add(MakeShareable(new biomeAssets("Plains", 1)));
+	BiomeAssetsData.Add(MakeShareable(new biomeAssets("Mountains", 2)));
+
 	BiomeAssetsData[0]->AssetSettings.Empty();
 	BiomeAssetsData[1]->AssetSettings.Empty();
 	BiomeAssetsData[2]->AssetSettings.Empty();

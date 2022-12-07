@@ -11,6 +11,9 @@ S2DPreviewWindow::S2DPreviewWindow(const int32& inSizeX, const int32& inSizeY, c
 	//First two slots are always populated by default? heightmap and grid:
 	textures.Add(nullptr);
 	textures.Add(nullptr);
+	textures.Add(nullptr);
+
+	brushes.Add(nullptr);
 	brushes.Add(nullptr);
 	brushes.Add(nullptr);
 }
@@ -144,7 +147,7 @@ void S2DPreviewWindow::CreateGridTexture()
 	//add texture to array of textures
 	if (textures.IsValidIndex(1))
 	{
-		textures[1] = tempTexturePtr;
+		textures[2] = tempTexturePtr;
 	}
 	else
 	{
@@ -153,15 +156,96 @@ void S2DPreviewWindow::CreateGridTexture()
 
 }
 
+void S2DPreviewWindow::CreateBiotopeTexture()
+{
+	uint8* pixels = (uint8*)malloc(SizeX * SizeY * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+
+
+	
+
+	for (int y = 0; y < SizeY; y++)
+	{
+		for (int x = 0; x < SizeX; x++)
+		{
+
+			
+
+
+
+				pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 0] = 0;
+				pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 1] = 0;
+				pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 2] = 0;
+				pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 3] = 0;
+
+
+
+
+				
+
+			
+
+		}
+	}
+
+	for (auto& it : markedTiles)
+	{
+		for (uint32 y = FMath::Floor(it.Key / gridSizeOfProxies) * (TileSize - 1); y < (FMath::Floor(it.Key / gridSizeOfProxies) * (TileSize - 1) + (TileSize -1)); y++)
+		{
+			for (uint32 x = (it.Key % gridSizeOfProxies) * (TileSize - 1); x < (it.Key % gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1); x++)
+			{
+
+
+				
+
+
+				pixels[y * 4 * SizeX + (SizeX - x) * 4+ 0] = colors[it.Value % colors.Num()].X;
+				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 1] = colors[it.Value % colors.Num()].Y;
+				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 2] = colors[it.Value % colors.Num()].Z;
+				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 3] = 64;
+
+			}
+		}
+	}
+
+	UTexture2D* tempTexturePtr = UTexture2D::CreateTransient(SizeX, SizeY, PF_R8G8B8A8);
+
+	// Passing the pixels information to the texture
+	FTexture2DMipMap* Mip = &tempTexturePtr->GetPlatformData()->Mips[0];
+	Mip->SizeX = SizeX;
+	Mip->SizeY = SizeY;
+	Mip->BulkData.Lock(LOCK_READ_WRITE);
+	uint8* TextureData = (uint8*)Mip->BulkData.Realloc(SizeY * SizeX * sizeof(uint8) * 4);
+	FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * SizeY * SizeX * 4);
+	Mip->BulkData.Unlock();
+
+	// Updating Texture & mark it as unsaved
+	tempTexturePtr->AddToRoot();
+	tempTexturePtr->UpdateResource();
+	//Package->MarkPackageDirty();
+
+	free(pixels);
+	pixels = NULL;
+
+	//add texture to array of textures
+	if (textures.IsValidIndex(1))
+	{
+		textures[1] = tempTexturePtr;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Default pointer for BiotopeTexture in texture array is missing"));
+	}
+}
+
 void S2DPreviewWindow::AssembleWidget()
 {
 	//TSharedPtr<FSlateImageBrush> tempImageBrush = MakeShared<FSlateImageBrush>(textures[0], FVector2D(textures[0]->GetSizeX(), textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 	brushes[0] = MakeShared<FSlateImageBrush>(textures[0], FVector2D(textures[0]->GetSizeX(), textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 	brushes[1] = MakeShared<FSlateImageBrush>(textures[1], FVector2D(textures[1]->GetSizeX(), textures[1]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
-	
+	brushes[2] = MakeShared<FSlateImageBrush>(textures[2], FVector2D(textures[2]->GetSizeX(), textures[2]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 	//brushes.Add(MakeShared<FSlateImageBrush>(textures[1], FVector2D(textures[1]->GetSizeX(), textures[1]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile));
 
-	previewContext->SetContent(
+	/*previewContext->SetContent(
 		
 		
 		SNew(SOverlay)
@@ -191,8 +275,42 @@ void S2DPreviewWindow::AssembleWidget()
 		]
 		
 
-		);
+		);*/
 
+	
+		//previewContext->SetContent
+
+		
+	previewOverlay = SNew(SOverlay);
+
+		for (auto& it: brushes)
+		{
+			previewOverlay->AddSlot()
+				[
+					SNew(SBox)
+
+					.MinAspectRatio(1)
+				[
+					SNew(SImage)
+
+					.Image(it.Get())
+				]
+				];
+
+		}
+
+
+		previewContext->SetContent(previewOverlay.ToSharedRef());
+	
+
+}
+void S2DPreviewWindow::MarkTile(int32 selectedBiotope, FVector2D inCoords)
+{
+	
+	//Tmap can only store unique keys, thus will replace if we add an already existing key, which is what we want, we want to override 
+	markedTiles.Add(FromCoordToTileIndex(inCoords),selectedBiotope);
+	UE_LOG(LogTemp, Log, TEXT("Added a new pair to markedTiles"));
+	UE_LOG(LogTemp, Log, TEXT("Marked tiles now contains : %d"), markedTiles.Num());
 }
 int32 S2DPreviewWindow::FromCoordToTileIndex(FVector2D inCoords)
 {
