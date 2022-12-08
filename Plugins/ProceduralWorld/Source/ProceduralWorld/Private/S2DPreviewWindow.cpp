@@ -207,6 +207,19 @@ void S2DPreviewWindow::CreateBiotopeTexture()
 		}
 	}
 
+	for (auto& it : markedTilesVoronoi)
+	{
+		for (uint32 y = FMath::Floor(it.Key / gridSizeOfProxies) * (TileSize - 1); y < (FMath::Floor(it.Key / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1)); y++)
+		{
+			for (uint32 x = (it.Key % gridSizeOfProxies) * (TileSize - 1); x < (it.Key % gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1); x++)
+			{
+
+				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 3] += 128;
+
+			}
+		}
+	}
+
 	UTexture2D* tempTexturePtr = UTexture2D::CreateTransient(SizeX, SizeY, PF_R8G8B8A8);
 
 	// Passing the pixels information to the texture
