@@ -312,6 +312,44 @@ void S2DPreviewWindow::MarkTile(int32 selectedBiotope, FVector2D inCoords)
 	UE_LOG(LogTemp, Log, TEXT("Added a new pair to markedTiles"));
 	UE_LOG(LogTemp, Log, TEXT("Marked tiles now contains : %d"), markedTiles.Num());
 }
+void S2DPreviewWindow::MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords)
+{
+	/*int32 X = FromCoordToTileIndex(inCoords) % gridSizeOfProxies;
+	int32 Y = FMath::Floor(FromCoordToTileIndex(inCoords) / gridSizeOfProxies);*/
+
+	//Marked Origins of biotopes
+	markedTilesVoronoi.Add(FromCoordToTileIndex(inCoords), selectedBiotope);
+	markedTiles.Add(FromCoordToTileIndex(inCoords), selectedBiotope);
+
+
+	for (uint32 i = 0; i < gridSizeOfProxies * gridSizeOfProxies; i++)
+	{
+		//check so that the tile to be assigned is not marked as an origin of a biome
+		if (!markedTilesVoronoi.Contains(i))
+		{
+
+
+
+			FVector2f currTileCoords(i % gridSizeOfProxies, FMath::Floor(i / gridSizeOfProxies));
+			float distance = 200000; //Just a large number 
+			int32 biotope = -1;
+
+			for (auto& it : markedTilesVoronoi)
+			{
+				float temp = FVector2f::Distance(currTileCoords, FVector2f(it.Key % gridSizeOfProxies, FMath::Floor(it.Key / gridSizeOfProxies)));
+				if (distance >= temp )
+				{
+					//markedTiles.Add(i,it.Value);
+					biotope = it.Value;
+					//it->biotope = b.biomeType;
+					distance = temp;
+				}
+
+			}
+			markedTiles.Add(i, biotope);
+		}
+	}
+}
 int32 S2DPreviewWindow::FromCoordToTileIndex(FVector2D inCoords)
 {
 	int32 x_floor = floor(inCoords.X / TileSize);

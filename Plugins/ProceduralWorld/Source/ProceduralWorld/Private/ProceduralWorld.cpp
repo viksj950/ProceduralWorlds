@@ -528,7 +528,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					SNew(SSegmentedControl<int32>)
 					.OnValueChanged_Lambda([&](auto newValue){
 						
-				UE_LOG(LogTemp, Warning, TEXT("Changed value to: %d"), newValue);
+					UE_LOG(LogTemp, Warning, TEXT("Changed value to: %d"), newValue);
+					//change mode
+					biotopePlacementSelection = newValue;
+					
 
 
 						})
@@ -576,7 +579,27 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				FVector2D heightmapPosition = (inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) / absSize) * SizeX;
 
 				heightmapPosition.X = FMath::Abs((heightmapPosition.X - SizeX));
-				previewWindow.MarkTile(BiomeSettingSelection,heightmapPosition);
+
+
+				switch (biotopePlacementSelection)
+				{
+					case 0:
+						
+
+						break;
+					case 1:
+						previewWindow.MarkTile(BiomeSettingSelection, heightmapPosition);
+
+						break;
+					case 2:
+						previewWindow.MarkTileVoronoi(BiomeSettingSelection, heightmapPosition);
+						UE_LOG(LogTemp, Log, TEXT("Clicked using MarkTileVoronoi"));
+						UE_LOG(LogTemp, Log, TEXT("Nmbr of marked Voronoi tiles: %d"), previewWindow.markedTilesVoronoi.Num());
+						break;
+				default:
+					break;
+				}
+				
 				
 				UE_LOG(LogTemp, Log, TEXT("Clicked Texture at tile index: %d"), previewWindow.FromCoordToTileIndex(heightmapPosition));
 
