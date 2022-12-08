@@ -245,8 +245,8 @@ public:
 		{"Plains",1,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} ,
 		{"Mountains",2,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} };*/
 
-	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64, 2550,3,1.2f,0.5f,0.015f,1.0f)) ,
-		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64, 2550,3,1.2f,0.5f,0.015f,1.0f)) ,
+	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64, 600,3,1.2f,0.5f,0.015f,1.0f)) ,
+		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64, 850,3,1.2f,0.5f,0.015f,1.0f)) ,
 		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64, 4096,14,3.5f,0.86f,0.0015f,1.4f)) };
 	
 
