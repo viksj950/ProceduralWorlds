@@ -201,7 +201,7 @@ void S2DPreviewWindow::CreateBiotopeTexture()
 				pixels[y * 4 * SizeX + (SizeX - x) * 4+ 0] = colors[it.Value % colors.Num()].X;
 				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 1] = colors[it.Value % colors.Num()].Y;
 				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 2] = colors[it.Value % colors.Num()].Z;
-				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 3] = 64;
+				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 3] = 25;
 
 			}
 		}
@@ -214,7 +214,7 @@ void S2DPreviewWindow::CreateBiotopeTexture()
 			for (uint32 x = (it.Key % gridSizeOfProxies) * (TileSize - 1); x < (it.Key % gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1); x++)
 			{
 
-				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 3] += 128;
+				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 3] += 80;
 
 			}
 		}
