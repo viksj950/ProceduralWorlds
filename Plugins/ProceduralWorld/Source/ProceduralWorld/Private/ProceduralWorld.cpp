@@ -585,8 +585,11 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						.AutoHeight()
 						[
 							SNew(SBox)
-							.WidthOverride(50)
-							.HeightOverride(50)
+							.ToolTipText(FText::FromString("Toggle Grid"))
+							.MaxAspectRatio(1)
+							.MinAspectRatio(1)
+							.WidthOverride(35)
+							.HeightOverride(35)
 							[
 								SNew(SCheckBox)
 								.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
@@ -611,24 +614,29 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						.AutoHeight()
 						[
 							SNew(SBox)
-							.WidthOverride(50)
-						.HeightOverride(50)
-						[
-							SNew(SCheckBox)
-							.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
-							.IsChecked(ECheckBoxState::Checked)
-							.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
-
-							previewWindow.displayBiotopes = (newState == ECheckBoxState::Checked) ? true : false;
-							previewWindow.AssembleWidget();
-								})
+							.ToolTipText(FText::FromString("Toggle Biotopes"))
+							.MaxAspectRatio(1)
+							.MinAspectRatio(1)
+							.WidthOverride(35)
+							.HeightOverride(35)
 							[
-								SNew(SImage)
-								.ColorAndOpacity(FSlateColor::FSlateColor())
-								.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
-							]
+								SNew(SCheckBox)
+								
+								.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+								.IsChecked(ECheckBoxState::Checked)
+								.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
 
-						]
+								previewWindow.displayBiotopes = (newState == ECheckBoxState::Checked) ? true : false;
+								previewWindow.AssembleWidget();
+									})
+								[
+									SNew(SImage)
+									
+									.ColorAndOpacity(FSlateColor::FSlateColor())
+									.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+								]
+
+							]
 
 
 						]
