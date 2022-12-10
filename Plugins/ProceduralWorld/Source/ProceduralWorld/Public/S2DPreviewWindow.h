@@ -42,19 +42,31 @@ public:
 	
 	};
 
+	bool displayGrid;
+	bool displayBiotopes;
+	bool displayRoads;
+
 
 	TMap<int32, int32> markedTiles;
 
 	//Marked Origins of biotopes
 	TMap<int32,int32> markedTilesVoronoi;
 
+	//Road Coordinates
+	TArray<FVector> roadCoords;
+
 	void UpdateLandscapeSettings(const int32& inSizeX, const int32& inSizeY, const int32& inQuadsPerComponent, const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize);
 	void CreateHeightmapTexture(const TArray<uint16>& inData);
 	void CreateGridTexture();
 	void CreateBiotopeTexture();
+	void CreateRoadMarkTexture();
 	void AssembleWidget();
 	void MarkTile(int32 selectedBiotope, FVector2D inCoords);
 	void MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords);
+
+	//Road functions
+	void AddRoadPoint(FVector2D inCoords);
+
 	int32 FromCoordToTileIndex(FVector2D inCoords);
 	
 

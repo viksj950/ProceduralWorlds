@@ -480,7 +480,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			+SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNew(SSegmentedControl<int32>)
+					SAssignNew(biotopeGenerationMode,SSegmentedControl<int32>)
 					.OnValueChanged_Lambda([&](auto newValue){
 						
 					UE_LOG(LogTemp, Warning, TEXT("Changed value to: %d"), newValue);
@@ -501,7 +501,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				+ SSegmentedControl<int32>::Slot(2)
 				.Icon(FAppStyle::Get().GetBrush("Icons.pyramid"))
-				.Text(LOCTEXT("ManVoronoi", "TODO"))
+				.Text(LOCTEXT("ManVoronoi", "Manual Voronoi"))
 
 				/*+ SSegmentedControl<int32>::Slot(3)
 				.Icon(FAppStyle::Get().GetBrush("Icons.sphere"))
@@ -512,48 +512,153 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.AutoHeight()
 				
 				[
-					SNew(SBox)
-					.HeightOverride(505)
-					.MaxAspectRatio(1)
-					.MinAspectRatio(1)
+					SNew(SHorizontalBox)
+					+SHorizontalBox::Slot()
 					
 					[
-						SAssignNew(previewWindow.previewContext, SBorder)
-						.DesiredSizeScale(1)
-						.ContentScale(1)
-						.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry, const FPointerEvent& MouseEvent) {
-						//Need to fix this, when the image is scaled the coordinates varry, possible solution: find image slate size, and clicked coordinates, calculate the % 
-						//and then use the selected size of the landscape/heightmap to get correct coordinates.
-						FVector2D absSize = inGeometry.GetAbsoluteSize();
-						//MouseEvent.
-						FVector2D heightmapPosition = (inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) / absSize) * SizeX;
 
-						heightmapPosition.X = FMath::Abs((heightmapPosition.X - SizeX));
-						switch (biotopePlacementSelection)
-						{
-							case 0:
-						
-
-								break;
-							case 1:
-								previewWindow.MarkTile(BiomeSettingSelection, heightmapPosition);
-
-								break;
-							case 2:
-								previewWindow.MarkTileVoronoi(BiomeSettingSelection, heightmapPosition);
-								UE_LOG(LogTemp, Log, TEXT("Clicked using MarkTileVoronoi"));
-								UE_LOG(LogTemp, Log, TEXT("Nmbr of marked Voronoi tiles: %d"), previewWindow.markedTilesVoronoi.Num());
-								break;
-						default:
-							break;
-						}
-						UE_LOG(LogTemp, Log, TEXT("Clicked Texture at tile index: %d"), previewWindow.FromCoordToTileIndex(heightmapPosition));
-						return FReply::Handled();
-
-					})
-				
-					]
+						SNew(SBox)
+						.HeightOverride(505)
+						.MaxAspectRatio(1)
+						.MinAspectRatio(1)
 					
+						[
+							SAssignNew(previewWindow.previewContext, SBorder)
+							.DesiredSizeScale(1)
+							.ContentScale(1)
+							.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry, const FPointerEvent& MouseEvent) {
+							//Need to fix this, when the image is scaled the coordinates varry, possible solution: find image slate size, and clicked coordinates, calculate the % 
+							//and then use the selected size of the landscape/heightmap to get correct coordinates.
+							FVector2D absSize = inGeometry.GetAbsoluteSize();
+							//MouseEvent.
+							FVector2D heightmapPosition = (inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) / absSize) * SizeX;
+
+							heightmapPosition.X = FMath::Abs((heightmapPosition.X - SizeX));
+
+
+							//Check road mode or biotope mode
+
+							if (roadPlacementMode->IsChecked())
+							{
+								previewWindow.AddRoadPoint(heightmapPosition);
+							}
+							else {
+								switch (biotopePlacementSelection)
+								{
+								case 0:
+
+
+									break;
+								case 1:
+									previewWindow.MarkTile(BiomeSettingSelection, heightmapPosition);
+									previewWindow.CreateBiotopeTexture();
+									previewWindow.AssembleWidget();
+
+									break;
+								case 2:
+									previewWindow.MarkTileVoronoi(BiomeSettingSelection, heightmapPosition);
+									previewWindow.CreateBiotopeTexture();
+									previewWindow.AssembleWidget();
+									UE_LOG(LogTemp, Log, TEXT("Clicked using MarkTileVoronoi"));
+									UE_LOG(LogTemp, Log, TEXT("Nmbr of marked Voronoi tiles: %d"), previewWindow.markedTilesVoronoi.Num());
+									break;
+								default:
+									break;
+								}
+
+							}
+
+						
+							UE_LOG(LogTemp, Log, TEXT("Clicked Texture at tile index: %d"), previewWindow.FromCoordToTileIndex(heightmapPosition));
+							return FReply::Handled();
+
+						})
+				
+						]
+					]
+
+					+ SHorizontalBox::Slot() //Buttons for toggling 2d preview grid and biotope visualization
+					.AutoWidth()
+					[
+						SNew(SVerticalBox)	//Toggle grid 2D view
+						+SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(SBox)
+							.WidthOverride(50)
+							.HeightOverride(50)
+							[
+								SNew(SCheckBox)
+								.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+								.IsChecked(ECheckBoxState::Checked)
+								.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+										
+								previewWindow.displayGrid = (newState == ECheckBoxState::Checked) ? true : false;
+								previewWindow.AssembleWidget();
+									})
+								[
+									SNew(SImage)
+									//.ColorAndOpacity(FSlateColor::UseForeground())
+									.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+								]
+
+							]
+							
+							
+						]
+						
+						+ SVerticalBox::Slot() //Toggle Biotopes 2D view
+						.AutoHeight()
+						[
+							SNew(SBox)
+							.WidthOverride(50)
+						.HeightOverride(50)
+						[
+							SNew(SCheckBox)
+							.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+							.IsChecked(ECheckBoxState::Checked)
+							.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+
+							previewWindow.displayBiotopes = (newState == ECheckBoxState::Checked) ? true : false;
+							previewWindow.AssembleWidget();
+								})
+							[
+								SNew(SImage)
+								.ColorAndOpacity(FSlateColor::FSlateColor())
+								.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+							]
+
+						]
+
+
+						]
+
+						+ SVerticalBox::Slot() //Toggle roads 2D view
+							.AutoHeight()
+							[
+								SNew(SBox)
+								.WidthOverride(50)
+							.HeightOverride(50)
+							[
+								SNew(SCheckBox)
+								.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+							.IsChecked(ECheckBoxState::Checked)
+							.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+
+							previewWindow.displayRoads = (newState == ECheckBoxState::Checked) ? true : false;
+							previewWindow.AssembleWidget();
+								})
+							[
+								SNew(SImage)
+								.ColorAndOpacity(FSlateColor::FSlateColor())
+									.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+							]
+
+							]
+
+
+							]
+					]
 					
 				]
 
@@ -561,14 +666,33 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNew(SCheckBox)
-					.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
-					.IsChecked(ECheckBoxState::Unchecked)
-				
+					SNew(SBorder)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Toggle road mode"))
+						SAssignNew(roadPlacementMode, SCheckBox)
+						.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+						.IsChecked(ECheckBoxState::Unchecked)
+						.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+						
+						if (newState == ECheckBoxState::Checked)
+						{
+							biotopeGenerationMode->SetEnabled(false);
+						}
+						else
+						{
+							biotopeGenerationMode->SetEnabled(true);
+						}
+						
+						UE_LOG(LogTemp, Log, TEXT("Toggled road placement mode"));
+
+						FReply::Handled();
+							})
+
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString("Toggle road mode"))
+						]
 					]
+					
 					
 
 				]
@@ -1540,6 +1664,7 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	previewWindow.CreateGridTexture();
 	previewWindow.CreateBiotopeTexture();
 	previewWindow.AssembleWidget();
+	
 	UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
 
 
@@ -1557,6 +1682,17 @@ FReply FProceduralWorldModule::GenerateTerrain()
 
 	FVector start{ 50,50,0 };
 	FVector end{ 399,477,0 };
+
+	if (previewWindow.roadCoords.Num() >= 2)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Using manual start and end coords"));
+		start = previewWindow.roadCoords[0];
+		end = previewWindow.roadCoords[1];
+
+	}
+	
+
+	
 
 	ptrToTerrain->generateRoadSmarter(tiles, roads,start,end);
 	if (!roads.IsEmpty()) {
