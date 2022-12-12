@@ -315,14 +315,22 @@ public:
 
 	//UI 2D INTERFACE----------------------------------------------------------------------------------------------
 	
+	TSharedPtr<SSegmentedControl<int32>> biotopeGenerationMode;
+
 	UPROPERTY()
-	UTexture2D* CustomTexture;
+	//UTexture2D* CustomTexture;
 
 	TSharedPtr<SBorder> previewTextureBorder;
 	TSharedPtr<FSlateImageBrush> myImageBrush;
 
 	//Some default values
 	S2DPreviewWindow previewWindow{ 505,505,63,1,1,64 };
+
+	uint32 biotopePlacementSelection{ 0 };
+
+	//ROAD UI------------------------------------------------------------------------------------------------------
+
+	TSharedPtr<SCheckBox> roadPlacementMode;
 	
 	//UI Asset Distribution ---------------------------------------------------------------------------------------
 	 

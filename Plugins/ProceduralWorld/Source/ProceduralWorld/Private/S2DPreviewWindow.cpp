@@ -5,7 +5,7 @@
 
 S2DPreviewWindow::S2DPreviewWindow(const int32& inSizeX, const int32& inSizeY, const int32& inQuadsPerComponent,
 	const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize): SizeX{inSizeX}, SizeY{inSizeY}, QuadsPerComponent{inQuadsPerComponent},
-	ComponentsPerProxy{inComponentsPerProxy}, SectionsPerComponent{inSectionsPerComponent}, TileSize{inTilesSize}
+	ComponentsPerProxy{ inComponentsPerProxy }, SectionsPerComponent{ inSectionsPerComponent }, TileSize{ inTilesSize }, displayGrid{true}, displayBiotopes{true}
 {
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * ComponentsPerProxy));
 	//First two slots are always populated by default? heightmap and grid:
@@ -201,7 +201,20 @@ void S2DPreviewWindow::CreateBiotopeTexture()
 				pixels[y * 4 * SizeX + (SizeX - x) * 4+ 0] = colors[it.Value % colors.Num()].X;
 				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 1] = colors[it.Value % colors.Num()].Y;
 				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 2] = colors[it.Value % colors.Num()].Z;
-				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 3] = 64;
+				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 3] = 25;
+
+			}
+		}
+	}
+
+	for (auto& it : markedTilesVoronoi)
+	{
+		for (uint32 y = FMath::Floor(it.Key / gridSizeOfProxies) * (TileSize - 1); y < (FMath::Floor(it.Key / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1)); y++)
+		{
+			for (uint32 x = (it.Key % gridSizeOfProxies) * (TileSize - 1); x < (it.Key % gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1); x++)
+			{
+
+				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 3] += 80;
 
 			}
 		}
@@ -237,51 +250,23 @@ void S2DPreviewWindow::CreateBiotopeTexture()
 	}
 }
 
+void S2DPreviewWindow::CreateRoadMarkTexture() 
+{
+	
+
+}
+
 void S2DPreviewWindow::AssembleWidget()
 {
 	//TSharedPtr<FSlateImageBrush> tempImageBrush = MakeShared<FSlateImageBrush>(textures[0], FVector2D(textures[0]->GetSizeX(), textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 	brushes[0] = MakeShared<FSlateImageBrush>(textures[0], FVector2D(textures[0]->GetSizeX(), textures[0]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 	brushes[1] = MakeShared<FSlateImageBrush>(textures[1], FVector2D(textures[1]->GetSizeX(), textures[1]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
+	
 	brushes[2] = MakeShared<FSlateImageBrush>(textures[2], FVector2D(textures[2]->GetSizeX(), textures[2]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 	//brushes.Add(MakeShared<FSlateImageBrush>(textures[1], FVector2D(textures[1]->GetSizeX(), textures[1]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile));
 
-	/*previewContext->SetContent(
 		
-		
-		SNew(SOverlay)
-		.Cursor(EMouseCursor::Crosshairs)
-		
-		+SOverlay::Slot()
-		[
-			SNew(SBox)
-			
-			.MinAspectRatio(1)
-			[
-			SNew(SImage)
-
-			.Image(brushes[0].Get())
-			]
-		]
-		+SOverlay::Slot()
-		[
-			SNew(SBox)
-			.MinAspectRatio(1)
-			[
-				SNew(SImage)
-
-				.Image(brushes[1].Get())
-			]
-
-		]
-		
-
-		);*/
-
-	
-		//previewContext->SetContent
-
-		
-	previewOverlay = SNew(SOverlay);
+	/*previewOverlay = SNew(SOverlay);
 
 		for (auto& it: brushes)
 		{
@@ -297,8 +282,31 @@ void S2DPreviewWindow::AssembleWidget()
 				]
 				];
 
-		}
+		}*/
+		previewOverlay = SNew(SOverlay);
 
+		for (size_t i = 0; i < brushes.Num(); i++)
+		{
+			if (i == 2 && !displayGrid) //Skip drawing grid
+			{
+				continue;
+			}
+			if (i == 1 && !displayBiotopes) //Skip drawing biotopes
+			{
+				continue;
+			}
+			previewOverlay->AddSlot()
+				[
+					SNew(SBox)
+
+					.MinAspectRatio(1)
+				[
+					SNew(SImage)
+
+					.Image(brushes[i].Get())
+				]
+				];
+		}
 
 		previewContext->SetContent(previewOverlay.ToSharedRef());
 	
@@ -311,6 +319,49 @@ void S2DPreviewWindow::MarkTile(int32 selectedBiotope, FVector2D inCoords)
 	markedTiles.Add(FromCoordToTileIndex(inCoords),selectedBiotope);
 	UE_LOG(LogTemp, Log, TEXT("Added a new pair to markedTiles"));
 	UE_LOG(LogTemp, Log, TEXT("Marked tiles now contains : %d"), markedTiles.Num());
+}
+void S2DPreviewWindow::MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords)
+{
+	/*int32 X = FromCoordToTileIndex(inCoords) % gridSizeOfProxies;
+	int32 Y = FMath::Floor(FromCoordToTileIndex(inCoords) / gridSizeOfProxies);*/
+
+	//Marked Origins of biotopes
+	markedTilesVoronoi.Add(FromCoordToTileIndex(inCoords), selectedBiotope);
+	markedTiles.Add(FromCoordToTileIndex(inCoords), selectedBiotope);
+
+
+	for (uint32 i = 0; i < gridSizeOfProxies * gridSizeOfProxies; i++)
+	{
+		//check so that the tile to be assigned is not marked as an origin of a biome
+		if (!markedTilesVoronoi.Contains(i))
+		{
+
+
+
+			FVector2f currTileCoords(i % gridSizeOfProxies, FMath::Floor(i / gridSizeOfProxies));
+			float distance = 200000; //Just a large number 
+			int32 biotope = -1;
+
+			for (auto& it : markedTilesVoronoi)
+			{
+				float temp = FVector2f::Distance(currTileCoords, FVector2f(it.Key % gridSizeOfProxies, FMath::Floor(it.Key / gridSizeOfProxies)));
+				if (distance >= temp )
+				{
+					//markedTiles.Add(i,it.Value);
+					biotope = it.Value;
+					//it->biotope = b.biomeType;
+					distance = temp;
+				}
+
+			}
+			markedTiles.Add(i, biotope);
+		}
+	}
+}
+void S2DPreviewWindow::AddRoadPoint(FVector2D inCoords)
+{
+
+	roadCoords.Add(FVector(inCoords.X, inCoords.Y, 0.0));
 }
 int32 S2DPreviewWindow::FromCoordToTileIndex(FVector2D inCoords)
 {

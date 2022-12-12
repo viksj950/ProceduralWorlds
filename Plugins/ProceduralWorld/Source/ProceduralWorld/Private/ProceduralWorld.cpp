@@ -76,161 +76,177 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
-			SNew(SHorizontalBox)	//Main Horizontal box, now dividing setting on one box and generation/listinging/deletion in the other
+			SNew(SHorizontalBox)	//Main Horizontal box nr1, now dividing setting on one box and generation/listinging/deletion in the other-------------------------------------------
 			+ SHorizontalBox::Slot()
-		[
-
-
-
-
-			SNew(SVerticalBox)	//Vertical box to store rows(Horizontal boxes) with text / settings
-
-
-
-			+SVerticalBox::Slot()
-		.AutoHeight()
-		.MaxHeight(100)
-		[
-
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.MaxWidth(150)
-		.Padding(0)
-		.FillWidth(1.0f)
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Left)
-		[
-
-			SNew(STextBlock)
-			.Text(FText::FromString("Biotope:"))
-
-
-
-		]
-	+ SHorizontalBox::Slot()
-		[
-			SNew(SComboBox<TSharedPtr<BiotopePerlinNoiseSetting>>)
-			.OptionsSource(&BiotopeSettings)
-		.OnGenerateWidget_Lambda([](TSharedPtr<BiotopePerlinNoiseSetting> Item)
-			{
-				return SNew(STextBlock).Text(FText::FromString(*Item->Biotope));
-				//return SNew(SButton).Text(FText::FromString(*Item->Description));
-			})
-		.OnSelectionChanged_Lambda([this](TSharedPtr<BiotopePerlinNoiseSetting> InSelection, ESelectInfo::Type InSelectInfo)
-			{
-				if (InSelection.IsValid() && ComboBoxTitleBlockNoise.IsValid())
-				{
-					ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
-					this->BiomeSettingSelection = InSelection->BiotopeIndex;
-
-					
-					
-
-
-				}
-
-			})
+			[
+				SNew(SVerticalBox)	//Vertical box to store rows(Horizontal boxes) with text / settings
+				+SVerticalBox::Slot()
+				.AutoHeight()
+				.MaxHeight(100)
 				[
-					SAssignNew(ComboBoxTitleBlockNoise, STextBlock).Text(LOCTEXT("ComboLabel", "City"))
+
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.MaxWidth(150)
+					.Padding(0)
+					.FillWidth(1.0f)
+					.VAlign(VAlign_Center)
+					.HAlign(HAlign_Left)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString("Biotope:"))
+					]
+					+ SHorizontalBox::Slot()
+					[
+						SNew(SComboBox<TSharedPtr<BiotopePerlinNoiseSetting>>)
+						.OptionsSource(&BiotopeSettings)
+						.OnGenerateWidget_Lambda([](TSharedPtr<BiotopePerlinNoiseSetting> Item)
+						{
+							return SNew(STextBlock).Text(FText::FromString(*Item->Biotope));
+							//return SNew(SButton).Text(FText::FromString(*Item->Description));
+						})
+						.OnSelectionChanged_Lambda([this](TSharedPtr<BiotopePerlinNoiseSetting> InSelection, ESelectInfo::Type InSelectInfo)
+						{
+							if (InSelection.IsValid() && ComboBoxTitleBlockNoise.IsValid())
+							{
+								ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
+								this->BiomeSettingSelection = InSelection->BiotopeIndex;
+							}
+
+						})
+							[
+								SAssignNew(ComboBoxTitleBlockNoise, STextBlock).Text(LOCTEXT("ComboLabel", "City"))
+							]
+
+
+					]
+	
+	
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.MaxWidth(150)
+					.Padding(0)
+					.FillWidth(1.0f)
+					.VAlign(VAlign_Center)
+					.HAlign(HAlign_Left)
+					[
+
+						SNew(STextBlock)
+						.Text(FText::FromString("Add new biotope"))
+
+
+
+					]
+
+					+ SHorizontalBox::Slot()
+					[
+						SNew(SEditableTextBox)
+						.HintText(LOCTEXT("addBiotopeHint", "name"))
+						.OnTextChanged_Lambda([&](auto newName) {
+							this->newBiomeName = newName;
+						})
+					]
+					+ SHorizontalBox::Slot()
+					.MaxWidth(50)
+					[
+						SNew(SButton)
+						.Text(LOCTEXT("AddBiotopeButton", "Add"))
+						.OnClicked_Raw(this, &FProceduralWorldModule::addNewBiotope)
+						[
+							SNew(SBox)
+							.WidthOverride(50)
+							.HeightOverride(25)
+							[
+								SNew(SImage)
+								.ColorAndOpacity(FSlateColor::UseForeground())
+								.Image(FAppStyle::Get().GetBrush("Icons.plus"))
+							]
+						]
+					]
 				]
 
+				+ SVerticalBox::Slot()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.MaxWidth(150)
+					.Padding(0)
+					.FillWidth(1.0f)
+					.VAlign(VAlign_Center)
+					.HAlign(HAlign_Left)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString("HeightScale"))
+					]
 
-		]
+					+ SHorizontalBox::Slot()
+					.MaxWidth(150)
 
-		]
-			+ SVerticalBox::Slot()
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.MaxWidth(150)
-		.Padding(0)
-		.FillWidth(1.0f)
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Left)
-		[
+					.Padding(5.0f)
+					.FillWidth(1.0f)
+					.VAlign(VAlign_Center)
+					.HAlign(HAlign_Left)
+					[
+						SNew(SNumericEntryBox<int32>)
+						.AllowSpin(true)
+						.MinValue(1)
+						.MaxValue(4096)
+						.MaxSliderValue(4096)
+						.MinDesiredValueWidth(2)
+						.Value_Raw(this, &FProceduralWorldModule::GetHeightScale)
+						.OnValueChanged_Raw(this, &FProceduralWorldModule::SetHeightScale)
+					]
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.MaxWidth(150)
+				.Padding(0)
+				.FillWidth(1.0f)
+				.VAlign(VAlign_Center)
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Octaves"))
 
-			SNew(STextBlock)
-			.Text(FText::FromString("HeightScale"))
+				]
 
-
-
-		]
-
-	+ SHorizontalBox::Slot()
-		.MaxWidth(150)
-
-		.Padding(5.0f)
-		.FillWidth(1.0f)
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Left)
-		[
-			SNew(SNumericEntryBox<int32>)
-			.AllowSpin(true)
-		.MinValue(1)
-		.MaxValue(4096)
-		.MaxSliderValue(4096)
-		.MinDesiredValueWidth(2)
-		.Value_Raw(this, &FProceduralWorldModule::GetHeightScale)
-		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetHeightScale)
-		]
-
-
-		]
-	+ SVerticalBox::Slot()
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.MaxWidth(150)
-		.Padding(0)
-		.FillWidth(1.0f)
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Left)
-		[
-
-			SNew(STextBlock)
-			.Text(FText::FromString("Octaves"))
-
-
-
-		]
-
-	+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.MaxWidth(150)
-		[
-			SNew(SNumericEntryBox<int32>)
-			.AllowSpin(true)
-		.MinValue(1)
-		.MaxValue(16)
-		.MaxSliderValue(5)
-		.MinDesiredValueWidth(2)
-		.Value_Raw(this, &FProceduralWorldModule::GetOctaveCount)
-		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetOctaveCount)
-		]
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.MaxWidth(150)
+					[
+						SNew(SNumericEntryBox<int32>)
+						.AllowSpin(true)
+					.MinValue(1)
+					.MaxValue(16)
+					.MaxSliderValue(5)
+					.MinDesiredValueWidth(2)
+					.Value_Raw(this, &FProceduralWorldModule::GetOctaveCount)
+					.OnValueChanged_Raw(this, &FProceduralWorldModule::SetOctaveCount)
+					]
 
 
-		]
-	+ SVerticalBox::Slot()
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.MaxWidth(150)
-		.Padding(0)
-		.FillWidth(1.0f)
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Left)
-		[
+					]
+					+ SVerticalBox::Slot()
+						[
+							SNew(SHorizontalBox)
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							.MaxWidth(150)
+							.Padding(0)
+							.FillWidth(1.0f)
+							.VAlign(VAlign_Center)
+							.HAlign(HAlign_Left)
+							[
 
-			SNew(STextBlock)
-			.Text(FText::FromString("Amplitude"))
+								SNew(STextBlock)
+								.Text(FText::FromString("Amplitude"))
 
-
-
-		]
+							]
 
 	+ SHorizontalBox::Slot()
 		.AutoWidth()
@@ -308,19 +324,19 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		.MaxWidth(150)
 		[
 			SNew(SNumericEntryBox<float>)
-			.AllowSpin(true)
-		.MinValue(0)
-		.MaxValue(1)
-		.MaxSliderValue(1)
-		.MinDesiredValueWidth(2)
-		.Value_Raw(this, &FProceduralWorldModule::GetFrequency)
-		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetFrequency)
-		]
+				.AllowSpin(true)
+			.MinValue(0)
+			.MaxValue(1)
+			.MaxSliderValue(1)
+			.MinDesiredValueWidth(2)
+			.Value_Raw(this, &FProceduralWorldModule::GetFrequency)
+			.OnValueChanged_Raw(this, &FProceduralWorldModule::SetFrequency)
+			]
 
 
-		]
+			]
 
-	+ SVerticalBox::Slot()
+		+ SVerticalBox::Slot()
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -339,7 +355,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 		]
 
-	+ SHorizontalBox::Slot()
+		+ SHorizontalBox::Slot()
 		.AutoWidth()
 		.MaxWidth(150)
 		[
@@ -356,13 +372,13 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 		]
 
-	+ SVerticalBox::Slot()
+		+ SVerticalBox::Slot()
 		[
 			
 
 			SNew(SButton)
 			.Text(FText::FromString("Delete Biotope"))
-		.OnClicked_Raw(this,&FProceduralWorldModule::deleteBiotope)
+			.OnClicked_Raw(this,&FProceduralWorldModule::deleteBiotope)
 
 
 		
@@ -371,164 +387,106 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 
 		]
-	+ SVerticalBox::Slot()
+		+ SVerticalBox::Slot() //Landscape Settings
 		.MaxHeight(100)
 		[
 
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.MaxWidth(150)
-		.Padding(0)
-		.FillWidth(1.0f)
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Left)
-		[
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Left)
+			[
 
 			SNew(STextBlock)
 			.Text(FText::FromString("Landscape dimensions (OBS only 1 component per proxy is working)"))
 
 
 
-		]
-	+ SHorizontalBox::Slot()
-		[
-			SNew(SComboBox<TSharedPtr<LandscapeSetting>>)
-			.OptionsSource(&LandscapeComboSettings)
-		.OnGenerateWidget_Lambda([](TSharedPtr<LandscapeSetting> Item)
-			{
-				return SNew(STextBlock).Text(FText::FromString(*Item->Description));
-				//return SNew(SButton).Text(FText::FromString(*Item->Description));
-			})
-		.OnSelectionChanged_Lambda([this](TSharedPtr<LandscapeSetting> InSelection, ESelectInfo::Type InSelectInfo)
-			{
-				if (InSelection.IsValid() && ComboBoxTitleBlock.IsValid())
+			]
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SComboBox<TSharedPtr<LandscapeSetting>>)
+				.OptionsSource(&LandscapeComboSettings)
+				.OnGenerateWidget_Lambda([](TSharedPtr<LandscapeSetting> Item)
 				{
-					ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
-					this->SetLandscapeSettings(InSelection);
-
-					
-
-				}
-
-			})
+					return SNew(STextBlock).Text(FText::FromString(*Item->Description));
+					//return SNew(SButton).Text(FText::FromString(*Item->Description));
+				})
+				.OnSelectionChanged_Lambda([this](TSharedPtr<LandscapeSetting> InSelection, ESelectInfo::Type InSelectInfo)
+				{
+					if (InSelection.IsValid() && ComboBoxTitleBlock.IsValid())
+					{
+						ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
+						this->SetLandscapeSettings(InSelection);
+					}
+				})
 				[
 					//SAssignNew(ComboBoxTitleBlock, STextBlock).Text(LOCTEXT("ComboLabel", "Please select a size!"))
 					SAssignNew(ComboBoxTitleBlock, STextBlock).Text(FText::FromString(*LandscapeComboSettings[0].Get()->Description))
 				]
 
 
-		]
+			]
 
 		]
-
-
-		]
+		
+	]	//End of Main Horizontal box nr1-------------------------------------------------------------------------------------------------------------
 
 		+SHorizontalBox::Slot()
 			[
 
 			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.MaxHeight(50)
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-			.AutoWidth()
-			.MaxWidth(150)
-			.Padding(0)
-			.FillWidth(1.0f)
-			.VAlign(VAlign_Center)
-			.HAlign(HAlign_Left)
-			[
-
-				SNew(STextBlock)
-				.Text(FText::FromString("Add new biotope"))
-
-
-
-			]
-
-		+ SHorizontalBox::Slot()
-			//.AutoWidth()
-			//.MaxWidth(150)
-
-			[
-				SNew(SEditableTextBox)
-				.HintText(LOCTEXT("addBiotopeHint", "name"))
-				
-				.OnTextChanged_Lambda([&](auto newName){
-				
-			this->newBiomeName = newName;
-			})
-				
-			]
-		+SHorizontalBox::Slot()
-			.MaxWidth(50)
-			[
-				SNew(SButton)
-				.Text(LOCTEXT("AddBiotopeButton", "Add"))
-				.OnClicked_Raw(this, &FProceduralWorldModule::addNewBiotope)
-			[
-				SNew(SBox)
-				.WidthOverride(50)
-				.HeightOverride(25)
-				
-				[
-				SNew(SImage)
-				
-				.ColorAndOpacity(FSlateColor::UseForeground())
-				.Image(FAppStyle::Get().GetBrush("Icons.plus"))
-				]
-				]
-			]
-
-			]
 			+SVerticalBox::Slot()
 			.AutoHeight()
 			.MaxHeight(50)
 			[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
-			.AutoWidth()
-			.MaxWidth(150)
-			.Padding(0)
-			.FillWidth(1.0f)
-			.VAlign(VAlign_Center)
-			.HAlign(HAlign_Left)
-			[
+				.AutoWidth()
+				.MaxWidth(150)
+				.Padding(0)
+				.FillWidth(1.0f)
+				.VAlign(VAlign_Center)
+				.HAlign(HAlign_Left)
+				[
 
-				SNew(STextBlock)
-				.Text(FText::FromString("Amount of biomes"))
+					SNew(STextBlock)
+					.Text(FText::FromString("Amount of biomes"))
 
 
-
-			]
-
-		+ SHorizontalBox::Slot()
-			.AutoWidth()
-			.MaxWidth(150)
-			[
-				SNew(SNumericEntryBox<int32>)
-				.AllowSpin(true)
-			.MinValue(0)
-			.MaxValue(20)
-			.MaxSliderValue(20)
-			.MinDesiredValueWidth(2)
-			.Value_Lambda([this]() {return this->nmbrOfBiomes; })
-			.OnValueChanged_Lambda([&](auto newValue) {this->nmbrOfBiomes = newValue; })
-			]
 
 				]
+
+			+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.MaxWidth(150)
+				[
+					SNew(SNumericEntryBox<int32>)
+					.AllowSpin(true)
+				.MinValue(0)
+				.MaxValue(20)
+				.MaxSliderValue(20)
+				.MinDesiredValueWidth(2)
+				.Value_Lambda([this]() {return this->nmbrOfBiomes; })
+				.OnValueChanged_Lambda([&](auto newValue) {this->nmbrOfBiomes = newValue; })
+				]
+
+			]
 				
 			+SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNew(SSegmentedControl<int32>)
+					SAssignNew(biotopeGenerationMode,SSegmentedControl<int32>)
 					.OnValueChanged_Lambda([&](auto newValue){
 						
-				UE_LOG(LogTemp, Warning, TEXT("Changed value to: %d"), newValue);
+					UE_LOG(LogTemp, Warning, TEXT("Changed value to: %d"), newValue);
+					//change mode
+					biotopePlacementSelection = newValue;
+					
 
 
 						})
@@ -543,7 +501,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				+ SSegmentedControl<int32>::Slot(2)
 				.Icon(FAppStyle::Get().GetBrush("Icons.pyramid"))
-				.Text(LOCTEXT("ManVoronoi", "TODO"))
+				.Text(LOCTEXT("ManVoronoi", "Manual Voronoi"))
 
 				/*+ SSegmentedControl<int32>::Slot(3)
 				.Icon(FAppStyle::Get().GetBrush("Icons.sphere"))
@@ -554,46 +512,204 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.AutoHeight()
 				
 				[
-					SNew(SBox)
-					.HeightOverride(505)
-					.MaxAspectRatio(1)
-					.MinAspectRatio(1)
+					SNew(SHorizontalBox)
+					+SHorizontalBox::Slot()
 					
 					[
-						SAssignNew(previewWindow.previewContext, SBorder)
 
-						.DesiredSizeScale(1)
-				.ContentScale(1)
+						SNew(SBox)
+						.HeightOverride(505)
+						.MaxAspectRatio(1)
+						.MinAspectRatio(1)
+					
+						[
+							SAssignNew(previewWindow.previewContext, SBorder)
+							.DesiredSizeScale(1)
+							.ContentScale(1)
+							.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry, const FPointerEvent& MouseEvent) {
+							//Need to fix this, when the image is scaled the coordinates varry, possible solution: find image slate size, and clicked coordinates, calculate the % 
+							//and then use the selected size of the landscape/heightmap to get correct coordinates.
+							FVector2D absSize = inGeometry.GetAbsoluteSize();
+							//MouseEvent.
+							FVector2D heightmapPosition = (inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) / absSize) * SizeX;
+
+							heightmapPosition.X = FMath::Abs((heightmapPosition.X - SizeX));
+
+
+							//Check road mode or biotope mode
+
+							if (roadPlacementMode->IsChecked())
+							{
+								previewWindow.AddRoadPoint(heightmapPosition);
+							}
+							else {
+								switch (biotopePlacementSelection)
+								{
+								case 0:
+
+
+									break;
+								case 1:
+									previewWindow.MarkTile(BiomeSettingSelection, heightmapPosition);
+									previewWindow.CreateBiotopeTexture();
+									previewWindow.AssembleWidget();
+
+									break;
+								case 2:
+									previewWindow.MarkTileVoronoi(BiomeSettingSelection, heightmapPosition);
+									previewWindow.CreateBiotopeTexture();
+									previewWindow.AssembleWidget();
+									UE_LOG(LogTemp, Log, TEXT("Clicked using MarkTileVoronoi"));
+									UE_LOG(LogTemp, Log, TEXT("Nmbr of marked Voronoi tiles: %d"), previewWindow.markedTilesVoronoi.Num());
+									break;
+								default:
+									break;
+								}
+
+							}
+
+						
+							UE_LOG(LogTemp, Log, TEXT("Clicked Texture at tile index: %d"), previewWindow.FromCoordToTileIndex(heightmapPosition));
+							return FReply::Handled();
+
+						})
 				
-				.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry, const FPointerEvent& MouseEvent) {
-				//Need to fix this, when the image is scaled the coordinates varry, possible solution: find image slate size, and clicked coordinates, calculate the % 
-				//and then use the selected size of the landscape/heightmap to get correct coordinates.
-				FVector2D absSize = inGeometry.GetAbsoluteSize();
-				
-				
+						]
+					]
 
-				//MouseEvent.
-				FVector2D heightmapPosition = (inGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) / absSize) * SizeX;
+					+ SHorizontalBox::Slot() //Buttons for toggling 2d preview grid and biotope visualization
+					.AutoWidth()
+					[
+						SNew(SVerticalBox)	//Toggle grid 2D view
+						+SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(SBox)
+							.ToolTipText(FText::FromString("Toggle Grid"))
+							.MaxAspectRatio(1)
+							.MinAspectRatio(1)
+							.WidthOverride(35)
+							.HeightOverride(35)
+							[
+								SNew(SCheckBox)
+								.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+								.IsChecked(ECheckBoxState::Checked)
+								.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+										
+								previewWindow.displayGrid = (newState == ECheckBoxState::Checked) ? true : false;
+								previewWindow.AssembleWidget();
+									})
+								[
+									SNew(SImage)
+									//.ColorAndOpacity(FSlateColor::UseForeground())
+									.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+								]
 
-				heightmapPosition.X = FMath::Abs((heightmapPosition.X - SizeX));
-				previewWindow.MarkTile(BiomeSettingSelection,heightmapPosition);
-				
-				UE_LOG(LogTemp, Log, TEXT("Clicked Texture at tile index: %d"), previewWindow.FromCoordToTileIndex(heightmapPosition));
+							]
+							
+							
+						]
+						
+						+ SVerticalBox::Slot() //Toggle Biotopes 2D view
+						.AutoHeight()
+						[
+							SNew(SBox)
+							.ToolTipText(FText::FromString("Toggle Biotopes"))
+							.MaxAspectRatio(1)
+							.MinAspectRatio(1)
+							.WidthOverride(35)
+							.HeightOverride(35)
+							[
+								SNew(SCheckBox)
+								
+								.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+								.IsChecked(ECheckBoxState::Checked)
+								.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+
+								previewWindow.displayBiotopes = (newState == ECheckBoxState::Checked) ? true : false;
+								previewWindow.AssembleWidget();
+									})
+								[
+									SNew(SImage)
+									
+									.ColorAndOpacity(FSlateColor::FSlateColor())
+									.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+								]
+
+							]
 
 
-				return FReply::Handled();
+						]
 
-					})
-				
+						+ SVerticalBox::Slot() //Toggle roads 2D view
+							.AutoHeight()
+							[
+								SNew(SBox)
+								.WidthOverride(50)
+							.HeightOverride(50)
+							[
+								SNew(SCheckBox)
+								.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+							.IsChecked(ECheckBoxState::Checked)
+							.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+
+							previewWindow.displayRoads = (newState == ECheckBoxState::Checked) ? true : false;
+							previewWindow.AssembleWidget();
+								})
+							[
+								SNew(SImage)
+								.ColorAndOpacity(FSlateColor::FSlateColor())
+									.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+							]
+
+							]
+
+
+							]
+					]
+					
+				]
+
+
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SBorder)
+					[
+						SAssignNew(roadPlacementMode, SCheckBox)
+						.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+						.IsChecked(ECheckBoxState::Unchecked)
+						.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+						
+						if (newState == ECheckBoxState::Checked)
+						{
+							biotopeGenerationMode->SetEnabled(false);
+						}
+						else
+						{
+							biotopeGenerationMode->SetEnabled(true);
+						}
+						
+						UE_LOG(LogTemp, Log, TEXT("Toggled road placement mode"));
+
+						FReply::Handled();
+							})
+
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString("Toggle road mode"))
+						]
 					]
 					
 					
 
-					
 				]
 		
 			]
-	+ SHorizontalBox::Slot()
+			
+
+
+	+ SHorizontalBox::Slot() //Main horizontal slot nr3
 		[
 
 			SNew(SVerticalBox)
@@ -1556,6 +1672,7 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	previewWindow.CreateGridTexture();
 	previewWindow.CreateBiotopeTexture();
 	previewWindow.AssembleWidget();
+	
 	UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
 
 
@@ -1565,41 +1682,6 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 
 FReply FProceduralWorldModule::GenerateTerrain()
 {
-	////Call to CreateLandscape and generate its properties 
-	//ptrToTerrain = new CreateLandscape(SizeX, SizeY, QuadsPerComponent, ComponentsPerProxy, SectionsPerComponent, TileSize);
-
-	////DO THIS BETTER----------------
-	//int32 nmbrOfTilesInARow = (SizeX - 1) / (QuadsPerComponent * ComponentsPerProxy);
-
-	////tiles.Init(new UTile(QuadsPerComponent, ComponentsPerProxy), nmbrOfTilesInARow * nmbrOfTilesInARow);
-
-	//for (size_t i{ 0 }; i < nmbrOfTilesInARow * nmbrOfTilesInARow; i++)
-	//{
-
-	//	UTile* temp = new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize);
-	//	temp->index = i;
-	//	tiles.Add(temp);
-	//}
-
-	//for (size_t i = 0; i < tiles.Num(); i++)
-	//{
-
-	//	tiles[i]->updateAdjacentTiles(tiles, nmbrOfTilesInARow);
-
-	//}
-
-	//ptrToTerrain->AssignBiotopesToTiles(tiles, nmbrOfBiomes, BiotopeSettings);
-	////Generate Perlin Noise and assign it to all tiles
-	////myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
-
-	////Creates proxies used in world partioning
-	//ptrToTerrain->GenerateAndAssignHeightData(tiles, BiotopeSettings);
-
-	////Concatinate heightData from all tiles and spawn a landscape
-	//ptrToTerrain->concatHeightData(tiles);
-	////Interpolate using gaussian blur
-	//ptrToTerrain->interpBiomes(tiles, 3, 1.0, 30, 20);
-
 	//Check if we already have created data and just want to generate raods and spawn the landscape
 	if (ptrToTerrain == nullptr) 
 	{
@@ -1609,7 +1691,18 @@ FReply FProceduralWorldModule::GenerateTerrain()
 	FVector start{ 50,50,0 };
 	FVector end{ 399,477,0 };
 
-	ptrToTerrain->generateRoadSmarter(tiles, roads,start,end,250);
+	if (previewWindow.roadCoords.Num() >= 2)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Using manual start and end coords"));
+		start = previewWindow.roadCoords[0];
+		end = previewWindow.roadCoords[1];
+
+	}
+	
+
+	
+
+	ptrToTerrain->generateRoadSmarter(tiles, roads,start,end);
 	if (!roads.IsEmpty()) {
 		roads[0].calcLengthsSplines();
 		roads[0].vizualizeRoad(ptrToTerrain->LandscapeScale);
