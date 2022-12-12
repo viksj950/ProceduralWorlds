@@ -1688,21 +1688,24 @@ FReply FProceduralWorldModule::GenerateTerrain()
 		GenerateTerrainData();
 	}
 
-	FVector start{ 50,50,0 };
-	FVector end{ 399,477,0 };
+	//FVector start{ 50,50,0 };
+	//FVector end{ 399,477,0 };
+	FVector start;
+	FVector end;
 
 	if (previewWindow.roadCoords.Num() >= 2)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Using manual start and end coords"));
 		start = previewWindow.roadCoords[0];
 		end = previewWindow.roadCoords[1];
+		ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, 100);
 
 	}
 	
 
-	
+	//ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, 100);
 
-	ptrToTerrain->generateRoadSmarter(tiles, roads,start,end);
+	
 	if (!roads.IsEmpty()) {
 		roads[0].calcLengthsSplines();
 		roads[0].vizualizeRoad(ptrToTerrain->LandscapeScale);
@@ -1711,7 +1714,7 @@ FReply FProceduralWorldModule::GenerateTerrain()
 		}
 	}
 	else {
-		UE_LOG(LogTemp, Warning, TEXT("No posible path for road to geneata"));
+		UE_LOG(LogTemp, Warning, TEXT("No posible path for road to geneata OR no road was wanted"));
 
 	}
 
