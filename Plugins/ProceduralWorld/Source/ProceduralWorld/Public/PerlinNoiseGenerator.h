@@ -220,7 +220,7 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 			float amplitudeLoc = settings.Amplitude;
 			float frequencyLoc = settings.Frequency;  //For rass 0.005625 is kinda good, rockieer biome: 0.015625 
 			for (int k = 0; k < settings.OctaveCount; k++) {
-				sum += generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * settings.HeightScale;
+				sum += abs(generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * settings.HeightScale);
 				//sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625 * frequency) * Amplitude * heightScale;
 				//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
 
@@ -230,7 +230,7 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 			}
 			int32 diff = averageHeight - (sum + averageHeight);
 			if ((sum)+averageHeight < averageHeight) {
-				Data[column * DataSideSize + row] = ((sum + averageHeight) - diff*0.1);
+				Data[column * DataSideSize + row] = (sum + averageHeight);
 			}
 			else {
 				Data[column * DataSideSize + row] = (sum)+averageHeight;
