@@ -541,6 +541,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 							if (roadPlacementMode->IsChecked())
 							{
 								previewWindow.AddRoadPoint(heightmapPosition);
+								previewWindow.roadsDataList->RebuildList();
 							}
 							else {
 								switch (biotopePlacementSelection)
@@ -684,6 +685,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						if (newState == ECheckBoxState::Checked)
 						{
 							biotopeGenerationMode->SetEnabled(false);
+							previewWindow.AddRoad();
+							previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
 						}
 						else
 						{
@@ -703,6 +706,32 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					
 					
 
+				]
+			+ SVerticalBox::Slot()
+				[
+					SAssignNew(previewWindow.roadsDataList,SListView<TSharedPtr<RoadCoords>>)
+					.ListItemsSource(&previewWindow.roadsData)
+					.OnGenerateRow_Lambda([&](TSharedPtr<RoadCoords> item, const TSharedRef<STableViewBase>& OwnerTable) {
+
+					return SNew(STableRow<TSharedPtr<RoadCoords>>, OwnerTable)
+					[
+						SNew(SHorizontalBox)
+						+SHorizontalBox::Slot()
+						[
+							SNew(STextBlock).Text(FText::FromString("A Road"))
+						]
+						+ SHorizontalBox::Slot()
+						[
+							SNew(STextBlock).Text(FText::FromString("Number of Points:"))
+						]
+						+ SHorizontalBox::Slot()
+						[
+								SNew(STextBlock).Text(FText::AsNumber(item->Points.Num()))
+						]
+					];
+					
+					
+					})
 				]
 		
 			]
@@ -1672,6 +1701,8 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	previewWindow.CreateGridTexture();
 	previewWindow.CreateBiotopeTexture();
 	previewWindow.AssembleWidget();
+	previewWindow.AssembleRoadListWidget();
+	previewWindow.roadsDataList->RebuildList();
 	
 	UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
 
@@ -1693,11 +1724,11 @@ FReply FProceduralWorldModule::GenerateTerrain()
 	FVector start;
 	FVector end;
 
-	if (previewWindow.roadCoords.Num() >= 2)
+	if (!previewWindow.roadsData.IsEmpty() && previewWindow.roadsData[0]->Points.Num() >= 2)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Using manual start and end coords"));
-		start = previewWindow.roadCoords[0];
-		end = previewWindow.roadCoords[1];
+		start = previewWindow.roadsData[0]->Points[0];
+		end = previewWindow.roadsData[1]->Points[1];
 		ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, 100);
 
 	}

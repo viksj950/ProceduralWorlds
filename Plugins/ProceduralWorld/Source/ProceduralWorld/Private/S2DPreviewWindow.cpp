@@ -5,7 +5,7 @@
 
 S2DPreviewWindow::S2DPreviewWindow(const int32& inSizeX, const int32& inSizeY, const int32& inQuadsPerComponent,
 	const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize): SizeX{inSizeX}, SizeY{inSizeY}, QuadsPerComponent{inQuadsPerComponent},
-	ComponentsPerProxy{ inComponentsPerProxy }, SectionsPerComponent{ inSectionsPerComponent }, TileSize{ inTilesSize }, displayGrid{true}, displayBiotopes{true}
+	ComponentsPerProxy{ inComponentsPerProxy }, SectionsPerComponent{ inSectionsPerComponent }, TileSize{ inTilesSize }, displayGrid{true}, displayBiotopes{true}, roadIndex{0}
 {
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * ComponentsPerProxy));
 	//First two slots are always populated by default? heightmap and grid:
@@ -358,11 +358,47 @@ void S2DPreviewWindow::MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords
 		}
 	}
 }
+
+//TSharedRef<STableRow<TSharedPtr<RoadCoords>>> S2DPreviewWindow::OnGenerateWidgetForList(TSharedPtr<RoadCoords> inItem, const TSharedRef<STableViewBase>& OwnerTable)
+//{
+//	return SNew(STableRow<TSharedPtr<RoadCoords>>)[
+//		SNew(STextBlock).Text("A Road")];
+//}
+
+void S2DPreviewWindow::AddRoad()
+{
+	roadsData.Add(MakeShareable(new RoadCoords));
+	
+}
+
 void S2DPreviewWindow::AddRoadPoint(FVector2D inCoords)
 {
 
-	roadCoords.Add(FVector(inCoords.X, inCoords.Y, 0.0));
+	roadsData[roadIndex]->Points.Add(FVector(inCoords.X, inCoords.Y, 0.0));
 }
+
+void S2DPreviewWindow::AssembleRoadListWidget()
+{
+	/*roadsDataList = SNew(SListView<TSharedPtr<RoadCoords>>);
+
+	roadsDataList->SetListItemsSource(roadsData);
+	roadsDataList->GenerateWidgetForItem();*/
+
+		/*.ListItemsSource(&roadsData).OnGenerateRow_Lambda([this](TSharedPtr<RoadCoords>, const TSharedRef<STableViewBase>& OwnerTable) {
+			
+		return SNew(STableRow<TSharedPtr<RoadCoords>>, OwnerTable)
+			[
+				SNew(STextBlock).Text(FText::FromString("A Road"))
+			];
+			});*/
+	
+	
+	// .OnGenerateRow(this, &S2DPreviewWindow::OnGenerateWidgetForList);
+	/*roadsDataList->SetListItemsSource(roadsData);
+	roadsDataList->GenerateNewWidget();*/
+	//roadsDataList->GenerateWidgetForItem(TSharedRef<STableRow<TSharedPtr<RoadCoords>>> S2DPreviewWindow::OnGenerateWidgetForList)
+}
+
 int32 S2DPreviewWindow::FromCoordToTileIndex(FVector2D inCoords)
 {
 	int32 x_floor = floor(inCoords.X / TileSize);
