@@ -371,6 +371,51 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 
 		]
+		+ SVerticalBox::Slot()
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Left)
+			[
+
+				SNew(STextBlock)
+				.Text(FText::FromString("Turbulence"))
+
+
+
+			]
+
+		+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			[
+				SNew(SCheckBox)
+				.IsChecked_Lambda([&]() {
+				
+				return BiotopeSettings[BiomeSettingSelection]->Turbulence ? ECheckBoxState::Checked: ECheckBoxState::Unchecked;
+					})
+				.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
+				
+			if (inValue == ECheckBoxState::Checked)
+			{
+				BiotopeSettings[BiomeSettingSelection]->Turbulence = true;
+			}
+			else
+			{
+				BiotopeSettings[BiomeSettingSelection]->Turbulence = false;
+			}
+
+				})
+		
+			]
+
+
+			]
 
 		+ SVerticalBox::Slot()
 		[
