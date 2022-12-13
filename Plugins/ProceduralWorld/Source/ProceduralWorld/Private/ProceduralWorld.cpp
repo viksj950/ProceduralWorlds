@@ -166,7 +166,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					]
 				]
 
-				+ SVerticalBox::Slot()
+				/*+ SVerticalBox::Slot()
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
@@ -198,7 +198,32 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						.Value_Raw(this, &FProceduralWorldModule::GetHeightScale)
 						.OnValueChanged_Raw(this, &FProceduralWorldModule::SetHeightScale)
 					]
-				]
+				]*/
+				//TODO
+				//+SVerticalBox::Slot()
+				//[
+
+				//	SNew(SObjectPropertyEntryBox)
+				//	.AllowedClass(UMate)
+				//	.AllowClear(true)
+				//	.ObjectPath_Lambda([&]() {return this->IntermediateBiomeAssetSetting->ObjectPath; })
+				//	.DisplayUseSelected(true)
+				//	.DisplayThumbnail(true)
+				//	.ThumbnailPool(this->myAssetThumbnailPool)
+				//	.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+
+				//	this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
+				//	this->IntermediateBiomeAssetSetting->slateThumbnail = MakeShareable(new FAssetThumbnail(inData, 64, 64, myAssetThumbnailPool));
+				//	if (modifyAssetButton->IsEnabled()) {
+				//		assetSettingList->RebuildList();
+				//	}
+				//	//slateThumbnail = MakeShareable(new FAssetThumbnail(inData,64,64, myAssetThumbnailPool));
+
+				//		})
+
+
+				//]
+
 				+ SVerticalBox::Slot()
 				[
 					SNew(SHorizontalBox)
@@ -467,6 +492,15 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					{
 						ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
 						this->SetLandscapeSettings(InSelection);
+
+						//Reset preview window data of roads and biotopes TODO Make a function of this crap
+						previewWindow.markedTiles.Empty();
+						previewWindow.roadsData.Empty();
+						previewWindow.markedTilesVoronoi.Empty();
+						previewWindow.CreateGridTexture();
+						previewWindow.CreateBiotopeTexture();
+						previewWindow.CreateRoadMarkTexture();
+						previewWindow.AssembleWidget();
 					}
 				})
 				[
