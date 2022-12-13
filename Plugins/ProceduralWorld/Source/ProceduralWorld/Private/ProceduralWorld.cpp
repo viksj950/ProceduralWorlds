@@ -587,6 +587,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 							{
 								previewWindow.AddRoadPoint(heightmapPosition);
 								previewWindow.roadsDataList->RebuildList();
+								previewWindow.CreateRoadMarkTexture();
+								previewWindow.AssembleWidget();
 							}
 							else {
 								switch (biotopePlacementSelection)
@@ -691,27 +693,31 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 							.AutoHeight()
 							[
 								SNew(SBox)
-								.WidthOverride(50)
-							.HeightOverride(50)
-							[
-								SNew(SCheckBox)
-								.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
-							.IsChecked(ECheckBoxState::Checked)
-							.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+								.ToolTipText(FText::FromString("Toggle Roads"))
+								.MaxAspectRatio(1)
+								.MinAspectRatio(1)
+								.WidthOverride(35)
+								.HeightOverride(35)
+								[
+									SNew(SCheckBox)
+									.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+									.IsChecked(ECheckBoxState::Checked)
+									.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
 
-							previewWindow.displayRoads = (newState == ECheckBoxState::Checked) ? true : false;
-							previewWindow.AssembleWidget();
-								})
-							[
-								SNew(SImage)
-								.ColorAndOpacity(FSlateColor::FSlateColor())
-									.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+									previewWindow.displayRoads = (newState == ECheckBoxState::Checked) ? true : false;
+									previewWindow.AssembleWidget();
+									})
+									[
+										SNew(SImage)
+										.ColorAndOpacity(FSlateColor::FSlateColor())
+											.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+									]	
+
+								]
+
+
 							]
 
-							]
-
-
-							]
 					]
 					
 				]
@@ -1745,6 +1751,7 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);
 	previewWindow.CreateGridTexture();
 	previewWindow.CreateBiotopeTexture();
+	previewWindow.CreateRoadMarkTexture();
 	previewWindow.AssembleWidget();
 	previewWindow.AssembleRoadListWidget();
 	previewWindow.roadsDataList->RebuildList();

@@ -5,14 +5,17 @@
 
 S2DPreviewWindow::S2DPreviewWindow(const int32& inSizeX, const int32& inSizeY, const int32& inQuadsPerComponent,
 	const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize): SizeX{inSizeX}, SizeY{inSizeY}, QuadsPerComponent{inQuadsPerComponent},
-	ComponentsPerProxy{ inComponentsPerProxy }, SectionsPerComponent{ inSectionsPerComponent }, TileSize{ inTilesSize }, displayGrid{true}, displayBiotopes{true}, roadIndex{0}
+	ComponentsPerProxy{ inComponentsPerProxy }, SectionsPerComponent{ inSectionsPerComponent }, TileSize{ inTilesSize }, displayGrid{true}, displayBiotopes{true}, displayRoads{true}
+	, roadIndex{0}
 {
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * ComponentsPerProxy));
 	//First two slots are always populated by default? heightmap and grid:
 	textures.Add(nullptr);
 	textures.Add(nullptr);
 	textures.Add(nullptr);
+	textures.Add(nullptr);
 
+	brushes.Add(nullptr);
 	brushes.Add(nullptr);
 	brushes.Add(nullptr);
 	brushes.Add(nullptr);
@@ -252,7 +255,81 @@ void S2DPreviewWindow::CreateBiotopeTexture()
 
 void S2DPreviewWindow::CreateRoadMarkTexture() 
 {
-	
+
+	uint8* pixels = (uint8*)malloc(SizeX * SizeY * 4);
+
+	for (int y = 0; y < SizeY; y++)
+	{
+		for (int x = 0; x < SizeX; x++)
+		{
+
+			pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 0] = 0;
+			pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 1] = 0;
+			pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 2] = 0;
+			pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 3] = 0;
+
+		}
+	}
+
+	for (auto& i : roadsData)
+	{
+		for (auto& k : i->Points)
+		{
+		/*	k.X
+			k.Y*/
+			//int pixelIndex = FMath::RoundToInt(k.Y) * 4 * SizeX + (SizeX - FMath::RoundToInt(k.X) )* 4;
+			//pixels[pixelIndex + 0] = 255; //R
+			//pixels[pixelIndex + 3] = 255; //A
+
+			
+
+			for (int j = FMath::RoundToInt(k.Y) - 4; j < FMath::RoundToInt(k.Y) +4; j++)
+			{
+				for (int t = FMath::RoundToInt(k.X) -4; t < FMath::RoundToInt(k.X) +4; t++)
+				{
+					int pixelIndex = j * 4 * SizeX + (SizeX - t) * 4;
+					if (pixelIndex >= 0 && pixelIndex < SizeX*SizeY * 4)
+					{
+						pixels[pixelIndex + 0] = 255; //R
+						pixels[pixelIndex + 3] = 255; //A
+						UE_LOG(LogTemp, Warning, TEXT("Drew a road mark at index: %d"), pixelIndex);
+					}
+
+				}
+			}
+
+		}
+
+	}
+
+	UTexture2D* tempTexturePtr = UTexture2D::CreateTransient(SizeX, SizeY, PF_R8G8B8A8);
+
+	// Passing the pixels information to the texture
+	FTexture2DMipMap* Mip = &tempTexturePtr->GetPlatformData()->Mips[0];
+	Mip->SizeX = SizeX;
+	Mip->SizeY = SizeY;
+	Mip->BulkData.Lock(LOCK_READ_WRITE);
+	uint8* TextureData = (uint8*)Mip->BulkData.Realloc(SizeY * SizeX * sizeof(uint8) * 4);
+	FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * SizeY * SizeX * 4);
+	Mip->BulkData.Unlock();
+
+	// Updating Texture & mark it as unsaved
+	tempTexturePtr->AddToRoot();
+	tempTexturePtr->UpdateResource();
+	//Package->MarkPackageDirty();
+
+	free(pixels);
+	pixels = NULL;
+
+	//add texture to array of textures
+	if (textures.IsValidIndex(1))
+	{
+		textures[3] = tempTexturePtr;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Default pointer for RoadTexture in texture array is missing"));
+	}
 
 }
 
@@ -263,6 +340,7 @@ void S2DPreviewWindow::AssembleWidget()
 	brushes[1] = MakeShared<FSlateImageBrush>(textures[1], FVector2D(textures[1]->GetSizeX(), textures[1]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 	
 	brushes[2] = MakeShared<FSlateImageBrush>(textures[2], FVector2D(textures[2]->GetSizeX(), textures[2]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
+	brushes[3] = MakeShared<FSlateImageBrush>(textures[3], FVector2D(textures[3]->GetSizeX(), textures[3]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile);
 	//brushes.Add(MakeShared<FSlateImageBrush>(textures[1], FVector2D(textures[1]->GetSizeX(), textures[1]->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::NoTile));
 
 		
@@ -292,6 +370,10 @@ void S2DPreviewWindow::AssembleWidget()
 				continue;
 			}
 			if (i == 1 && !displayBiotopes) //Skip drawing biotopes
+			{
+				continue;
+			}
+			if (i == 3 && !displayRoads) //Skip drawing biotopes
 			{
 				continue;
 			}
