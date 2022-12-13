@@ -2038,6 +2038,7 @@ FReply FProceduralWorldModule::DeleteLandscape()
 	tiles.Empty();
 	landscapePtr->Destroy();
 	landscapePtr = nullptr;
+	ptrToTerrain = nullptr;
 	//delete landscapePtr;
 	//auto& it: roads[i].splinePath.splineActors
 	

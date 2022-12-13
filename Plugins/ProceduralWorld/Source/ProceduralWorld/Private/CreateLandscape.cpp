@@ -764,7 +764,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries)
 {
 	//FMath math;
-	uint16 tileIndex = 0;
+	uint16 tileIndex = GetTileIndex(start.X, start.Y);;
 	CRSpline spline;
 	float oldDist = 0;
 	float newDist = 0;
@@ -930,15 +930,16 @@ void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpl
 		yLocation.Y = Location.Y + roadWidth / 2;*/
 		v = (Location - prevLocation);
 
-		right_v = Location + FVector{ v.Y, -v.X, 0 };
-		left_v = Location + FVector{ -v.Y, v.X, 0 };
+		right_v = Location + (roadWidth / 2)*FVector{ v.Y, -v.X, 0 };
+		left_v = Location + (roadWidth / 2) * FVector{ -v.Y, v.X, 0 };
 	
 
 		if (FMath::RoundToInt(Location.X) >= 0 && FMath::RoundToInt(Location.Y) >= 0 && FMath::RoundToInt(prevLocation.X) >= 0 && FMath::RoundToInt(prevLocation.Y) >= 0) { //Avoids crashing
 			Location.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(Location.X), FMath::RoundToInt(Location.Y))];
 			prevLocation.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(prevLocation.X), FMath::RoundToInt(prevLocation.Y))];
 
-			if (FMath::RoundToInt(right_v.X) >= 0 && FMath::RoundToInt(left_v.Y) >= 0 && FMath::RoundToInt(right_v.X) < SizeX && FMath::RoundToInt(left_v.Y) < SizeX) { //Avoids crashing
+			if (FMath::RoundToInt(right_v.X) >= 0 && FMath::RoundToInt(right_v.Y) >= 0 && FMath::RoundToInt(left_v.X) >= 0 && FMath::RoundToInt(left_v.Y) >= 0 
+				&& FMath::RoundToInt(right_v.X) < SizeX && FMath::RoundToInt(right_v.Y) < SizeX && FMath::RoundToInt(left_v.X) < SizeX && FMath::RoundToInt(left_v.Y) < SizeX) { //Avoids crashing
 				right_v.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(right_v.X), FMath::RoundToInt(right_v.Y))];
 				left_v.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(left_v.X), FMath::RoundToInt(left_v.Y))];
 		/*		UE_LOG(LogTemp, Warning, TEXT("right_v  = %s"), *right_v.ToString());
