@@ -6,9 +6,14 @@
 #include "Brushes/SlateImageBrush.h"
 #include "Containers/Map.h"
 
-/**
- * 
- */
+//#include "Widgets/Views/SListView.h"
+//Struct for storing a roads coordinates
+struct RoadCoords
+{
+	//RoadCoords();
+	TArray<FVector> Points;
+};
+
 class PROCEDURALWORLD_API S2DPreviewWindow
 {
 public:
@@ -52,8 +57,7 @@ public:
 	//Marked Origins of biotopes
 	TMap<int32,int32> markedTilesVoronoi;
 
-	//Road Coordinates
-	TArray<FVector> roadCoords;
+	
 
 	void UpdateLandscapeSettings(const int32& inSizeX, const int32& inSizeY, const int32& inQuadsPerComponent, const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize);
 	void CreateHeightmapTexture(const TArray<uint16>& inData);
@@ -64,9 +68,20 @@ public:
 	void MarkTile(int32 selectedBiotope, FVector2D inCoords);
 	void MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords);
 
-	//Road functions
-	void AddRoadPoint(FVector2D inCoords);
+	//Road functionality---------------------------------------------------------
 
+	//Road Coordinates
+	//TArray<FVector> roadCoords;
+	TArray<TSharedPtr<RoadCoords>> roadsData;
+	uint32 roadIndex;
+
+	TSharedPtr<SListView< TSharedPtr<RoadCoords>>> roadsDataList;
+	//TSharedRef<STableRow<TSharedPtr<RoadCoords>>> OnGenerateWidgetForList(TSharedPtr<RoadCoords> inItem, const TSharedRef<STableViewBase>& OwnerTable);
+
+
+	void AddRoad();
+	void AddRoadPoint(FVector2D inCoords);
+	void AssembleRoadListWidget();
 	int32 FromCoordToTileIndex(FVector2D inCoords);
 	
 

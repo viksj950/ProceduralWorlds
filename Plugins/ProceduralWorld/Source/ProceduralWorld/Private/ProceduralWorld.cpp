@@ -371,6 +371,51 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 
 		]
+		+ SVerticalBox::Slot()
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Left)
+			[
+
+				SNew(STextBlock)
+				.Text(FText::FromString("Turbulence"))
+
+
+
+			]
+
+		+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			[
+				SNew(SCheckBox)
+				.IsChecked_Lambda([&]() {
+				
+				return BiotopeSettings[BiomeSettingSelection]->Turbulence ? ECheckBoxState::Checked: ECheckBoxState::Unchecked;
+					})
+				.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
+				
+			if (inValue == ECheckBoxState::Checked)
+			{
+				BiotopeSettings[BiomeSettingSelection]->Turbulence = true;
+			}
+			else
+			{
+				BiotopeSettings[BiomeSettingSelection]->Turbulence = false;
+			}
+
+				})
+		
+			]
+
+
+			]
 
 		+ SVerticalBox::Slot()
 		[
@@ -541,6 +586,9 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 							if (roadPlacementMode->IsChecked())
 							{
 								previewWindow.AddRoadPoint(heightmapPosition);
+								previewWindow.roadsDataList->RebuildList();
+								previewWindow.CreateRoadMarkTexture();
+								previewWindow.AssembleWidget();
 							}
 							else {
 								switch (biotopePlacementSelection)
@@ -645,27 +693,31 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 							.AutoHeight()
 							[
 								SNew(SBox)
-								.WidthOverride(50)
-							.HeightOverride(50)
-							[
-								SNew(SCheckBox)
-								.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
-							.IsChecked(ECheckBoxState::Checked)
-							.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+								.ToolTipText(FText::FromString("Toggle Roads"))
+								.MaxAspectRatio(1)
+								.MinAspectRatio(1)
+								.WidthOverride(35)
+								.HeightOverride(35)
+								[
+									SNew(SCheckBox)
+									.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+									.IsChecked(ECheckBoxState::Checked)
+									.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
 
-							previewWindow.displayRoads = (newState == ECheckBoxState::Checked) ? true : false;
-							previewWindow.AssembleWidget();
-								})
-							[
-								SNew(SImage)
-								.ColorAndOpacity(FSlateColor::FSlateColor())
-									.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+									previewWindow.displayRoads = (newState == ECheckBoxState::Checked) ? true : false;
+									previewWindow.AssembleWidget();
+									})
+									[
+										SNew(SImage)
+										.ColorAndOpacity(FSlateColor::FSlateColor())
+											.Image(FAppStyle::Get().GetBrush("Icons.pyramid")) //TODO create own icons
+									]	
+
+								]
+
+
 							]
 
-							]
-
-
-							]
 					]
 					
 				]
@@ -684,6 +736,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						if (newState == ECheckBoxState::Checked)
 						{
 							biotopeGenerationMode->SetEnabled(false);
+							previewWindow.AddRoad();
+							previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
 						}
 						else
 						{
@@ -703,6 +757,32 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					
 					
 
+				]
+			+ SVerticalBox::Slot()
+				[
+					SAssignNew(previewWindow.roadsDataList,SListView<TSharedPtr<RoadCoords>>)
+					.ListItemsSource(&previewWindow.roadsData)
+					.OnGenerateRow_Lambda([&](TSharedPtr<RoadCoords> item, const TSharedRef<STableViewBase>& OwnerTable) {
+
+					return SNew(STableRow<TSharedPtr<RoadCoords>>, OwnerTable)
+					[
+						SNew(SHorizontalBox)
+						+SHorizontalBox::Slot()
+						[
+							SNew(STextBlock).Text(FText::FromString("A Road"))
+						]
+						+ SHorizontalBox::Slot()
+						[
+							SNew(STextBlock).Text(FText::FromString("Number of Points:"))
+						]
+						+ SHorizontalBox::Slot()
+						[
+								SNew(STextBlock).Text(FText::AsNumber(item->Points.Num()))
+						]
+					];
+					
+					
+					})
 				]
 		
 			]
@@ -1671,7 +1751,10 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);
 	previewWindow.CreateGridTexture();
 	previewWindow.CreateBiotopeTexture();
+	previewWindow.CreateRoadMarkTexture();
 	previewWindow.AssembleWidget();
+	previewWindow.AssembleRoadListWidget();
+	previewWindow.roadsDataList->RebuildList();
 	
 	UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
 
@@ -1693,11 +1776,11 @@ FReply FProceduralWorldModule::GenerateTerrain()
 	FVector start;
 	FVector end;
 
-	if (previewWindow.roadCoords.Num() >= 2)
+	if (!previewWindow.roadsData.IsEmpty() && previewWindow.roadsData[0]->Points.Num() >= 2)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Using manual start and end coords"));
-		start = previewWindow.roadCoords[0];
-		end = previewWindow.roadCoords[1];
+		start = previewWindow.roadsData[0]->Points[0];
+		end = previewWindow.roadsData[1]->Points[1];
 		ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, 100);
 
 	}
