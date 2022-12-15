@@ -450,6 +450,7 @@ void S2DPreviewWindow::MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords
 void S2DPreviewWindow::AddRoad()
 {
 	roadsData.Add(MakeShareable(new RoadCoords));
+	roadsData.Last()->roadID = roadsData.Num() - 1;
 	
 }
 
@@ -457,6 +458,16 @@ void S2DPreviewWindow::AddRoadPoint(FVector2D inCoords)
 {
 
 	roadsData[roadIndex]->Points.Add(FVector(inCoords.X, inCoords.Y, 0.0));
+}
+
+void S2DPreviewWindow::UpdateRoadIDs()
+{
+	uint32 counter = 0;
+	for (auto& it : roadsData)
+	{
+		it->roadID = counter;
+		counter++;
+	}
 }
 
 void S2DPreviewWindow::AssembleRoadListWidget()

@@ -795,7 +795,16 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			+ SVerticalBox::Slot()
 				[
 					SAssignNew(previewWindow.roadsDataList,SListView<TSharedPtr<RoadCoords>>)
+					.SelectionMode(ESelectionMode::Single)
 					.ListItemsSource(&previewWindow.roadsData)
+					.OnSelectionChanged_Lambda([&](TSharedPtr<RoadCoords> item, ESelectInfo::Type) {
+						
+						if (item.IsValid())
+						{
+							UE_LOG(LogTemp, Log, TEXT("Selected a new Road"));
+						}
+
+					})
 					.OnGenerateRow_Lambda([&](TSharedPtr<RoadCoords> item, const TSharedRef<STableViewBase>& OwnerTable) {
 
 					return SNew(STableRow<TSharedPtr<RoadCoords>>, OwnerTable)
@@ -812,6 +821,49 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						+ SHorizontalBox::Slot()
 						[
 								SNew(STextBlock).Text(FText::AsNumber(item->Points.Num()))
+						]
+						+SHorizontalBox::Slot()
+						[
+							SNew(SBox)
+							.MaxAspectRatio(1)
+							.MinAspectRatio(1)
+							[
+								SNew(SButton)
+								.ContentScale(1)
+								.OnClicked_Lambda([&]() {
+								if (!roadPlacementMode->IsChecked())
+								{
+
+
+									for (auto& it : previewWindow.roadsDataList->GetSelectedItems())
+									{
+										for (int i{ 0 }; i < previewWindow.roadsData.Num(); i++)
+										{
+											if (it->roadID == previewWindow.roadsData[i]->roadID)
+											{
+												previewWindow.roadsData.RemoveAt(i);
+												previewWindow.roadsData.Shrink();
+											}
+
+										}
+
+									}
+									previewWindow.UpdateRoadIDs();
+									previewWindow.roadsDataList->RebuildList();
+									previewWindow.CreateRoadMarkTexture();
+									previewWindow.AssembleWidget();
+								}
+
+								return FReply::Handled();
+
+									})
+								[
+									SNew(SImage)
+									.ColorAndOpacity(FSlateColor::UseForeground())
+										.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+								]
+							]
+							
 						]
 					];
 					

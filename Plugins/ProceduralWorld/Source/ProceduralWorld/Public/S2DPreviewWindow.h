@@ -11,6 +11,7 @@
 struct RoadCoords
 {
 	//RoadCoords();
+	uint32 roadID;
 	TArray<FVector> Points;
 };
 
@@ -81,6 +82,7 @@ public:
 
 	void AddRoad();
 	void AddRoadPoint(FVector2D inCoords);
+	void UpdateRoadIDs();
 	void AssembleRoadListWidget();
 	int32 FromCoordToTileIndex(FVector2D inCoords);
 	
