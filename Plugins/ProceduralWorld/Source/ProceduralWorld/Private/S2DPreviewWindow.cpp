@@ -6,7 +6,7 @@
 S2DPreviewWindow::S2DPreviewWindow(const int32& inSizeX, const int32& inSizeY, const int32& inQuadsPerComponent,
 	const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize): SizeX{inSizeX}, SizeY{inSizeY}, QuadsPerComponent{inQuadsPerComponent},
 	ComponentsPerProxy{ inComponentsPerProxy }, SectionsPerComponent{ inSectionsPerComponent }, TileSize{ inTilesSize }, displayGrid{true}, displayBiotopes{true}, displayRoads{true}
-	, roadIndex{0}
+	, roadIndex{0}, roadColorAssigner{0}
 {
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * ComponentsPerProxy));
 	//First two slots are always populated by default? heightmap and grid:
@@ -270,7 +270,7 @@ void S2DPreviewWindow::CreateRoadMarkTexture()
 
 		}
 	}
-
+	
 	for (auto& i : roadsData)
 	{
 		for (auto& k : i->Points)
@@ -290,7 +290,10 @@ void S2DPreviewWindow::CreateRoadMarkTexture()
 					int pixelIndex = j * 4 * SizeX + (SizeX - t) * 4;
 					if (pixelIndex >= 0 && pixelIndex < SizeX*SizeY * 4)
 					{
-						pixels[pixelIndex + 0] = 255; //R
+						
+						pixels[pixelIndex + 0] = colors[i->roadID % colors.Num()].X; //R
+						pixels[pixelIndex + 1] = colors[i->roadID % colors.Num()].Y; //G
+						pixels[pixelIndex + 2] = colors[i->roadID % colors.Num()].Z; //B
 						pixels[pixelIndex + 3] = 255; //A
 						UE_LOG(LogTemp, Warning, TEXT("Drew a road mark at index: %d"), pixelIndex);
 					}
@@ -441,6 +444,60 @@ void S2DPreviewWindow::MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords
 	}
 }
 
+void S2DPreviewWindow::RandomizeVoronoi(int32 nmbrOfBiotopes, int32 nmbrOfBiomes)
+{
+	markedTilesVoronoi.Empty();
+	markedTiles.Empty();
+
+
+	float X;
+	float Y;
+	int32 biotope;
+	int32 tileIndex;
+	FMath mathInstance;
+	for (size_t i = 0; i < nmbrOfBiomes; i++)
+	{
+		biotope = mathInstance.RandRange(0, nmbrOfBiotopes - 1);	//random type of biotope (0-2)
+		tileIndex = mathInstance.RandRange(0, gridSizeOfProxies * gridSizeOfProxies - 1); //Random tile as origin (0-7)
+
+		markedTilesVoronoi.Add(tileIndex, biotope);
+		markedTiles.Add(tileIndex, biotope);
+
+		//convert tile index to X Y coordinates used for range computation
+		X = tileIndex % gridSizeOfProxies;
+		Y = FMath::Floor(tileIndex / gridSizeOfProxies);
+
+	}
+	
+	for (uint32 i = 0; i < gridSizeOfProxies * gridSizeOfProxies; i++)
+	{
+		//check so that the tile to be assigned is not marked as an origin of a biome
+		if (!markedTilesVoronoi.Contains(i))
+		{
+
+
+
+			FVector2f currTileCoords(i % gridSizeOfProxies, FMath::Floor(i / gridSizeOfProxies));
+			float distance = 200000; //Just a large number 
+			biotope = -1;
+
+			for (auto& it : markedTilesVoronoi)
+			{
+				float temp = FVector2f::Distance(currTileCoords, FVector2f(it.Key % gridSizeOfProxies, FMath::Floor(it.Key / gridSizeOfProxies)));
+				if (distance >= temp)
+				{
+					//markedTiles.Add(i,it.Value);
+					biotope = it.Value;
+					//it->biotope = b.biomeType;
+					distance = temp;
+				}
+
+			}
+			markedTiles.Add(i, biotope);
+		}
+	}
+}
+
 //TSharedRef<STableRow<TSharedPtr<RoadCoords>>> S2DPreviewWindow::OnGenerateWidgetForList(TSharedPtr<RoadCoords> inItem, const TSharedRef<STableViewBase>& OwnerTable)
 //{
 //	return SNew(STableRow<TSharedPtr<RoadCoords>>)[
@@ -451,6 +508,16 @@ void S2DPreviewWindow::AddRoad()
 {
 	roadsData.Add(MakeShareable(new RoadCoords));
 	roadsData.Last()->roadID = roadsData.Num() - 1;
+	roadsData.Last()->roadColor.R = colors[roadColorAssigner].X;
+	roadsData.Last()->roadColor.G = colors[roadColorAssigner].Y;
+	roadsData.Last()->roadColor.B = colors[roadColorAssigner].Z;
+	roadsData.Last()->roadColor.A = 255;
+	roadColorAssigner++;
+	if (roadColorAssigner >= colors.Num())
+	{
+		roadColorAssigner = 0;
+	}
+	
 	
 }
 

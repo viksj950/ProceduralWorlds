@@ -13,6 +13,7 @@ struct RoadCoords
 	//RoadCoords();
 	uint32 roadID;
 	TArray<FVector> Points;
+	FColor roadColor;
 };
 
 class PROCEDURALWORLD_API S2DPreviewWindow
@@ -68,6 +69,7 @@ public:
 	void AssembleWidget();
 	void MarkTile(int32 selectedBiotope, FVector2D inCoords);
 	void MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords);
+	void RandomizeVoronoi(int32 nmbrOfBiotopes, int32 nmbrOfBiomes);
 
 	//Road functionality---------------------------------------------------------
 
@@ -75,7 +77,7 @@ public:
 	//TArray<FVector> roadCoords;
 	TArray<TSharedPtr<RoadCoords>> roadsData;
 	uint32 roadIndex;
-
+	int32 roadColorAssigner;
 	TSharedPtr<SListView< TSharedPtr<RoadCoords>>> roadsDataList;
 	//TSharedRef<STableRow<TSharedPtr<RoadCoords>>> OnGenerateWidgetForList(TSharedPtr<RoadCoords> inItem, const TSharedRef<STableViewBase>& OwnerTable);
 
