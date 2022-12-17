@@ -292,7 +292,7 @@ void S2DPreviewWindow::CreateRoadMarkTexture()
 					{
 						pixels[pixelIndex + 0] = 255; //R
 						pixels[pixelIndex + 3] = 255; //A
-						UE_LOG(LogTemp, Warning, TEXT("Drew a road mark at index: %d"), pixelIndex);
+						//UE_LOG(LogTemp, Warning, TEXT("Drew a road mark at index: %d"), pixelIndex);
 					}
 
 				}
