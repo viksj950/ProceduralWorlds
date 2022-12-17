@@ -166,7 +166,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					]
 				]
 
-				+ SVerticalBox::Slot()
+				/*+ SVerticalBox::Slot()
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
@@ -198,7 +198,32 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						.Value_Raw(this, &FProceduralWorldModule::GetHeightScale)
 						.OnValueChanged_Raw(this, &FProceduralWorldModule::SetHeightScale)
 					]
-				]
+				]*/
+				//TODO
+				//+SVerticalBox::Slot()
+				//[
+
+				//	SNew(SObjectPropertyEntryBox)
+				//	.AllowedClass(UMate)
+				//	.AllowClear(true)
+				//	.ObjectPath_Lambda([&]() {return this->IntermediateBiomeAssetSetting->ObjectPath; })
+				//	.DisplayUseSelected(true)
+				//	.DisplayThumbnail(true)
+				//	.ThumbnailPool(this->myAssetThumbnailPool)
+				//	.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+
+				//	this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
+				//	this->IntermediateBiomeAssetSetting->slateThumbnail = MakeShareable(new FAssetThumbnail(inData, 64, 64, myAssetThumbnailPool));
+				//	if (modifyAssetButton->IsEnabled()) {
+				//		assetSettingList->RebuildList();
+				//	}
+				//	//slateThumbnail = MakeShareable(new FAssetThumbnail(inData,64,64, myAssetThumbnailPool));
+
+				//		})
+
+
+				//]
+
 				+ SVerticalBox::Slot()
 				[
 					SNew(SHorizontalBox)
@@ -467,6 +492,18 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					{
 						ComboBoxTitleBlock->SetText(FText::FromString(*InSelection->Description));
 						this->SetLandscapeSettings(InSelection);
+
+						//Reset preview window data of roads and biotopes TODO Make a function of this crap
+						roadPlacementMode->SetIsChecked(ECheckBoxState::Unchecked);
+						biotopeGenerationMode->SetEnabled(true);
+						previewWindow.markedTiles.Empty();
+						previewWindow.roadsData.Empty();
+						previewWindow.roadColorAssigner = 0;
+						previewWindow.markedTilesVoronoi.Empty();
+						previewWindow.CreateGridTexture();
+						previewWindow.CreateBiotopeTexture();
+						previewWindow.CreateRoadMarkTexture();
+						previewWindow.AssembleWidget();
 					}
 				})
 				[
@@ -506,21 +543,21 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 
-			+ SHorizontalBox::Slot()
+				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				.MaxWidth(150)
 				[
 					SNew(SNumericEntryBox<int32>)
 					.AllowSpin(true)
-				.MinValue(0)
-				.MaxValue(20)
-				.MaxSliderValue(20)
-				.MinDesiredValueWidth(2)
-				.Value_Lambda([this]() {return this->nmbrOfBiomes; })
-				.OnValueChanged_Lambda([&](auto newValue) {this->nmbrOfBiomes = newValue; })
+					.MinValue(0)
+					.MaxValue(20)
+					.MaxSliderValue(20)
+					.MinDesiredValueWidth(2)
+					.Value_Lambda([this]() {return this->nmbrOfBiomes; })
+					.OnValueChanged_Lambda([&](auto newValue) {this->nmbrOfBiomes = newValue; })
 				]
 
-			]
+				]
 				
 			+SVerticalBox::Slot()
 				.AutoHeight()
@@ -528,14 +565,36 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					SAssignNew(biotopeGenerationMode,SSegmentedControl<int32>)
 					.OnValueChanged_Lambda([&](auto newValue){
 						
-					UE_LOG(LogTemp, Warning, TEXT("Changed value to: %d"), newValue);
+					
 					//change mode
-					biotopePlacementSelection = newValue;
+
+					if (newValue == 0)
+					{
+						auto megh = FMessageDialog::Open(EAppMsgType::OkCancel, FText::FromString("Do you want to randomize biotopes? Your previous placements will be lost."));
+						if (megh == EAppReturnType::Ok)
+						{
+							biotopePlacementSelection = newValue;
+							previewWindow.RandomizeVoronoi(BiotopeSettings.Num(), nmbrOfBiomes);
+							previewWindow.CreateBiotopeTexture();
+							previewWindow.AssembleWidget();
+						}
+
+
+						biotopeGenerationMode->SetValue(biotopePlacementSelection);
+						
+					}
+					else
+					{
+						biotopePlacementSelection = newValue;
+					}
+
+
+					
 					
 
 
 						})
-					.Value(0)
+					.Value(biotopePlacementSelection)
 					+ SSegmentedControl<int32>::Slot(0)
 				.Icon(FAppStyle::Get().GetBrush("Icons.box-perspective"))
 				.Text(LOCTEXT("Voronoi", "Random Voroni"))
@@ -554,7 +613,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				]
 
 			+ SVerticalBox::Slot()
-				.AutoHeight()
+				//.AutoHeight()
+				.MaxHeight(505)
 				
 				[
 					SNew(SHorizontalBox)
@@ -563,12 +623,14 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					[
 
 						SNew(SBox)
-						.HeightOverride(505)
+						//.HeightOverride(505)
+						.WidthOverride(505)
 						.MaxAspectRatio(1)
 						.MinAspectRatio(1)
 					
 						[
 							SAssignNew(previewWindow.previewContext, SBorder)
+						
 							.DesiredSizeScale(1)
 							.ContentScale(1)
 							.OnMouseButtonUp_Lambda([&](const FGeometry& inGeometry, const FPointerEvent& MouseEvent) {
@@ -727,8 +789,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.AutoHeight()
 				[
 					SNew(SBorder)
+					
 					[
 						SAssignNew(roadPlacementMode, SCheckBox)
+						
 						.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
 						.IsChecked(ECheckBoxState::Unchecked)
 						.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
@@ -759,9 +823,19 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 				]
 			+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
 					SAssignNew(previewWindow.roadsDataList,SListView<TSharedPtr<RoadCoords>>)
+					.SelectionMode(ESelectionMode::Single)
 					.ListItemsSource(&previewWindow.roadsData)
+					.OnSelectionChanged_Lambda([&](TSharedPtr<RoadCoords> item, ESelectInfo::Type) {
+						
+						if (item.IsValid())
+						{
+							UE_LOG(LogTemp, Log, TEXT("Selected a new Road"));
+						}
+
+					})
 					.OnGenerateRow_Lambda([&](TSharedPtr<RoadCoords> item, const TSharedRef<STableViewBase>& OwnerTable) {
 
 					return SNew(STableRow<TSharedPtr<RoadCoords>>, OwnerTable)
@@ -770,6 +844,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						+SHorizontalBox::Slot()
 						[
 							SNew(STextBlock).Text(FText::FromString("A Road"))
+							.ColorAndOpacity(item->roadColor)
 						]
 						+ SHorizontalBox::Slot()
 						[
@@ -778,6 +853,56 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						+ SHorizontalBox::Slot()
 						[
 								SNew(STextBlock).Text(FText::AsNumber(item->Points.Num()))
+						]
+						+SHorizontalBox::Slot()
+						[
+							SNew(SBox)
+							.MaxAspectRatio(1)
+							.MinAspectRatio(1)
+							[
+								SNew(SButton)
+								.ContentScale(1)
+								.OnClicked_Lambda([&]() {
+								if (!roadPlacementMode->IsChecked())
+								{
+
+
+									for (auto& it : previewWindow.roadsDataList->GetSelectedItems())
+									{
+										for (int i{ 0 }; i < previewWindow.roadsData.Num(); i++)
+										{
+											if (it->roadID == previewWindow.roadsData[i]->roadID)
+											{
+												previewWindow.roadsData.RemoveAt(i);
+												previewWindow.roadsData.Shrink();
+											}
+
+										}
+
+									}
+									previewWindow.UpdateRoadIDs();
+									previewWindow.roadsDataList->RebuildList();
+									previewWindow.CreateRoadMarkTexture();
+									previewWindow.AssembleWidget();
+								}
+
+								return FReply::Handled();
+
+									})
+								[
+									SNew(SBox)
+									.MaxAspectRatio(1)
+									.MinAspectRatio(1)
+									[
+										SNew(SImage)
+										.ColorAndOpacity(FSlateColor::UseForeground())
+										.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+
+									]
+									
+								]
+							]
+							
 						]
 					];
 					
@@ -1920,111 +2045,88 @@ FReply FProceduralWorldModule::ListTiles()
 
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (ptrToTerrain != nullptr && !ptrToTerrain->rawConcatData.IsEmpty())
+	if (!ptrToTerrain->rawConcatData.IsEmpty())
 	{
 		
-		//int width = SizeX;
-		//int height = SizeY;
-		//uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+		int width = SizeX;
+		int height = SizeY;
+		uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
 
-		//// filling the pixels with dummy data (4 boxes: red, green, blue and white)
-		//
-		//for (int y = 0; y < height; y++)
-		//{
-		//	for (int x = 0; x < width; x++)
-		//	{
-		//				
-		//		/*ptrToTerrain->concatedHeightData;*/
-		//				//pixels[y * 4 * width + x * 4 + 0] = 255; // R
-		//				//pixels[y * 4 * width + x * 4 + 1] = 0;   // G
-		//				//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
-		//				//pixels[y * 4 * width + x * 4 + 3] = 255; // A
-		//		
-		//		if (x % (TileSize -1) == 0 || y % (TileSize - 1) == 0 || x % (TileSize -1) == 1 || y % (TileSize - 1) == (TileSize-2))
-		//		{
-		//			if (x > (SizeX / 2)) {
+		// filling the pixels with dummy data (4 boxes: red, green, blue and white)
+		
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+						
+				/*ptrToTerrain->concatedHeightData;*/
+						//pixels[y * 4 * width + x * 4 + 0] = 255; // R
+						//pixels[y * 4 * width + x * 4 + 1] = 0;   // G
+						//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
+						//pixels[y * 4 * width + x * 4 + 3] = 255; // A
+				
+				
+					pixels[x * 4 * width + (height - y - 1) * 4 + 0] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255); // R
+					pixels[x * 4 * width + (height - y - 1) * 4 + 1] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);  // G
+					pixels[x * 4 * width + (height - y - 1) * 4 + 2] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);   // B
+					pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255; // A
 
-		//				pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 0;
-		//				pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
-		//				pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 255;
-		//				pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
-
-		//			}
-		//			else {
-
-		//				pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 255;
-		//				pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;
-		//				pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 0;
-		//				pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255;
-
-		//			}
-
-		//			
+				
+					
 
 
-		//		}
-		//		else
-		//		{
-		//			pixels[x * 4 * width + (height - y - 1) * 4 + 0] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255); // R
-		//			pixels[x * 4 * width + (height - y - 1) * 4 + 1] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);  // G
-		//			pixels[x * 4 * width + (height - y - 1) * 4 + 2] = (uint8)(ptrToTerrain->rawConcatData[y * width + x] / 255);   // B
-		//			pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255; // A
+						
 
-		//		}
-		//			
+						
+					
+				
+			}
+		}
 
+		// Texture Information
+		FString FileName = FString("MyTexture");
+		FString pathPackage = TEXT("/Game/Content/");
+		pathPackage += "test_texture";
 
-		//				
+		
 
-		//				
-		//			
-		//		
-		//	}
-		//}
+		UPackage* Package = CreatePackage(nullptr, *pathPackage);
+		Package->FullyLoad();
+		// Create the Texture
+		FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
+		//UTexture2D *CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
+		UTexture2D* CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
 
-		//// Texture Information
-		//FString FileName = FString("MyTexture");
-		//FString pathPackage = TEXT("/Game/Content/");
-		//pathPackage += "test_texture";
-
-		//
-
-		////UPackage* Package = CreatePackage(nullptr, *pathPackage);
-
-		////// Create the Texture
-		////FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
-		////CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
-
-		////// Texture Settings
-		////CustomTexture->PlatformData = new FTexturePlatformData();
-		////CustomTexture->PlatformData->SizeX = width;
-		////CustomTexture->PlatformData->SizeY = height;
-		////CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
-		////TEST AT CREATING A UTEXTURE2D withot saving to "drawer"-------------------------------
+		//// Texture Settings
+		CustomTexture->PlatformData = new FTexturePlatformData();
+		CustomTexture->PlatformData->SizeX = width;
+		CustomTexture->PlatformData->SizeY = height;
+		CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
+		//TEST AT CREATING A UTEXTURE2D withot saving to "drawer"-------------------------------
 		//CustomTexture = UTexture2D::CreateTransient(width, height, PF_R8G8B8A8);
 		////CustomTexture->Compres
 		////CustomTexture
 		////-------------------------------------------------------------------------------
 
-		//// Passing the pixels information to the texture
+		// Passing the pixels information to the texture
 		//FTexture2DMipMap* Mip = &CustomTexture->GetPlatformData()->Mips[0];
-		////FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
-		//Mip->SizeX = width;
-		//Mip->SizeY = height;
-		//Mip->BulkData.Lock(LOCK_READ_WRITE);
-		//uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
-		//FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
-		//Mip->BulkData.Unlock();
-
-		//// Updating Texture & mark it as unsaved
-		//CustomTexture->AddToRoot();
-		//CustomTexture->UpdateResource();
-		////Package->MarkPackageDirty();
+		FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
+		Mip->SizeX = width;
+		Mip->SizeY = height;
+		Mip->BulkData.Lock(LOCK_READ_WRITE);
+		uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
+		FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+		Mip->BulkData.Unlock();
+		//CustomTexture->Source.Init(width, height, 1, 1, ETextureSourceFormat::TSF_RGBA16, pixels);
+		// Updating Texture & mark it as unsaved
+		CustomTexture->AddToRoot();
+		CustomTexture->UpdateResource();
+		Package->MarkPackageDirty();
 
 		//UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), *FileName);
 
-		//free(pixels);
-		//pixels = NULL;
+		free(pixels);
+		pixels = NULL;
 
 		//UE_LOG(LogTemp, Log, TEXT("Texture FetFName: %s"), *CustomTexture->GetFName().ToString());
 		//ItemBrush = new FSlateDynamicImageBrush(CustomTexture, FVector2D(CustomTexture->GetSizeX(), CustomTexture->GetSizeY()), FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), ESlateBrushTileType::Both);
@@ -2171,6 +2273,7 @@ FReply FProceduralWorldModule::DeleteTerrain()
 
 	}
 		roads.Empty();
+		
 		tiles.Empty();
 		landscapePtr->Destroy();
 		landscapePtr = nullptr;

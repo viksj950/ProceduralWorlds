@@ -327,7 +327,7 @@ public:
 	//Some default values
 	S2DPreviewWindow previewWindow{ 505,505,63,1,1,64 };
 
-	uint32 biotopePlacementSelection{ 0 };
+	uint32 biotopePlacementSelection{ 1 };
 
 	//ROAD UI------------------------------------------------------------------------------------------------------
 
