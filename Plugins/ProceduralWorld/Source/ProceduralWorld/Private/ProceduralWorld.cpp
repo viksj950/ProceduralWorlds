@@ -108,11 +108,26 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						})
 						.OnSelectionChanged_Lambda([this](TSharedPtr<BiotopePerlinNoiseSetting> InSelection, ESelectInfo::Type InSelectInfo)
 						{
-							if (InSelection.IsValid() && ComboBoxTitleBlockNoise.IsValid())
-							{
-								ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
-								this->BiomeSettingSelection = InSelection->BiotopeIndex;
-							}
+								if (InSelection.IsValid() && ComboBoxTitleBlockNoise.IsValid())
+								{
+									ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
+
+									for (size_t i = 0; i < BiotopeSettings.Num(); i++)
+									{
+
+										if (InSelection->BiotopeIndex == BiotopeSettings[i]->BiotopeIndex)
+										{
+											this->BiomeSettingSelection = i;
+										}
+									}
+									
+								}
+								
+								
+									
+
+								
+							
 
 						})
 							[
@@ -206,7 +221,17 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					SNew(SObjectPropertyEntryBox)
 					.AllowedClass(UMaterial::StaticClass())
 					.AllowClear(true)
-					.ObjectPath_Lambda([&]() {return BiotopeSettings[BiomeSettingSelection]->MaterialPath; })
+					.ObjectPath_Lambda([&]() {
+					if (BiomeSettingSelection < BiotopeSettings.Num())
+					{
+						return BiotopeSettings[BiomeSettingSelection]->MaterialPath;
+					}
+					else
+					{
+						return FString("");
+					}
+					
+						})
 					.DisplayUseSelected(true)
 					.DisplayThumbnail(true)
 					.ThumbnailPool(this->myAssetThumbnailPool)
@@ -651,6 +676,13 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 								previewWindow.AssembleWidget();
 							}
 							else {
+								int32 biotope = -1;
+								if (!BiotopeSettings.IsEmpty())
+								{
+									biotope = BiotopeSettings[BiomeSettingSelection]->BiotopeIndex;
+								}
+
+
 								switch (biotopePlacementSelection)
 								{
 								case 0:
@@ -658,13 +690,13 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 									break;
 								case 1:
-									previewWindow.MarkTile(BiomeSettingSelection, heightmapPosition);
+									previewWindow.MarkTile(biotope, heightmapPosition);
 									previewWindow.CreateBiotopeTexture();
 									previewWindow.AssembleWidget();
 
 									break;
 								case 2:
-									previewWindow.MarkTileVoronoi(BiomeSettingSelection, heightmapPosition);
+									previewWindow.MarkTileVoronoi(biotope, heightmapPosition);
 									previewWindow.CreateBiotopeTexture();
 									previewWindow.AssembleWidget();
 									UE_LOG(LogTemp, Log, TEXT("Clicked using MarkTileVoronoi"));

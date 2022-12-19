@@ -265,6 +265,26 @@ public:
 		UE_LOG(LogTemp, Warning, TEXT("Deleting Biotope %s"), *BiotopeSettings[BiomeSettingSelection]->Biotope);
 		FString biotopeToDelete = BiotopeSettings[BiomeSettingSelection]->Biotope;
 		
+
+		//2D 
+		for (auto it = previewWindow.markedTiles.CreateConstIterator();it; ++it)
+		{
+			if (it.Value() == BiotopeSettings[BiomeSettingSelection]->BiotopeIndex)
+			{
+				previewWindow.markedTiles.Remove(it.Key());
+			}
+
+		}
+		for (auto it = previewWindow.markedTilesVoronoi.CreateConstIterator();it;++it)
+		{
+			if (it.Value() == BiotopeSettings[BiomeSettingSelection]->BiotopeIndex)
+			{
+				previewWindow.markedTilesVoronoi.Remove(it.Key());
+			}
+
+		}
+
+
 		//Remove noise settings for the biotope and change the selection aswell
 		BiotopeSettings.RemoveAt(BiomeSettingSelection);
 		BiomeSettingSelection = 0;
@@ -287,6 +307,13 @@ public:
 
 		BiomeAssetSettingSelection = 0;
 		assetSettingList->RebuildList();
+
+
+
+
+		
+		
+
 		return FReply::Handled();
 	}
 
