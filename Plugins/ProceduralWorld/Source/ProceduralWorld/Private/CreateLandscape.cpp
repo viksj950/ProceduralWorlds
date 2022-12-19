@@ -883,6 +883,53 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	return sucess;
 }
 
+bool CreateLandscape::generateRoadPlot(TArray<Road>& inRoads, TArray<FVector> points)
+{
+	bool success = true;
+	bool firstPoint = true;
+	FMath math;
+	int16 counter = 0;
+	TArray<ControlPoint> roadCPs;
+	CRSpline spliner;
+	Road road;
+
+	if (points.Num() < 2) {
+		success = false;
+		UE_LOG(LogTemp, Warning, TEXT("Manual input points was either empty or just set to 1 [STOP CALLING THIS FUNCTION IN THIS CASE]"));
+	}
+	else {
+		while (counter < points.Num()) {
+			if (firstPoint) { //first tangent
+
+				roadCPs.Add({ (float)math.RandRange(points[counter].X,points[counter].X + TileSize - 1),
+					(float)math.RandRange(points[counter].Y,points[counter].Y + TileSize - 1),(float)45000 }); //A random start tangent based on input point
+
+				spliner.addControlPoint(roadCPs.Last()); //add first tangent to the spline
+
+				firstPoint = false; //Now first tangent is set
+			}
+			else {
+				roadCPs.Add({ (float)points[counter].X, (float) points[counter].Y, 45000});
+
+				spliner.addControlPoint(roadCPs.Last()); //Add the first "real" point
+
+				counter++;
+			}
+
+			
+		}
+		roadCPs.Add({ (float)math.RandRange(points[counter - 1].X,points[counter - 1].X + TileSize - 1),
+					(float)math.RandRange(points[counter - 1].Y,points[counter - 1].Y + TileSize - 1),(float)45000 }); //A random end tangent based on last input point
+
+		spliner.addControlPoint(roadCPs.Last()); //add last tangent to the spline
+
+		road = spliner;
+		inRoads.Add(road); 
+	}
+
+	return success;
+}
+
 float CreateLandscape::calcDist(const FVector& p1, const FVector& p2)
 {
 	int dx = abs(p2.X - p1.X);

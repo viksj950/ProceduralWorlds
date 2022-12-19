@@ -1898,15 +1898,15 @@ FReply FProceduralWorldModule::GenerateTerrain()
 
 	FVector start;
 	FVector end;
-
-	if (!previewWindow.roadsData.IsEmpty() && previewWindow.roadsData[0]->Points.Num() >= 2)
+	int16 adjTries = 10;
+	//Auto generation of road based on start and end point
+	if (!previewWindow.roadsData.IsEmpty() && previewWindow.roadsData[0]->Points.Num() == 2)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Using manual start and end coords"));
+		UE_LOG(LogTemp, Warning, TEXT("[AUTO ROAD GENERATION]"));
 		start = previewWindow.roadsData[0]->Points[0];
 		end = previewWindow.roadsData[0]->Points[1];
 		int16 hardCap = 20;
 		int16 counter = 0;
-		int16 adjTries = 10;
 		bool succeded = ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, adjTries);
 		while(!succeded && counter < hardCap){
 			counter++;
@@ -1917,6 +1917,14 @@ FReply FProceduralWorldModule::GenerateTerrain()
 			UE_LOG(LogTemp, Warning, TEXT("[Road generation was succesufull]"));
 		}
 		
+
+	}
+	//Manual plotting of road
+	
+	if (!previewWindow.roadsData.IsEmpty() && previewWindow.roadsData[0]->Points.Num() > 2)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[MANUAL RODE GENERATION]"));
+		ptrToTerrain->generateRoadPlot(roads, previewWindow.roadsData[0]->Points);
 
 	}
 	

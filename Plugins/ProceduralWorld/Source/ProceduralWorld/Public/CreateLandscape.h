@@ -70,10 +70,12 @@ public:
 
 	//Function for deforming the world height data based on road placement (brute force)
 	void roadAnamarphosis(const TArray<Road>& roads,float sigma = 0.3f, int kernelSize = 9, int interpolationPadding = 0);
-	//sugma func
+	//sugma func (deprecated)
 	void generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads);
 	//With start and end point
 	bool generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries);
+	//Manual plotting of points
+	bool generateRoadPlot(TArray<Road>& inRoads, TArray<FVector> points);
 
 	float calcDist(const FVector& p1, const FVector& p2);
 
