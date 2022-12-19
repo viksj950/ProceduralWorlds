@@ -518,6 +518,7 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, float const si
 		{
 			for(auto& s: r.splinePaths )
 			{
+				
 				for (float t = 0; t < s.TotalLength; t++) {
 					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
 					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
@@ -760,20 +761,22 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 
 }
-
-void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries)
+//fix consts
+bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries)
 {
-	//FMath math;
-	uint16 tileIndex = 0;
+	FMath math;
+	uint16 tileIndex = GetTileIndex(start.X, start.Y);
+	uint16 prevTileIndex;
+	uint16 endTile = GetTileIndex(end.X, end.Y);
 	CRSpline spline;
 	float oldDist = 0;
 	float newDist = 0;
 	float X = start.X;
 	float Y = start.Y;
-	int endTile = GetTileIndex(end.X, end.Y);
+	bool sucess = false;
 
-	//tangent
-	spline.addControlPoint({X-(X/2),Y-(Y/2),(float)45000});
+	//tangent (Needs to be improved)
+	spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
 	//first control point
 	spline.addControlPoint({ X,Y,(float)45000 });
 	ControlPoint startCP = spline.points.Last();
@@ -784,17 +787,18 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	int maxRoadTiles{ 25 };
 	int Tries{ maxTries };
 	int32 adjIndex = 0;
-	//int32 tileSize = inTiles[tileIndex]->tileSize;
-	int32 slopeThreshold = 350;
+	int32 slopeThreshold = 800;
 	bool regardDist = true;
+;
 	uint16 oldTileIndex = 0;
 	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same tile again
 	TMap<float, ControlPoint> candidates; //used for choosing which control point makes most sense to extend road to
 
 	while (maxRoadTiles > 0 && Tries > 0 && !(calcDist(EndCP.pos, end) < TileSize/2)) {
 		Tries--;
+		bool goBack = true;
 
-		while(adjIndex < 8) { //Fix 797 crashes sometimes
+		while(adjIndex < 8) { 
 			if (inTiles[tileIndex]->adjacentTiles[adjIndex] != nullptr)
 			{
 				if (!(visitedTiles.Contains(inTiles[tileIndex]->adjacentTiles[adjIndex]->index))) {
@@ -822,10 +826,6 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			}
 			//UE_LOG(LogTemp, Warning, TEXT("Choose candidate nr : %d"), actualBest);
 			spline.addControlPoint({ (float)bestCandidate.pos.X, (float)bestCandidate.pos.Y,(float)45000 }); //add that shit
-			//spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)45000 }); //some random taangent
-
-			//Iterate the new curve segment
-			//spline.calcLengths();
 
 			//if (checkBounds(spline)) {
 			//	UE_LOG(LogTemp, Warning, TEXT("[BIG ISSUE]The new point choosen does create a spline out of bounds!!"));
@@ -837,14 +837,18 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			maxRoadTiles--;
 			Tries = maxTries;
 			candidates.Empty();
+			prevTileIndex = tileIndex;
 			tileIndex = GetTileIndex(bestCandidate.pos.X, bestCandidate.pos.Y);
 			visitedTiles.Add(tileIndex);
 			adjIndex = 0;
 			regardDist = true;
 
 			if (tileIndex == endTile) {
-				UE_LOG(LogTemp, Warning, TEXT("Road succesfully reached end point!"));
-				spline.addControlPoint({ (float)bestCandidate.pos.X + 50, (float)bestCandidate.pos.Y + 50,(float)45000 }); //add tangent to end point
+				//UE_LOG(LogTemp, Warning, TEXT("Road succesfully reached end point!"));
+				spline.points.RemoveAt(spline.points.Num() - 1); //remove best candidate
+				spline.addControlPoint({ (float)end.X, (float)end.Y,(float)45000 });
+				spline.addControlPoint({ (float)end.X + 50, (float)end.Y + 50,(float)40000 }); //add tangent to end point
+				sucess = true;
 				break;
 			}
 			
@@ -854,30 +858,29 @@ void CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			regardDist = false;
 			adjIndex = 0;
 		}
+		else if (candidates.IsEmpty() && Tries == 0 && goBack && visitedTiles.Num() > 1 && spline.points.Num() > 3)  {
+			UE_LOG(LogTemp, Warning, TEXT("No path can be found from here, trying to go back"));
+			spline.points.RemoveAt(spline.points.Num() - 1); //remove last point
+			tileIndex = prevTileIndex;
+			prevTileIndex = GetTileIndex(spline.points[spline.points.Num() - 2].pos.X, spline.points[spline.points.Num() - 2].pos.Y);
+			adjIndex = 0;
+			Tries = Tries + 5;
+			regardDist = true;
+			goBack = false;
+		}
 		else {
 			adjIndex = 0;
 		}
 
 	}
 
-	//int endTile = GetTileIndex(end.X, end.Y);
-	//int currentTile = GetTileIndex(EndCP.pos.X, EndCP.pos.Y);
-
-	////temp solution to always end in end point
-	//if (currentTile == endTile) {
-	///*	spline.addControlPoint({ (float)end.X,(float)end.Y,(float)45000 });
-	//	spline.addControlPoint({ (float)end.X - 50, (float)end.Y + 50,(float)45000 });
-	//	spline.calcLengths();*/
-	//	UE_LOG(LogTemp, Warning, TEXT("Road succesfully reached end point!"));
-	//}
-	/*else {
-		UE_LOG(LogTemp, Warning, TEXT("Road cannot reach end point!"));
-	}*/
-
 	//Add the road spline as an actual road entry in road array
-	if (spline.points.Num() >= 4) {
+	//if (spline.points.Num() >= 4) {
+	if (sucess) {
 		inRoads.Add(spline);
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Bool value is: %s"), sucess ? TEXT("true") : TEXT("false"));
+	return sucess;
 }
 
 float CreateLandscape::calcDist(const FVector& p1, const FVector& p2)
@@ -899,6 +902,8 @@ void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpl
 {
 	FMath math;
 
+	ControlPoint previousLastPoint = spline.points.Last();
+
 	//Random cp
 	spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
 
@@ -906,11 +911,17 @@ void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpl
 		oldDist = calcDist(spline.points[spline.points.Num() - 2].pos, end);
 	}
 
+	FVector u = spline.points.Last().pos - previousLastPoint.pos;
+	u.Normalize();
+	u = u * 4;
+
 	EndCP = spline.points.Last();
 	newDist = calcDist(EndCP.pos, end);
 
-	//Random Tangent
-	spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1), (float)45000 });
+	//Tangent with direction of previous spline segemtn, 2 units infront 
+	spline.addControlPoint({(float) (spline.points.Last().pos.X + u.X) , (float) (spline.points.Last().pos.Y + u.Y), (float)45000 });
+	//Rnadom as fuck
+	//spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
 	spline.calcLengths();
 
 	float steplength = spline.TotalLength / 150.0f;
@@ -930,42 +941,49 @@ void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpl
 		yLocation.Y = Location.Y + roadWidth / 2;*/
 		v = (Location - prevLocation);
 
-		right_v = Location + FVector{ v.Y, -v.X, 0 };
-		left_v = Location + FVector{ -v.Y, v.X, 0 };
-	
+		FVector right_normalized = { v.Y, -v.X, 0 };
+		FVector left_normalized = { -v.Y, v.X, 0 };
+
+		right_normalized.Normalize();
+		left_normalized.Normalize();
+
+		right_v = Location + (roadWidth) *  right_normalized;
+		left_v = Location + (roadWidth) * left_normalized;
 
 		if (FMath::RoundToInt(Location.X) >= 0 && FMath::RoundToInt(Location.Y) >= 0 && FMath::RoundToInt(prevLocation.X) >= 0 && FMath::RoundToInt(prevLocation.Y) >= 0) { //Avoids crashing
-			Location.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(Location.X), FMath::RoundToInt(Location.Y))];
-			prevLocation.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(prevLocation.X), FMath::RoundToInt(prevLocation.Y))];
+			if (FMath::RoundToInt(Location.X) < SizeX && FMath::RoundToInt(Location.Y) < SizeX && FMath::RoundToInt(prevLocation.X) < SizeX && FMath::RoundToInt(prevLocation.Y) < SizeX) {
+				Location.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(Location.X), FMath::RoundToInt(Location.Y))];
+				prevLocation.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(prevLocation.X), FMath::RoundToInt(prevLocation.Y))];
 
-			if (FMath::RoundToInt(right_v.X) >= 0 && FMath::RoundToInt(left_v.Y) >= 0 && FMath::RoundToInt(right_v.X) < SizeX && FMath::RoundToInt(left_v.Y) < SizeX) { //Avoids crashing
-				right_v.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(right_v.X), FMath::RoundToInt(right_v.Y))];
-				left_v.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(left_v.X), FMath::RoundToInt(left_v.Y))];
-		/*		UE_LOG(LogTemp, Warning, TEXT("right_v  = %s"), *right_v.ToString());
-				UE_LOG(LogTemp, Warning, TEXT("left_v = % s"), *left_v.ToString())*/
+				if (FMath::RoundToInt(right_v.X) >= 0 && FMath::RoundToInt(right_v.Y) >= 0 && FMath::RoundToInt(left_v.X) >= 0 && FMath::RoundToInt(left_v.Y) >= 0
+					&& FMath::RoundToInt(right_v.X) < SizeX && FMath::RoundToInt(right_v.Y) < SizeX && FMath::RoundToInt(left_v.X) < SizeX && FMath::RoundToInt(left_v.Y) < SizeX) { //Avoids crashing
+					right_v.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(right_v.X), FMath::RoundToInt(right_v.Y))];
+					left_v.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(left_v.X), FMath::RoundToInt(left_v.Y))];
+					/*		UE_LOG(LogTemp, Warning, TEXT("right_v  = %s"), *right_v.ToString());
+							UE_LOG(LogTemp, Warning, TEXT("left_v = % s"), *left_v.ToString())*/
 
-				if (abs(right_v.Z - left_v.Z) > maxSlopeH) {
-					maxSlopeH = abs(right_v.Z - left_v.Z);
-					/*UE_LOG(LogTemp, Warning, TEXT("This NEVER happens right?!"));*/
+					if (abs(right_v.Z - left_v.Z) > maxSlopeH) {
+						maxSlopeH = abs(right_v.Z - left_v.Z);
+						/*UE_LOG(LogTemp, Warning, TEXT("This NEVER happens right?!"));*/
+					}
+
 				}
-
+				if (abs(Location.Z - prevLocation.Z) > maxSlope) {
+					maxSlope = abs(Location.Z - prevLocation.Z);
+					//UE_LOG(LogTemp, Warning, TEXT("Location.Z = %f"), Location.Z);
+					//UE_LOG(LogTemp, Warning, TEXT("prevLocation.Z = %f"), prevLocation.Z);
+				}
 			}
-			if (abs(Location.Z - prevLocation.Z) > maxSlope) {
-				maxSlope = abs(Location.Z - prevLocation.Z);
-				//UE_LOG(LogTemp, Warning, TEXT("Location.Z = %f"), Location.Z);
-				//UE_LOG(LogTemp, Warning, TEXT("prevLocation.Z = %f"), prevLocation.Z);
+			else {
+				UE_LOG(LogTemp, Warning, TEXT("Coords are out of bounds, not computing these!"));
 			}
 		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("Coords are out of bounds, not computing these!"));
-		}
-
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("Max Slope (Vertical) = %f"), maxSlope);
-	UE_LOG(LogTemp, Warning, TEXT("Max Slope (Horizontal) = %f"), maxSlopeH);
+	//UE_LOG(LogTemp, Warning, TEXT("Max Slope (Vertical) = %f"), maxSlope);
+	//UE_LOG(LogTemp, Warning, TEXT("Max Slope (Horizontal) = %f"), maxSlopeH);
 
-	if (regardDist && (oldDist < newDist || maxSlope > slopeThreshold || maxSlopeH > slopeThreshold*8)) {
+	if (regardDist && (oldDist < newDist || maxSlope > slopeThreshold || maxSlopeH > slopeThreshold)) {
 		
 		if (maxSlope > slopeThreshold) {
 			UE_LOG(LogTemp, Warning, TEXT("To much slope!"));

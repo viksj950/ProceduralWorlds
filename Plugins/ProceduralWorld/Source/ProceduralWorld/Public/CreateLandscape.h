@@ -73,7 +73,7 @@ public:
 	//sugma func
 	void generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads);
 	//With start and end point
-	void generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries);
+	bool generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries);
 
 	float calcDist(const FVector& p1, const FVector& p2);
 

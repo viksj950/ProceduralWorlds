@@ -1896,8 +1896,6 @@ FReply FProceduralWorldModule::GenerateTerrain()
 		GenerateTerrainData();
 	}
 
-	//FVector start{ 50,50,0 };
-	//FVector end{ 399,477,0 };
 	FVector start;
 	FVector end;
 
@@ -1906,23 +1904,36 @@ FReply FProceduralWorldModule::GenerateTerrain()
 		UE_LOG(LogTemp, Warning, TEXT("Using manual start and end coords"));
 		start = previewWindow.roadsData[0]->Points[0];
 		end = previewWindow.roadsData[0]->Points[1];
-		ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, 100);
+		int16 hardCap = 20;
+		int16 counter = 0;
+		int16 adjTries = 10;
+		bool succeded = ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, adjTries);
+		while(!succeded && counter < hardCap){
+			counter++;
+			UE_LOG(LogTemp, Warning, TEXT("Previous road failed, new road generation attempt: %d"), counter);
+			succeded = ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, adjTries);
+		}
+		if (succeded) {
+			UE_LOG(LogTemp, Warning, TEXT("[Road generation was succesufull]"));
+		}
+		
 
 	}
 	
 
 	//ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, 100);
 
-	
 	if (!roads.IsEmpty()) {
-		roads[0].calcLengthsSplines();
-		roads[0].vizualizeRoad(ptrToTerrain->LandscapeScale);
-		for (int i = 0; i < 5; i++) {
-			ptrToTerrain->roadAnamarphosis(roads, 0.01, 9, i);
+		for (auto& k : roads) {
+			k.calcLengthsSplines();
+			k.vizualizeRoad(ptrToTerrain->LandscapeScale);
+			for (int i = 0; i < 5; i++) {
+				ptrToTerrain->roadAnamarphosis(roads, 0.01, 9, i);
+			}
 		}
 	}
 	else {
-		UE_LOG(LogTemp, Warning, TEXT("No posible path for road to geneata OR no road was wanted"));
+		UE_LOG(LogTemp, Warning, TEXT("[Road generation failed] OR [No road was marked]"));
 
 	}
 
@@ -2223,6 +2234,7 @@ FReply FProceduralWorldModule::DeleteLandscape()
 	tiles.Empty();
 	landscapePtr->Destroy();
 	landscapePtr = nullptr;
+	ptrToTerrain = nullptr;
 	//delete landscapePtr;
 	//auto& it: roads[i].splinePath.splineActors
 	
