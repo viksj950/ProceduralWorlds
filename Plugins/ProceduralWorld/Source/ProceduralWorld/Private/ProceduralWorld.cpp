@@ -237,6 +237,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				[
 					SNew(STextBlock)
 					.Text(FText::FromString("Octaves"))
+					
+					
 
 				]
 
@@ -246,9 +248,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					[
 						SNew(SNumericEntryBox<int32>)
 						.AllowSpin(true)
+					.ToolTipText(FText::FromString("Number of layer of noise that will be applied (Fractal-Browian Motion) \nA higher octave count creates a more coarse surface (1 - 16)"))
 					.MinValue(1)
 					.MaxValue(16)
-					.MaxSliderValue(5)
+					.MaxSliderValue(16)
 					.MinDesiredValueWidth(2)
 					.Value_Raw(this, &FProceduralWorldModule::GetOctaveCount)
 					.OnValueChanged_Raw(this, &FProceduralWorldModule::SetOctaveCount)
@@ -279,9 +282,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		[
 			SNew(SNumericEntryBox<float>)
 			.AllowSpin(true)
+		.ToolTipText(FText::FromString("The height scale for the noise \nA higher value will create more intense peaks and dips"))
 		.MinValue(0)
-		.MaxValue(12)
-		.MaxSliderValue(5)
+		.MaxValue(10)
+		.MaxSliderValue(10)
 		.MinDesiredValueWidth(2)
 		.Value_Raw(this, &FProceduralWorldModule::GetAmplitude)
 		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetAmplitude)
@@ -315,6 +319,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		[
 			SNew(SNumericEntryBox<float>)
 			.AllowSpin(true)
+		.ToolTipText(FText::FromString("The falloff that scales with the octave count \nA higher value will increase the falloff per octave"))
 		.MinValue(0)
 		.MaxValue(1)
 		.MaxSliderValue(1)
@@ -350,9 +355,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		[
 			SNew(SNumericEntryBox<float>)
 				.AllowSpin(true)
+			.ToolTipText(FText::FromString("Frequency of the noise sampling\nA higher frequency will produce more dense peaks and dips\nA lower frequency will produce more sparse peaks and dips "))
 			.MinValue(0)
-			.MaxValue(1)
-			.MaxSliderValue(1)
+			.MaxValue(0.5)
+			.MaxSliderValue(0.5)
 			.MinDesiredValueWidth(2)
 			.Value_Raw(this, &FProceduralWorldModule::GetFrequency)
 			.OnValueChanged_Raw(this, &FProceduralWorldModule::SetFrequency)
@@ -386,9 +392,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		[
 			SNew(SNumericEntryBox<float>)
 			.AllowSpin(true)
+		.ToolTipText(FText::FromString("Lacunarity acts as a multiplier for the frequency per octave\nA higher lacunarity value will increase the frequency each octave\nLacunarity set to 2 is the standard for FBM"))
 		.MinValue(1)
-		.MaxValue(16)
-		.MaxSliderValue(16)
+		.MaxValue(8)
+		.MaxSliderValue(8)
 		.MinDesiredValueWidth(2)
 		.Value_Raw(this, &FProceduralWorldModule::GetLacunarity)
 		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetLacunarity)
@@ -420,6 +427,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			.MaxWidth(150)
 			[
 				SNew(SCheckBox)
+				.ToolTipText(FText::FromString("Turbulence ON takes the absolute value of the noise values\nTypically toggled as ON when valleys and dips are not desired"))
 				.IsChecked_Lambda([&]() {
 				
 				return BiotopeSettings[BiomeSettingSelection]->Turbulence ? ECheckBoxState::Checked: ECheckBoxState::Unchecked;
@@ -538,6 +546,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 					SNew(STextBlock)
 					.Text(FText::FromString("Amount of biomes"))
+			
 
 
 
@@ -1222,6 +1231,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 							SNew(SImage)
 							.ColorAndOpacity(FSlateColor::UseForeground())
 							.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+							
 						]
 
 					]
@@ -1268,6 +1278,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 
 					SNew(SButton)
 					.ContentScale(1)
+					.ToolTipText(FText::FromString("Remove this object"))
 					.OnClicked_Lambda([&]() {
 						for (auto& it: assetSettingList->GetSelectedItems())
 						{	
@@ -1291,6 +1302,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 					
 					.ColorAndOpacity(FSlateColor::UseForeground())
 							.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+						
 				]
 				]
 					
@@ -1359,11 +1371,12 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.HAlign(HAlign_Left)
 		[
 			SNew(SNumericEntryBox<int32>)
+			.ToolTipText(FText::FromString("Max number of this object that will be attempted to be spawned in in this biome\nWarning: Using a high asset count will increase spawn time and decrease runtime performance\nConsider using nanite for highly detailed assets to increase runtime performance"))
 			.Delta(1)
 			.AllowSpin(true)
 			.MinValue(1)
 			.MaxValue(4096)
-			.MaxSliderValue(4096)
+			.MaxSliderValue(999)
 			//.MinDesiredValueWidth(2)
 			.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->assetCount; })
 			.OnValueChanged_Lambda([&](const int32& inValue) {this->IntermediateBiomeAssetSetting->assetCount = inValue; })
@@ -1383,7 +1396,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 
 			SNew(STextBlock)
-			.Text(FText::FromString("scaleVar"))
+			.Text(FText::FromString("Scale variance"))
 
 
 
@@ -1399,6 +1412,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 			SNew(SNumericEntryBox<float>)
 			.AllowSpin(true)
+		.ToolTipText(FText::FromString("The difference in scale the object can spawn with\nThis value applies both in reduction of scale and increase in scale\nValue of 0 means the object always remains as the default scale"))
 		.MinValue(0)
 		.MaxValue(0.999)
 		.MaxSliderValue(0.999)
@@ -1421,7 +1435,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 
 			SNew(STextBlock)
-			.Text(FText::FromString("angleThreshhold"))
+			.Text(FText::FromString("Angle tolerance"))
 
 
 
@@ -1437,7 +1451,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 			SNew(SNumericEntryBox<float>)
 			.AllowSpin(true)
-		.MinValue(0)
+		.ToolTipText(FText::FromString("This value determines how much slope is allowed for the object to spawn on\nValue of 1.0 means it has max tolerance allowing it to spawn on scarps and hard slopes"))
+		.MinValue(0.01)
 		.MaxValue(1)
 		.MaxSliderValue(1)
 		.MinDesiredValueWidth(0)
@@ -1459,8 +1474,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 
 			SNew(STextBlock)
-			.Text(FText::FromString("noCollision"))
-
+			.Text(FText::FromString("Avoid Collision"))
+			
 
 
 		]
@@ -1474,6 +1489,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.HAlign(HAlign_Left)
 		[
 			SNew(SCheckBox)
+			.ToolTipText(FText::FromString("When ON each type of this object will avoid colliding with other objects"))
 		/*	.IsChecked_Lambda([&]() {
 		if (this->IntermediateBiomeAssetSetting->noCollide == true && myDensityNumBox.IsValid() && !myDensityNumBox->IsEnabled()) {
 			return ECheckBoxState::Checked;
@@ -1503,6 +1519,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			SAssignNew(myDensityNumBox,SNumericEntryBox<float>)
 			.IsEnabled_Lambda([&]() {return this->IntermediateBiomeAssetSetting->noCollide; })
 			.AllowSpin(true)
+			.ToolTipText(FText::FromString("This value changes the distance in which collision is checked, a higher value means more sparseness between objects"))
 			.MinValue(0)
 			.MaxValue(1)
 			.MaxSliderValue(1)
@@ -1525,7 +1542,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 
 			SNew(STextBlock)
-			.Text(FText::FromString("Consider Roads"))
+			.Text(FText::FromString("Avoid Roads"))
 		]
 
 	+ SHorizontalBox::Slot()
@@ -1537,6 +1554,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.HAlign(HAlign_Left)
 		[
 			SNew(SCheckBox)
+			.ToolTipText(FText::FromString("When toggled ON, the object will not be allowed to spawn on roads"))
 		.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
 		if (inValue == ECheckBoxState::Checked )
 		{
@@ -1554,6 +1572,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
+
 		.AutoWidth()
 		.MaxWidth(150)
 		.Padding(0)
