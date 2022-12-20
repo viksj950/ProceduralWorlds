@@ -63,6 +63,7 @@ public:
 
 	void UpdateLandscapeSettings(const int32& inSizeX, const int32& inSizeY, const int32& inQuadsPerComponent, const int32& inComponentsPerProxy, const int32& inSectionsPerComponent, const int32& inTilesSize);
 	void CreateHeightmapTexture(const TArray<uint16>& inData);
+	void CreateHeightmapTexture();
 	void CreateGridTexture();
 	void CreateBiotopeTexture();
 	void CreateRoadMarkTexture();

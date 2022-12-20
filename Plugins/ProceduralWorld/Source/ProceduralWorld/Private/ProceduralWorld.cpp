@@ -523,6 +523,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						previewWindow.roadsData.Empty();
 						previewWindow.roadColorAssigner = 0;
 						previewWindow.markedTilesVoronoi.Empty();
+						previewWindow.CreateHeightmapTexture();
 						previewWindow.CreateGridTexture();
 						previewWindow.CreateBiotopeTexture();
 						previewWindow.CreateRoadMarkTexture();
@@ -1567,19 +1568,19 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.HAlign(HAlign_Left)
 		[
 			SNew(SCheckBox)
-		.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
-		if (inValue == ECheckBoxState::Checked )
-		{
-			this->IntermediateBiomeAssetSetting->considerRoad = true;
-		}
-		else if (inValue == ECheckBoxState::Unchecked )
-		{
-			this->IntermediateBiomeAssetSetting->noCollide = false;
-		}
+			.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
+			if (inValue == ECheckBoxState::Checked )
+			{
+				this->IntermediateBiomeAssetSetting->considerRoad = true;
+			}
+			else if (inValue == ECheckBoxState::Unchecked )
+			{
+				this->IntermediateBiomeAssetSetting->noCollide = false;
+			}
 
-			})
+				})
 
-		]]
+			]]
 	+SVerticalBox::Slot()
 		[
 			SNew(SHorizontalBox)

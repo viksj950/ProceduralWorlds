@@ -87,6 +87,56 @@ void S2DPreviewWindow::CreateHeightmapTexture(const TArray<uint16>& inData)
 
 }
 
+void S2DPreviewWindow::CreateHeightmapTexture()
+{
+	uint8* pixels = (uint8*)malloc(SizeX * SizeY * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+
+	for (int y = 0; y < SizeY; y++)
+	{
+		for (int x = 0; x < SizeX; x++)
+		{
+
+
+			pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 0] = 128; // R
+			pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 1] = 128;  // G
+			pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 2] = 128;   // B
+			pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 3] = 255; // A
+
+		}
+	}
+
+
+	UTexture2D* tempTexturePtr = UTexture2D::CreateTransient(SizeX, SizeY, PF_R8G8B8A8);
+
+	// Passing the pixels information to the texture
+	FTexture2DMipMap* Mip = &tempTexturePtr->GetPlatformData()->Mips[0];
+	Mip->SizeX = SizeX;
+	Mip->SizeY = SizeY;
+	Mip->BulkData.Lock(LOCK_READ_WRITE);
+	uint8* TextureData = (uint8*)Mip->BulkData.Realloc(SizeY * SizeX * sizeof(uint8) * 4);
+	FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * SizeY * SizeX * 4);
+	Mip->BulkData.Unlock();
+
+	// Updating Texture & mark it as unsaved
+	tempTexturePtr->AddToRoot();
+	tempTexturePtr->UpdateResource();
+	//Package->MarkPackageDirty();
+
+	free(pixels);
+	pixels = NULL;
+
+	//add texture to array of textures //TEMPORARY TO SEE UPDATES!!
+
+	if (textures.IsValidIndex(0))
+	{
+		textures[0] = tempTexturePtr;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Default pointer for heightmap in texture array is missing"));
+	}
+}
+
 void S2DPreviewWindow::CreateGridTexture()
 {
 
