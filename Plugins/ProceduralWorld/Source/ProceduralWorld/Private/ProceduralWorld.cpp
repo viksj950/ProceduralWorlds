@@ -108,11 +108,26 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						})
 						.OnSelectionChanged_Lambda([this](TSharedPtr<BiotopePerlinNoiseSetting> InSelection, ESelectInfo::Type InSelectInfo)
 						{
-							if (InSelection.IsValid() && ComboBoxTitleBlockNoise.IsValid())
-							{
-								ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
-								this->BiomeSettingSelection = InSelection->BiotopeIndex;
-							}
+								if (InSelection.IsValid() && ComboBoxTitleBlockNoise.IsValid())
+								{
+									ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
+
+									for (size_t i = 0; i < BiotopeSettings.Num(); i++)
+									{
+
+										if (InSelection->BiotopeIndex == BiotopeSettings[i]->BiotopeIndex)
+										{
+											this->BiomeSettingSelection = i;
+										}
+									}
+									
+								}
+								
+								
+									
+
+								
+							
 
 						})
 							[
@@ -200,29 +215,37 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					]
 				]*/
 				//TODO
-				//+SVerticalBox::Slot()
-				//[
+				+SVerticalBox::Slot()
+				[
 
-				//	SNew(SObjectPropertyEntryBox)
-				//	.AllowedClass(UMate)
-				//	.AllowClear(true)
-				//	.ObjectPath_Lambda([&]() {return this->IntermediateBiomeAssetSetting->ObjectPath; })
-				//	.DisplayUseSelected(true)
-				//	.DisplayThumbnail(true)
-				//	.ThumbnailPool(this->myAssetThumbnailPool)
-				//	.OnObjectChanged_Lambda([&](const FAssetData& inData) {
+					SNew(SObjectPropertyEntryBox)
+					.AllowedClass(UMaterial::StaticClass())
+					.AllowClear(true)
+					.ObjectPath_Lambda([&]() {
+					if (BiomeSettingSelection < BiotopeSettings.Num())
+					{
+						return BiotopeSettings[BiomeSettingSelection]->MaterialPath;
+					}
+					else
+					{
+						return FString("");
+					}
+					
+						})
+					.DisplayUseSelected(true)
+					.DisplayThumbnail(true)
+					.ThumbnailPool(this->myAssetThumbnailPool)
+					.OnObjectChanged_Lambda([&](const FAssetData& inData) {
 
-				//	this->IntermediateBiomeAssetSetting->ObjectPath = inData.ObjectPath.ToString();
-				//	this->IntermediateBiomeAssetSetting->slateThumbnail = MakeShareable(new FAssetThumbnail(inData, 64, 64, myAssetThumbnailPool));
-				//	if (modifyAssetButton->IsEnabled()) {
-				//		assetSettingList->RebuildList();
-				//	}
-				//	//slateThumbnail = MakeShareable(new FAssetThumbnail(inData,64,64, myAssetThumbnailPool));
+					BiotopeSettings[BiomeSettingSelection]->MaterialPath = inData.ObjectPath.ToString();
+					//this->IntermediateBiomeAssetSetting->slateThumbnail = MakeShareable(new FAssetThumbnail(inData, 64, 64, myAssetThumbnailPool));
+					
+					//slateThumbnail = MakeShareable(new FAssetThumbnail(inData,64,64, myAssetThumbnailPool));
 
-				//		})
+						})
 
 
-				//]
+				]
 
 				+ SVerticalBox::Slot()
 				[
@@ -662,6 +685,13 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 								previewWindow.AssembleWidget();
 							}
 							else {
+								int32 biotope = -1;
+								if (!BiotopeSettings.IsEmpty())
+								{
+									biotope = BiotopeSettings[BiomeSettingSelection]->BiotopeIndex;
+								}
+
+
 								switch (biotopePlacementSelection)
 								{
 								case 0:
@@ -669,13 +699,13 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 									break;
 								case 1:
-									previewWindow.MarkTile(BiomeSettingSelection, heightmapPosition);
+									previewWindow.MarkTile(biotope, heightmapPosition);
 									previewWindow.CreateBiotopeTexture();
 									previewWindow.AssembleWidget();
 
 									break;
 								case 2:
-									previewWindow.MarkTileVoronoi(BiomeSettingSelection, heightmapPosition);
+									previewWindow.MarkTileVoronoi(biotope, heightmapPosition);
 									previewWindow.CreateBiotopeTexture();
 									previewWindow.AssembleWidget();
 									UE_LOG(LogTemp, Log, TEXT("Clicked using MarkTileVoronoi"));
@@ -1787,6 +1817,7 @@ FReply FProceduralWorldModule::Setup()
 		tiles[i]->streamingProxy = it;
 		if (tiles[i]->biotope == 0) {
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'")));
+			
 		}
 		else if (tiles[i]->biotope == 1) {
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'")));
@@ -1794,6 +1825,15 @@ FReply FProceduralWorldModule::Setup()
 		else if (tiles[i]->biotope == 2) {
 			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
 		}
+
+		for (auto& k : BiotopeSettings)
+		{
+			if (tiles[i]->biotope == k->BiotopeIndex)
+			{
+				tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'")));
+			}
+		}
+		
 		
 		i++;
 	}
@@ -1975,15 +2015,16 @@ FReply FProceduralWorldModule::GenerateTerrain()
 	for (auto& it : LandscapeInfo->Proxies)
 	{
 		tiles[i]->streamingProxy = it;
-		if (tiles[i]->biotope == 0) {
-			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'")));
+
+		for (auto& k : BiotopeSettings)
+		{
+			if (tiles[i]->biotope == k->BiotopeIndex)
+			{
+				//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'")));
+				tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, *k->MaterialPath));
+			}
 		}
-		else if (tiles[i]->biotope == 1) {
-			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'")));
-		}
-		else if (tiles[i]->biotope == 2) {
-			tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'")));
-		}
+
 
 		i++;
 	}

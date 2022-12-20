@@ -245,17 +245,18 @@ public:
 		{"Plains",1,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} ,
 		{"Mountains",2,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} };*/
 
-	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64, 600,3,1.2f,0.5f,0.015f,1.0f,false)) ,
-		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64, 850,3,1.2f,0.5f,0.015f,1.0f,false)) ,
-		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64, 4096,12,7.0f,0.5f,0.0015f,2.0f,true)) };
+	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64,"Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'",4096,3,1.2f,0.5f,0.015f,1.0f,false)) ,
+		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64,"Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'" ,4096,3,1.2f,0.5f,0.015f,1.0f,false)) ,
+		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64,"Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'", 4096,12,7.0f,0.5f,0.0015f,2.0f,true))};
 	
-
+	uint32 BiotopePerlinNoiseSettingIndexer{ 3 };
 	//TSharedPtr<FString> newBiotopeName;
 	//void SetNewBiotopeName(const FText& NewText) { newBiotopeName = MakeShareable(new FString(NewText.ToString())); };
 	FText newBiomeName;
 	FReply addNewBiotope() {
-		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(newBiomeName.ToString(), BiotopeSettings.Num(), 64, 4096, 5, 2.3f, 0.92f, 0.0015f, 1.96f,false)));
+		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(newBiomeName.ToString(), BiotopePerlinNoiseSettingIndexer, 64,"", 4096, 5, 2.3f, 0.92f, 0.0015f, 1.96f, false)));
 		BiomeAssetsData.Add(MakeShareable(new biomeAssets(newBiomeName.ToString(), BiomeAssetsData.Num())));
+		BiotopePerlinNoiseSettingIndexer++;
 		return FReply::Handled();
 	};
 
@@ -264,6 +265,26 @@ public:
 		UE_LOG(LogTemp, Warning, TEXT("Deleting Biotope %s"), *BiotopeSettings[BiomeSettingSelection]->Biotope);
 		FString biotopeToDelete = BiotopeSettings[BiomeSettingSelection]->Biotope;
 		
+
+		//2D 
+		for (auto it = previewWindow.markedTiles.CreateConstIterator();it; ++it)
+		{
+			if (it.Value() == BiotopeSettings[BiomeSettingSelection]->BiotopeIndex)
+			{
+				previewWindow.markedTiles.Remove(it.Key());
+			}
+
+		}
+		for (auto it = previewWindow.markedTilesVoronoi.CreateConstIterator();it;++it)
+		{
+			if (it.Value() == BiotopeSettings[BiomeSettingSelection]->BiotopeIndex)
+			{
+				previewWindow.markedTilesVoronoi.Remove(it.Key());
+			}
+
+		}
+
+
 		//Remove noise settings for the biotope and change the selection aswell
 		BiotopeSettings.RemoveAt(BiomeSettingSelection);
 		BiomeSettingSelection = 0;
@@ -286,6 +307,13 @@ public:
 
 		BiomeAssetSettingSelection = 0;
 		assetSettingList->RebuildList();
+
+
+
+
+		
+		
+
 		return FReply::Handled();
 	}
 

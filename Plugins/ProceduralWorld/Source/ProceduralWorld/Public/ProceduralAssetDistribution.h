@@ -62,6 +62,8 @@ struct biomeAssetSettings
 	float density;
 	bool considerRoad;
 
+	FString MaterialPath;
+
 	//Compare paths
 	bool operator==(const biomeAssetSettings& rhs) const {
 

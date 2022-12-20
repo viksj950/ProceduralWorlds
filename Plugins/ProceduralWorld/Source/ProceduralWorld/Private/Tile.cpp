@@ -8,6 +8,7 @@ UTile::UTile(int32 NumOfQuads, int32 ComponentsPerProxy, int32 inTileSize)
 	tileSize = inTileSize; 
 	tileHeightData.Init(0,inTileSize * inTileSize);
 	adjacentTiles.Init(nullptr, 8);
+	biotope = -1;
 
 }
 

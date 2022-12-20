@@ -109,8 +109,25 @@ void CreateLandscape::GenerateAndAssignHeightData(TArray<UTile*>& inTiles, const
 			X += (TileSize - 1);
 			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
 		}
+		int index{-1};
+		for (size_t i = 0; i < BiotopeSettings.Num(); i++)
+		{
+			if (it->biotope == BiotopeSettings[i]->BiotopeIndex)
+			{
+				index = i;
+				break;
+			}
 
-		currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *BiotopeSettings[it->biotope]);
+		}
+		if (index != -1)
+		{
+			currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *BiotopeSettings[index]);
+		}
+		else
+		{
+			currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *new BiotopePerlinNoiseSetting("default",-1,64,"",1,1,1,1,1,1,false));
+		}
+		
 
 		//assign correct noise values depending on tile index and biotope 
 		//Also need to have biotopeSettings
