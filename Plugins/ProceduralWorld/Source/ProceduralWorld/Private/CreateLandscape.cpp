@@ -783,7 +783,7 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 {
 	FMath math;
 	uint16 tileIndex = GetTileIndex(start.X, start.Y);
-	uint16 prevTileIndex;
+	uint16 prevTileIndex = 0;
 	uint16 endTile = GetTileIndex(end.X, end.Y);
 	CRSpline spline;
 	float oldDist = 0;
@@ -801,7 +801,7 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 
 	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
 	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
-	int maxRoadTiles{ 25 };
+	//int maxRoadTiles{ 2500 }; //remove LATER
 	int Tries{ maxTries };
 	int32 adjIndex = 0;
 	int32 slopeThreshold = 800;
@@ -811,7 +811,7 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same tile again
 	TMap<float, ControlPoint> candidates; //used for choosing which control point makes most sense to extend road to
 
-	while (maxRoadTiles > 0 && Tries > 0 && !(calcDist(EndCP.pos, end) < TileSize/2)) {
+	while (Tries > 0 && !(calcDist(EndCP.pos, end) < TileSize/2)) {
 		Tries--;
 		bool goBack = true;
 
@@ -851,7 +851,6 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			//}
 
 			UE_LOG(LogTemp, Warning, TEXT("Added a spline segment succesfully"));
-			maxRoadTiles--;
 			Tries = maxTries;
 			candidates.Empty();
 			prevTileIndex = tileIndex;

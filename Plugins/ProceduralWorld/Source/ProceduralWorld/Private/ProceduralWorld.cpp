@@ -1950,10 +1950,11 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 FReply FProceduralWorldModule::GenerateTerrain()
 {
 	//Check if we already have created data and just want to generate raods and spawn the landscape
-	if (ptrToTerrain == nullptr) 
-	{
-		GenerateTerrainData();
-	}
+	//if (ptrToTerrain == nullptr) 
+	//{
+	//	GenerateTerrainData();
+	//}
+	GenerateTerrainData();
 
 	FVector start;
 	FVector end;

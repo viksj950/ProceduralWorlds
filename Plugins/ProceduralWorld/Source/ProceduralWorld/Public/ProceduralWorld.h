@@ -245,8 +245,8 @@ public:
 		{"Plains",1,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} ,
 		{"Mountains",2,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} };*/
 
-	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64,"Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'",4096,3,1.2f,0.5f,0.015f,1.0f,false)) ,
-		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64,"Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'" ,4096,3,1.2f,0.5f,0.015f,1.0f,false)) ,
+	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64,"Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'",4096,3,0.17f,0.5f,0.015f,1.0f,false)) ,
+		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64,"Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'" ,4096,3,0.25f,0.5f,0.015f,1.0f,false)) ,
 		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64,"Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'", 4096,12,7.0f,0.5f,0.0015f,2.0f,true))};
 	
 	uint32 BiotopePerlinNoiseSettingIndexer{ 3 };
