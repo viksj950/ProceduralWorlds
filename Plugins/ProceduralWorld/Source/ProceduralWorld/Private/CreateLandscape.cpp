@@ -783,7 +783,7 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 {
 	FMath math;
 	uint16 tileIndex = GetTileIndex(start.X, start.Y);
-	uint16 prevTileIndex;
+	uint16 prevTileIndex = 0;
 	uint16 endTile = GetTileIndex(end.X, end.Y);
 	CRSpline spline;
 	float oldDist = 0;
@@ -801,7 +801,7 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 
 	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
 	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
-	int maxRoadTiles{ 25 };
+	//int maxRoadTiles{ 2500 }; //remove LATER
 	int Tries{ maxTries };
 	int32 adjIndex = 0;
 	int32 slopeThreshold = 800;
@@ -811,7 +811,7 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same tile again
 	TMap<float, ControlPoint> candidates; //used for choosing which control point makes most sense to extend road to
 
-	while (maxRoadTiles > 0 && Tries > 0 && !(calcDist(EndCP.pos, end) < TileSize/2)) {
+	while (Tries > 0 && !(calcDist(EndCP.pos, end) < TileSize/2)) {
 		Tries--;
 		bool goBack = true;
 
@@ -851,7 +851,6 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 			//}
 
 			UE_LOG(LogTemp, Warning, TEXT("Added a spline segment succesfully"));
-			maxRoadTiles--;
 			Tries = maxTries;
 			candidates.Empty();
 			prevTileIndex = tileIndex;
@@ -898,6 +897,53 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Bool value is: %s"), sucess ? TEXT("true") : TEXT("false"));
 	return sucess;
+}
+
+bool CreateLandscape::generateRoadPlot(TArray<Road>& inRoads, TArray<FVector> points)
+{
+	bool success = true;
+	bool firstPoint = true;
+	FMath math;
+	int16 counter = 0;
+	TArray<ControlPoint> roadCPs;
+	CRSpline spliner;
+	Road road;
+
+	if (points.Num() < 2) {
+		success = false;
+		UE_LOG(LogTemp, Warning, TEXT("Manual input points was either empty or just set to 1 [STOP CALLING THIS FUNCTION IN THIS CASE]"));
+	}
+	else {
+		while (counter < points.Num()) {
+			if (firstPoint) { //first tangent
+
+				roadCPs.Add({ (float)math.RandRange(points[counter].X,points[counter].X + TileSize - 1),
+					(float)math.RandRange(points[counter].Y,points[counter].Y + TileSize - 1),(float)45000 }); //A random start tangent based on input point
+
+				spliner.addControlPoint(roadCPs.Last()); //add first tangent to the spline
+
+				firstPoint = false; //Now first tangent is set
+			}
+			else {
+				roadCPs.Add({ (float)points[counter].X, (float) points[counter].Y, 45000});
+
+				spliner.addControlPoint(roadCPs.Last()); //Add the first "real" point
+
+				counter++;
+			}
+
+			
+		}
+		roadCPs.Add({ (float)math.RandRange(points[counter - 1].X,points[counter - 1].X + TileSize - 1),
+					(float)math.RandRange(points[counter - 1].Y,points[counter - 1].Y + TileSize - 1),(float)45000 }); //A random end tangent based on last input point
+
+		spliner.addControlPoint(roadCPs.Last()); //add last tangent to the spline
+
+		road = spliner;
+		inRoads.Add(road); 
+	}
+
+	return success;
 }
 
 float CreateLandscape::calcDist(const FVector& p1, const FVector& p2)
