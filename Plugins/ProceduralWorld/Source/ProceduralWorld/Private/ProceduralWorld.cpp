@@ -979,12 +979,14 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			+ SHorizontalBox::Slot()
 			[
 				SNew(SBox)
-				.HAlign(HAlign_Center)
+				.HAlign(HAlign_Left)
 				.VAlign(VAlign_Center)
 				[
 				SNew(SButton)
 				.Text(FText::FromString("Generate Heightmap"))
+				.ToolTipText(FText::FromString("Creates a 2D noise preview of the world"))
 				.OnClicked_Raw(this, &FProceduralWorldModule::GenerateTerrainData) //Setup
+				.HAlign(HAlign_Left)
 				]
 			]
 		]

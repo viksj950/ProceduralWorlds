@@ -185,11 +185,11 @@ void ProceduralAssetDistribution::spawnWithNoCollide(UTile* tile, const FVector&
 	//Check if location is suitable and not inside existing house
 	FVector newSize = density * scaleValue * Mesh->GetBounds().GetBox().GetSize();
 
-	Point2D currentHouseTL = { Location.X - (newSize.X / 2), Location.Y + (newSize.Y / 2) };
-	Point2D currentHouseBR = { Location.X + (newSize.X / 2), Location.Y - (newSize.Y / 2) };
+	Point2D currentObjectTL = { Location.X - (newSize.X / 2), Location.Y + (newSize.Y / 2) };
+	Point2D currentObjectBR = { Location.X + (newSize.X / 2), Location.Y - (newSize.Y / 2) };
 
-	Point2D prevHouseTL;
-	Point2D prevHouseBL;
+	Point2D prevObjectTL;
+	Point2D prevObjectBL;
 	bool shouldSpawn = true;
 
 	if (tile->tileAssets.IsEmpty()) { //first house in tile, no need to check intersect
@@ -207,10 +207,10 @@ void ProceduralAssetDistribution::spawnWithNoCollide(UTile* tile, const FVector&
 			FVector scale = tile->tileAssets[l].Get()->GetStaticMeshComponent()->GetRelativeScale3D();
 
 			FVector prevSize = density * scale * tile->tileAssets[l].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize();
-			prevHouseTL = { tile->tileAssets[l]->GetActorLocation().X - (prevSize.X / 2) , tile->tileAssets[l]->GetActorLocation().Y + (prevSize.Y / 2) };
-			prevHouseBL = { tile->tileAssets[l]->GetActorLocation().X + (prevSize.X / 2) , tile->tileAssets[l]->GetActorLocation().Y - (prevSize.Y / 2) };
+			prevObjectTL = { tile->tileAssets[l]->GetActorLocation().X - (prevSize.X / 2) , tile->tileAssets[l]->GetActorLocation().Y + (prevSize.Y / 2) };
+			prevObjectBL = { tile->tileAssets[l]->GetActorLocation().X + (prevSize.X / 2) , tile->tileAssets[l]->GetActorLocation().Y - (prevSize.Y / 2) };
 
-			if (Intersecting(currentHouseTL, currentHouseBR, prevHouseTL, prevHouseBL)) {
+			if (Intersecting(currentObjectTL, currentObjectBR, prevObjectTL, prevObjectBL)) {
 				shouldSpawn = false;
 				AssetCount++;
 				culledAssets.Add(MyNewActor);
