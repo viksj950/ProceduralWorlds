@@ -1172,10 +1172,24 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 
 		addAssetButton->SetEnabled(false);
 		modifyAssetButton->SetEnabled(true);
+
 		if (item.IsValid())
 		{
 			//IntermediateBiomeAssetSetting = MakeShareable(new biomeAssetSettings(*item));
 			IntermediateBiomeAssetSetting = item;
+
+		/*	if (item->noCollide) {
+				noCollCheckBox->SetIsChecked(ECheckBoxState::Checked);
+			}
+			else {
+				noCollCheckBox->SetIsChecked(ECheckBoxState::Unchecked);
+			}
+			if (item->considerRoad) {
+				avoidRoadCheckBox->SetIsChecked(ECheckBoxState::Checked);
+			}
+			else {
+				avoidRoadCheckBox->SetIsChecked(ECheckBoxState::Unchecked);
+			}*/
 		}
 		else
 		{
@@ -1518,7 +1532,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Left)
 		[
-			SNew(SCheckBox)
+			SAssignNew(noCollCheckBox,SCheckBox)
 			.ToolTipText(FText::FromString("When ON each type of this object will avoid colliding with other objects"))
 		/*	.IsChecked_Lambda([&]() {
 		if (this->IntermediateBiomeAssetSetting->noCollide == true && myDensityNumBox.IsValid() && !myDensityNumBox->IsEnabled()) {
@@ -1531,6 +1545,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		 
 				})
 			*/
+
 			.OnCheckStateChanged_Lambda([&](const ECheckBoxState &inValue) {
 					if (inValue == ECheckBoxState::Checked && myDensityNumBox.IsValid() && myDensityNumBox->IsEnabled() == false)
 					{
@@ -1550,9 +1565,9 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 			.IsEnabled_Lambda([&]() {return this->IntermediateBiomeAssetSetting->noCollide; })
 			.AllowSpin(true)
 			.ToolTipText(FText::FromString("This value changes the distance in which collision is checked, a higher value means more sparseness between objects"))
-			.MinValue(0)
-			.MaxValue(1)
-			.MaxSliderValue(1)
+			.MinValue(2.0)
+			.MaxValue(10)
+			.MaxSliderValue(10)
 			.MinDesiredValueWidth(0)
 			.Value_Lambda([&]() {return this->IntermediateBiomeAssetSetting->density; })
 			.OnValueChanged_Lambda([&](const float& inValue) {this->IntermediateBiomeAssetSetting->density = inValue; })

@@ -368,6 +368,9 @@ public:
 	TArray<TSharedPtr<biomeAssets>> BiomeAssetsData{ MakeShareable(new biomeAssets("City",0)), MakeShareable(new biomeAssets("Plains",1)),
 	  MakeShareable(new biomeAssets("Mountains",2)) };
 
+	TSharedPtr<SCheckBox> noCollCheckBox;
+
+	TSharedPtr<SCheckBox> avoidRoadCheckBox;
 
 	//Some intermediate placeholder used for displaying the settings for each biotop
 	TSharedPtr<STextBlock> ComboBoxTitleBlockBiotopeAsset;
