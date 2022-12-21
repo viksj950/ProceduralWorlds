@@ -70,7 +70,7 @@ public:
 	void AssembleWidget();
 	void MarkTile(int32 selectedBiotope, FVector2D inCoords);
 	void MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords);
-	void RandomizeVoronoi(int32 nmbrOfBiotopes, int32 nmbrOfBiomes);
+	void RandomizeVoronoi(const TArray<int32> &Biotopes, int32 nmbrOfBiomes);
 
 	//Road functionality---------------------------------------------------------
 

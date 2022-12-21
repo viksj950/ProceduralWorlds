@@ -494,7 +494,7 @@ void S2DPreviewWindow::MarkTileVoronoi(int32 selectedBiotope, FVector2D inCoords
 	}
 }
 
-void S2DPreviewWindow::RandomizeVoronoi(int32 nmbrOfBiotopes, int32 nmbrOfBiomes)
+void S2DPreviewWindow::RandomizeVoronoi(const TArray<int32> &Biotopes, int32 nmbrOfBiomes)
 {
 	markedTilesVoronoi.Empty();
 	markedTiles.Empty();
@@ -502,16 +502,16 @@ void S2DPreviewWindow::RandomizeVoronoi(int32 nmbrOfBiotopes, int32 nmbrOfBiomes
 
 	float X;
 	float Y;
-	int32 biotope;
+	int32 biotopeIndex;
 	int32 tileIndex;
 	FMath mathInstance;
 	for (size_t i = 0; i < nmbrOfBiomes; i++)
 	{
-		biotope = mathInstance.RandRange(0, nmbrOfBiotopes - 1);	//random type of biotope (0-2)
+		biotopeIndex = Biotopes[ mathInstance.RandRange(0, Biotopes.Num() -1)];	//random type of biotope (0-2)
 		tileIndex = mathInstance.RandRange(0, gridSizeOfProxies * gridSizeOfProxies - 1); //Random tile as origin (0-7)
 
-		markedTilesVoronoi.Add(tileIndex, biotope);
-		markedTiles.Add(tileIndex, biotope);
+		markedTilesVoronoi.Add(tileIndex, biotopeIndex);
+		markedTiles.Add(tileIndex, biotopeIndex);
 
 		//convert tile index to X Y coordinates used for range computation
 		X = tileIndex % gridSizeOfProxies;
@@ -529,7 +529,7 @@ void S2DPreviewWindow::RandomizeVoronoi(int32 nmbrOfBiotopes, int32 nmbrOfBiomes
 
 			FVector2f currTileCoords(i % gridSizeOfProxies, FMath::Floor(i / gridSizeOfProxies));
 			float distance = 200000; //Just a large number 
-			biotope = -1;
+			biotopeIndex = -1;
 
 			for (auto& it : markedTilesVoronoi)
 			{
@@ -537,13 +537,13 @@ void S2DPreviewWindow::RandomizeVoronoi(int32 nmbrOfBiotopes, int32 nmbrOfBiomes
 				if (distance >= temp)
 				{
 					//markedTiles.Add(i,it.Value);
-					biotope = it.Value;
+					biotopeIndex = it.Value;
 					//it->biotope = b.biomeType;
 					distance = temp;
 				}
 
 			}
-			markedTiles.Add(i, biotope);
+			markedTiles.Add(i, biotopeIndex);
 		}
 	}
 }

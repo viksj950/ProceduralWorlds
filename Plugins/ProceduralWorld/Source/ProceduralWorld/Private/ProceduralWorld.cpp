@@ -607,7 +607,14 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						if (megh == EAppReturnType::Ok)
 						{
 							biotopePlacementSelection = newValue;
-							previewWindow.RandomizeVoronoi(BiotopeSettings.Num(), nmbrOfBiomes);
+
+							TArray<int32> tempBiotopes;
+
+							for (auto& it: BiotopeSettings)
+							{
+								tempBiotopes.Add(it->BiotopeIndex);
+							}
+							previewWindow.RandomizeVoronoi(tempBiotopes, nmbrOfBiomes);
 							previewWindow.CreateBiotopeTexture();
 							previewWindow.AssembleWidget();
 						}
@@ -1521,23 +1528,17 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 			SNew(SCheckBox)
 			.ToolTipText(FText::FromString("When ON each type of this object will avoid colliding with other objects"))
-		/*	.IsChecked_Lambda([&]() {
-		if (this->IntermediateBiomeAssetSetting->noCollide == true && myDensityNumBox.IsValid() && !myDensityNumBox->IsEnabled()) {
-			return ECheckBoxState::Checked;
-		}
-		else
-		{
-			return ECheckBoxState::Unchecked;
-		}
-		 
+			.IsChecked_Lambda([&]() {
+
+			return this->IntermediateBiomeAssetSetting->noCollide ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 				})
-			*/
+			
 			.OnCheckStateChanged_Lambda([&](const ECheckBoxState &inValue) {
-					if (inValue == ECheckBoxState::Checked && myDensityNumBox.IsValid() && myDensityNumBox->IsEnabled() == false)
+					if (inValue == ECheckBoxState::Checked)
 					{
 						this->IntermediateBiomeAssetSetting->noCollide = true;
 					}
-					else if(inValue == ECheckBoxState::Unchecked && myDensityNumBox.IsValid() && myDensityNumBox->IsEnabled() == true)
+					else if(inValue == ECheckBoxState::Unchecked)
 					{
 						this->IntermediateBiomeAssetSetting->noCollide = false;
 					}
@@ -1586,6 +1587,10 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		[
 			SNew(SCheckBox)
 			.ToolTipText(FText::FromString("When toggled ON, the object will not be allowed to spawn on roads"))
+		.IsChecked_Lambda([&]() {
+
+		return this->IntermediateBiomeAssetSetting->considerRoad ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			})
 		.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
 		if (inValue == ECheckBoxState::Checked )
 		{
@@ -1593,7 +1598,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 		}
 		else if (inValue == ECheckBoxState::Unchecked )
 		{
-			this->IntermediateBiomeAssetSetting->noCollide = false;
+			this->IntermediateBiomeAssetSetting->considerRoad = false;
 		}
 
 				})
