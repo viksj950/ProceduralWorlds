@@ -359,7 +359,8 @@ public:
 
 	//ROAD UI------------------------------------------------------------------------------------------------------
 
-	TSharedPtr<SCheckBox> roadPlacementMode;
+	TSharedPtr<SCheckBox> smartRoadPlacementMode;
+	TSharedPtr<SCheckBox> manualRoadPlacementMode;
 	
 	//UI Asset Distribution ---------------------------------------------------------------------------------------
 	 

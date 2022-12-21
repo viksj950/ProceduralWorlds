@@ -525,7 +525,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						this->SetLandscapeSettings(InSelection);
 
 						//Reset preview window data of roads and biotopes TODO Make a function of this crap
-						roadPlacementMode->SetIsChecked(ECheckBoxState::Unchecked);
+						smartRoadPlacementMode->SetIsChecked(ECheckBoxState::Unchecked);
 						biotopeGenerationMode->SetEnabled(true);
 						previewWindow.markedTiles.Empty();
 						previewWindow.roadsData.Empty();
@@ -685,7 +685,23 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 							//Check road mode or biotope mode
 
-							if (roadPlacementMode->IsChecked())
+							if (smartRoadPlacementMode->IsChecked())
+							{
+								previewWindow.AddRoadPoint(heightmapPosition);
+
+								if (previewWindow.roadsData[previewWindow.roadIndex]->Points.Num() >= 2) //Check if we now have 2 points, if we do toggle smart Road Mode OFF
+								{
+									smartRoadPlacementMode->SetIsChecked(ECheckBoxState::Unchecked);
+									manualRoadPlacementMode->SetEnabled(true);
+									biotopeGenerationMode->SetEnabled(true);
+								}
+								previewWindow.roadsDataList->RebuildList();
+								previewWindow.CreateRoadMarkTexture();
+								previewWindow.AssembleWidget();
+
+
+							}
+							else if (manualRoadPlacementMode->IsChecked())
 							{
 								previewWindow.AddRoadPoint(heightmapPosition);
 								previewWindow.roadsDataList->RebuildList();
@@ -835,26 +851,67 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNew(SBorder)
-					
+					SNew(SHorizontalBox)
+					+SHorizontalBox::Slot()
 					[
-						SAssignNew(roadPlacementMode, SCheckBox)
+						SNew(SBorder)
+					
+						[
+							SAssignNew(smartRoadPlacementMode, SCheckBox)
 						
-						.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+							.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
+							.IsChecked(ECheckBoxState::Unchecked)
+							.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
+						
+							if (newState == ECheckBoxState::Checked)
+							{
+								biotopeGenerationMode->SetEnabled(false);
+								previewWindow.AddRoad("Smart Road");
+								previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
+								manualRoadPlacementMode->SetEnabled(false);
+							}
+							else
+							{
+								biotopeGenerationMode->SetEnabled(true);
+								manualRoadPlacementMode->SetEnabled(true);
+							}
+						
+							UE_LOG(LogTemp, Log, TEXT("Toggled auto road placement mode"));
+
+							FReply::Handled();
+								})
+
+							[
+								SNew(STextBlock)
+								.Text(FText::FromString("Toggle smart road mode"))
+							]
+						]
+					
+					]
+					+ SHorizontalBox::Slot()
+					[
+						SNew(SBorder)
+
+						[
+							SAssignNew(manualRoadPlacementMode, SCheckBox)
+
+							.Style(&FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox"))
 						.IsChecked(ECheckBoxState::Unchecked)
 						.OnCheckStateChanged_Lambda([&](ECheckBoxState newState) {
-						
+
 						if (newState == ECheckBoxState::Checked)
 						{
 							biotopeGenerationMode->SetEnabled(false);
-							previewWindow.AddRoad();
+							previewWindow.AddRoad("Manual Road");
 							previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
+							smartRoadPlacementMode->SetEnabled(false);
 						}
 						else
 						{
 							biotopeGenerationMode->SetEnabled(true);
+							smartRoadPlacementMode->SetEnabled(true);
 						}
-						
+
 						UE_LOG(LogTemp, Log, TEXT("Toggled road placement mode"));
 
 						FReply::Handled();
@@ -862,15 +919,15 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 						[
 							SNew(STextBlock)
-							.Text(FText::FromString("Toggle road mode"))
+							.Text(FText::FromString("Toggle manual road mode"))
+						]
 						]
 					]
-					
-					
 
 				]
 			+ SVerticalBox::Slot()
 				.AutoHeight()
+				.MaxHeight(100)
 				[
 					SAssignNew(previewWindow.roadsDataList,SListView<TSharedPtr<RoadCoords>>)
 					.SelectionMode(ESelectionMode::Single)
@@ -890,7 +947,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						SNew(SHorizontalBox)
 						+SHorizontalBox::Slot()
 						[
-							SNew(STextBlock).Text(FText::FromString("A Road"))
+							SNew(STextBlock).Text(FText::FromString(item->roadType))
 							.ColorAndOpacity(item->roadColor)
 						]
 						+ SHorizontalBox::Slot()
@@ -910,7 +967,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 								SNew(SButton)
 								.ContentScale(1)
 								.OnClicked_Lambda([&]() {
-								if (!roadPlacementMode->IsChecked())
+								if (!smartRoadPlacementMode->IsChecked())
 								{
 
 
@@ -1964,53 +2021,57 @@ FReply FProceduralWorldModule::GenerateTerrain()
 
 	FVector start;
 	FVector end;
-	int16 adjTries = 10;
-	//Auto generation of road based on start and end point
-	if (!previewWindow.roadsData.IsEmpty() && previewWindow.roadsData[0]->Points.Num() == 2)
+	for (size_t i = 0; i < previewWindow.roadsData.Num(); i++)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[AUTO ROAD GENERATION]"));
-		start = previewWindow.roadsData[0]->Points[0];
-		end = previewWindow.roadsData[0]->Points[1];
-		int16 hardCap = 20;
-		int16 counter = 0;
-		bool succeded = ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, adjTries);
-		while(!succeded && counter < hardCap){
-			counter++;
-			UE_LOG(LogTemp, Warning, TEXT("Previous road failed, new road generation attempt: %d"), counter);
-			succeded = ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, adjTries);
+
+
+		int16 adjTries = 10;
+		//Auto generation of road based on start and end point
+		if (previewWindow.roadsData[i]->roadType.Equals("Smart Road") && previewWindow.roadsData[i]->Points.Num() == 2)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[AUTO ROAD GENERATION]"));
+			start = previewWindow.roadsData[i]->Points[0];
+			end = previewWindow.roadsData[i]->Points[1];
+			int16 hardCap = 20;
+			int16 counter = 0;
+			bool succeded = ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, adjTries);
+			while (!succeded && counter < hardCap) {
+				counter++;
+				UE_LOG(LogTemp, Warning, TEXT("Previous road failed, new road generation attempt: %d"), counter);
+				succeded = ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, adjTries);
+			}
+			if (succeded) {
+				UE_LOG(LogTemp, Warning, TEXT("[Road generation was succesufull]"));
+			}
+
+
 		}
-		if (succeded) {
-			UE_LOG(LogTemp, Warning, TEXT("[Road generation was succesufull]"));
+		//Manual plotting of road
+
+		if (previewWindow.roadsData[i]->roadType.Equals("Manual Road") && previewWindow.roadsData[i]->Points.Num() > 2)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[MANUAL RODE GENERATION]"));
+			ptrToTerrain->generateRoadPlot(roads, previewWindow.roadsData[i]->Points);
+
 		}
-		
 
-	}
-	//Manual plotting of road
-	
-	if (!previewWindow.roadsData.IsEmpty() && previewWindow.roadsData[0]->Points.Num() > 2)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[MANUAL RODE GENERATION]"));
-		ptrToTerrain->generateRoadPlot(roads, previewWindow.roadsData[0]->Points);
 
-	}
-	
+		//ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, 100);
 
-	//ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, 100);
-
-	if (!roads.IsEmpty()) {
-		for (auto& k : roads) {
-			k.calcLengthsSplines();
-			k.vizualizeRoad(ptrToTerrain->LandscapeScale);
-			for (int i = 0; i < 5; i++) {
-				ptrToTerrain->roadAnamarphosis(roads, 0.01, 9, i);
+		if (!roads.IsEmpty()) {
+			for (auto& k : roads) {
+				k.calcLengthsSplines();
+				k.vizualizeRoad(ptrToTerrain->LandscapeScale);
+				for (int j = 0; j < 5; j++) {
+					ptrToTerrain->roadAnamarphosis(roads, 0.01, 9, j);
+				}
 			}
 		}
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("[Road generation failed] OR [No road was marked]"));
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("[Road generation failed] OR [No road was marked]"));
 
+		}
 	}
-
 	//Currently only imports the landscape settings to the landscape "mesh"mountainAssets
 	landscapePtr = ptrToTerrain->generateFromTileData(tiles);
 
