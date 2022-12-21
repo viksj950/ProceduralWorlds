@@ -804,7 +804,7 @@ bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<
 	//int maxRoadTiles{ 2500 }; //remove LATER
 	int Tries{ maxTries };
 	int32 adjIndex = 0;
-	int32 slopeThreshold = 800;
+	int32 slopeThreshold = 600;
 	bool regardDist = true;
 ;
 	uint16 oldTileIndex = 0;
