@@ -546,9 +546,9 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, float const si
 					}
 
 					//Iterate through road kernel
-					for (size_t xRoad = (X-(r.Width-1)/2 + interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
+					for (size_t xRoad = (X-(r.Width-1)/2 - interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
 					{
-						for (size_t yRoad = (Y - (r.Width - 1) / 2 + interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
+						for (size_t yRoad = (Y - (r.Width - 1) / 2 - interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
 						{
 							//Iterate through Gauss kernel
 							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
@@ -1804,6 +1804,7 @@ void CreateLandscape::CreateRoadMaskTexture(TArray<Road>& inRoads, float const s
 
 		}
 
+		TMap<uint32, uint32> modifiedPixels;
 		//Iterate through the road(s) and its internal splines (double foor loop)
 		//sp is NOT a control point, but rather a point on the spline curve
 		
@@ -1823,9 +1824,9 @@ void CreateLandscape::CreateRoadMaskTexture(TArray<Road>& inRoads, float const s
 					}
 
 					//Iterate through road kernel
-					for (size_t xRoad = (X - (r.Width - 1) / 2 + interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
+					for (size_t xRoad = (X - (r.Width - 1) / 2 - interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
 					{
-						for (size_t yRoad = (Y - (r.Width - 1) / 2 + interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
+						for (size_t yRoad = (Y - (r.Width - 1) / 2 - interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
 						{
 							//Iterate through Gauss kernel
 							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
@@ -1841,16 +1842,27 @@ void CreateLandscape::CreateRoadMaskTexture(TArray<Road>& inRoads, float const s
 										weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[X * 4 * width + Y * 4 + 0]; //This can crash
 									}
 								}
+								modifiedPixels.Add(xRoad * 4 * width + yRoad * 4 + 0, weightedKernelVertex);
 								//pixels[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
-								pixels[xRoad * 4 * width + yRoad * 4 + 0] = weightedKernelVertex; // R
-								pixels[xRoad * 4 * width + yRoad * 4 + 1] = weightedKernelVertex;  // G
-								pixels[xRoad * 4 * width + yRoad * 4 + 2] = weightedKernelVertex;   // B
-								pixels[xRoad * 4 * width + yRoad * 4 + 3] = 255; // A
+								//pixels[xRoad * 4 * width + yRoad * 4 + 0] = weightedKernelVertex; // R
+								//pixels[xRoad * 4 * width + yRoad * 4 + 1] = weightedKernelVertex;  // G
+								//pixels[xRoad * 4 * width + yRoad * 4 + 2] = weightedKernelVertex;   // B
+								//pixels[xRoad * 4 * width + yRoad * 4 + 3] = 255; // A
 							}
 						}
 					}
 				}
 			}
+		}
+
+		for (auto& it : modifiedPixels)
+		{
+
+			pixels[it.Key] = it.Value;
+			pixels[it.Key + 1] = it.Value;
+			pixels[it.Key + 2] = it.Value;
+			//No need to update alpha
+
 		}
 
 		// Texture Information
