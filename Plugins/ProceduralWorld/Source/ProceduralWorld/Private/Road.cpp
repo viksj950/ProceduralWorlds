@@ -3,7 +3,8 @@
 
 #include "Road.h"
 
-Road::Road(const CRSpline& inSpline) : splinePaths{inSpline} {
+Road::Road(const CRSpline& inSpline, const uint32 inWidth /*= 10*/) : splinePaths{inSpline}, Width{inWidth}
+{
 
 }
 void Road::extend(const ControlPoint &endPoint) {

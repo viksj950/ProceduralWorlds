@@ -866,7 +866,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 							if (newState == ECheckBoxState::Checked)
 							{
 								biotopeGenerationMode->SetEnabled(false);
-								previewWindow.AddRoad("Smart Road");
+								previewWindow.AddRoad("Smart Road", currentRoadWidth);
 								previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
 								manualRoadPlacementMode->SetEnabled(false);
 							}
@@ -902,7 +902,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						if (newState == ECheckBoxState::Checked)
 						{
 							biotopeGenerationMode->SetEnabled(false);
-							previewWindow.AddRoad("Manual Road");
+							previewWindow.AddRoad("Manual Road",currentRoadWidth);
 							previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
 							smartRoadPlacementMode->SetEnabled(false);
 						}
@@ -924,6 +924,29 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						]
 					]
 
+				]
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				.MaxHeight(50)
+				[
+					SNew(SHorizontalBox)
+					+SHorizontalBox::Slot()
+					[
+						SNew(STextBlock).Text(FText::FromString("Road Width:"))
+					]
+					+ SHorizontalBox::Slot()
+					[
+						/*SAssignNew(roadWidthEntryBox,SNumericEntryBox<uint32>)
+						.Value(10)*/
+
+						SNew(SNumericEntryBox<uint32>)
+						.AllowSpin(true)
+						.MinValue(3)
+						.MaxValue(30)
+						.Value_Lambda([&]() {return this->currentRoadWidth; })
+						.OnValueChanged_Lambda([&](const int32& inValue) {currentRoadWidth = inValue; })
+					]
+				
 				]
 			+ SVerticalBox::Slot()
 				.AutoHeight()
@@ -952,20 +975,38 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						]
 						+ SHorizontalBox::Slot()
 						[
-							SNew(STextBlock).Text(FText::FromString("Number of Points:"))
+							SNew(SHorizontalBox)
+							+SHorizontalBox::Slot()
+							[
+								SNew(STextBlock).Text(FText::FromString("Number of Points: ") )
+							]
+							+SHorizontalBox::Slot()
+							[
+								SNew(STextBlock).Text(FText::AsNumber(item->Points.Num()))
+							]
+							
 						]
 						+ SHorizontalBox::Slot()
 						[
-								SNew(STextBlock).Text(FText::AsNumber(item->Points.Num()))
+							SNew(SHorizontalBox)
+							+ SHorizontalBox::Slot()
+							[
+								SNew(STextBlock).Text(FText::FromString("Width: "))
+							]
+							+ SHorizontalBox::Slot()
+							[
+								SNew(STextBlock).Text(FText::AsNumber(item->Width))
+							]
 						]
 						+SHorizontalBox::Slot()
+							.AutoWidth()
 						[
 							SNew(SBox)
-							.MaxAspectRatio(1)
-							.MinAspectRatio(1)
+							/*.MaxAspectRatio(1)
+							.MinAspectRatio(1)*/
 							[
 								SNew(SButton)
-								.ContentScale(1)
+								
 								.OnClicked_Lambda([&]() {
 								if (!smartRoadPlacementMode->IsChecked())
 								{
@@ -994,15 +1035,15 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 									})
 								[
-									SNew(SBox)
-									.MaxAspectRatio(1)
-									.MinAspectRatio(1)
-									[
-										SNew(SImage)
-										.ColorAndOpacity(FSlateColor::UseForeground())
-										.Image(FAppStyle::Get().GetBrush("Icons.Delete"))
+									
 
-									]
+										/*SNew(SImage)
+										.ColorAndOpacity(FSlateColor::UseForeground())
+										.Image(FAppStyle::Get().GetBrush("Icons.Delete"))*/
+										SNew(STextBlock).Text(FText::FromString("Delete"))
+
+									
+
 									
 								]
 							]
@@ -2042,6 +2083,8 @@ FReply FProceduralWorldModule::GenerateTerrain()
 			}
 			if (succeded) {
 				UE_LOG(LogTemp, Warning, TEXT("[Road generation was succesufull]"));
+				//Set the Width to selected
+				roads.Last().Width = previewWindow.roadsData[i]->Width;
 			}
 
 
@@ -2052,6 +2095,8 @@ FReply FProceduralWorldModule::GenerateTerrain()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("[MANUAL RODE GENERATION]"));
 			ptrToTerrain->generateRoadPlot(roads, previewWindow.roadsData[i]->Points);
+			//Set the Width to selected
+			roads.Last().Width = previewWindow.roadsData[i]->Width;
 
 		}
 
