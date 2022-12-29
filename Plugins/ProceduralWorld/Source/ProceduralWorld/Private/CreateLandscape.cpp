@@ -1721,6 +1721,184 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	return Landscape;
 }
 
+void CreateLandscape::CreateRoadMaskTexture(TArray<Road>& inRoads, float const sigma, int kernelSize, int interpolationPadding) const
+{
+	
+		int width = SizeX;
+		int height = SizeY;
+		uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+
+		// filling the pixels with dummy data (4 boxes: red, green, blue and white)
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+
+				/*ptrToTerrain->concatedHeightData;*/
+						//pixels[y * 4 * width + x * 4 + 0] = 255; // R
+						//pixels[y * 4 * width + x * 4 + 1] = 0;   // G
+						//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
+						//pixels[y * 4 * width + x * 4 + 3] = 255; // A
+
+
+				pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 0; // R
+				pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;  // G
+				pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 0;   // B
+				pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255; // A
+
+			}
+		}
+		//Paint pixels according to roads and their width
+		ControlPoint sp;
+		int X;
+		int Y;
+		for (auto& r : inRoads)
+		{
+			for (auto& s : r.splinePaths)
+			{
+
+				for (float t = 0; t < s.TotalLength; t++) {
+					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+					//Check that the road is not outside of the landscape
+					if (X < 0 || X >= SizeX || Y < 0 || Y >= SizeY) {
+						break;
+					}
+
+					//Iterate through road kernel
+					for (size_t xRoad = (X - (r.Width - 1) / 2); xRoad < (X + (r.Width - 1) / 2); xRoad++)
+					{
+						for (size_t yRoad = (Y - (r.Width - 1) / 2); yRoad < (Y + (r.Width - 1) / 2); yRoad++)
+						{
+						
+							pixels[xRoad * 4 * width + yRoad * 4 + 0] = 255; // R
+							pixels[xRoad * 4 * width + yRoad * 4 + 1] = 255;  // G
+							pixels[xRoad * 4 * width + yRoad * 4 + 2] = 255;   // B
+							pixels[xRoad * 4 * width + yRoad * 4 + 3] = 255; // A
+
+						}
+					}
+				}
+			}
+		}
+
+		//Create kernel
+		TArray<kernelElement> kernel;
+
+		int firstIndex = floor(kernelSize / 2);
+
+		//create weights
+		float weight;
+		float sumWeights = 0;
+		//float sigma = 0.3;
+
+		for (int x = -firstIndex; x <= firstIndex; x++) {
+
+			for (int y = -firstIndex; y <= firstIndex; y++) {
+
+				weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, -(pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2)));
+				kernel.Add(kernelElement(weight, FVector2D(x, y)));
+				sumWeights += weight;
+			}
+
+		}
+
+		//Iterate through the road(s) and its internal splines (double foor loop)
+		//sp is NOT a control point, but rather a point on the spline curve
+		
+		float weightedKernelVertex;
+		for (auto& r : inRoads)
+		{
+			for (auto& s : r.splinePaths)
+			{
+
+				for (float t = 0; t < s.TotalLength; t++) {
+					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+					//Check that the road is not outside of the landscape
+					if (X < 0 || X >= SizeX || Y < 0 || Y >= SizeY) {
+						break;
+					}
+
+					//Iterate through road kernel
+					for (size_t xRoad = (X - (r.Width - 1) / 2 + interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
+					{
+						for (size_t yRoad = (Y - (r.Width - 1) / 2 + interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
+						{
+							//Iterate through Gauss kernel
+							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
+								weightedKernelVertex = 0;
+								//Iterate through Gauss kernel
+								for (int j = 0; j < kernelSize * kernelSize; j++) {
+									if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+									{
+										//weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+										weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[(uint32)(kernel[j].coords.X + xRoad) * 4 * width + (uint32)(kernel[j].coords.Y + yRoad)*4 + 0];
+									}
+									else {
+										weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[X * 4 * width + Y * 4 + 0]; //This can crash
+									}
+								}
+								//pixels[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
+								pixels[xRoad * 4 * width + yRoad * 4 + 0] = weightedKernelVertex; // R
+								pixels[xRoad * 4 * width + yRoad * 4 + 1] = weightedKernelVertex;  // G
+								pixels[xRoad * 4 * width + yRoad * 4 + 2] = weightedKernelVertex;   // B
+								pixels[xRoad * 4 * width + yRoad * 4 + 3] = 255; // A
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Texture Information
+		FString FileName = FString("MyRoadMask");
+		FString pathPackage = TEXT("/Game/Content/");
+		pathPackage += "roadMask_texture";
+
+
+
+		UPackage* Package = CreatePackage(nullptr, *pathPackage);
+		Package->FullyLoad();
+		// Create the Texture
+		FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
+		//UTexture2D *CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
+		UTexture2D* CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
+
+		//// Texture Settings
+		CustomTexture->PlatformData = new FTexturePlatformData();
+		CustomTexture->PlatformData->SizeX = width;
+		CustomTexture->PlatformData->SizeY = height;
+		CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
+		//TEST AT CREATING A UTEXTURE2D withot saving to "drawer"-------------------------------
+		//CustomTexture = UTexture2D::CreateTransient(width, height, PF_R8G8B8A8);
+		////CustomTexture->Compres
+		////CustomTexture
+		////-------------------------------------------------------------------------------
+
+		// Passing the pixels information to the texture
+		//FTexture2DMipMap* Mip = &CustomTexture->GetPlatformData()->Mips[0];
+		FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
+		Mip->SizeX = width;
+		Mip->SizeY = height;
+		Mip->BulkData.Lock(LOCK_READ_WRITE);
+		uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
+		FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+		Mip->BulkData.Unlock();
+		//CustomTexture->Source.Init(width, height, 1, 1, ETextureSourceFormat::TSF_RGBA16, pixels);
+		// Updating Texture & mark it as unsaved
+		CustomTexture->AddToRoot();
+		CustomTexture->UpdateResource();
+		Package->MarkPackageDirty();
+
+		//UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), *FileName);
+
+		free(pixels);
+		pixels = NULL;
+}
+
 FVector CreateLandscape::GetWorldCoordinates(const TArray<uint16>& inData, int32 inX, int32 inY) const
 {
 	FVector temp;

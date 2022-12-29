@@ -103,6 +103,8 @@ public:
 	ALandscape* generate();
 	ALandscape* generateFromTileData(TArray<UTile*> &inTiles);
 
+	void CreateRoadMaskTexture(TArray<Road>& inRoads, float const sigma, int kernelSize, int interpolationPadding) const;
+
 	FVector GetWorldCoordinates(const TArray<uint16>& inData, int32 inX, int32 inY) const;
 
 	//Returns number of tiles in each row/column
