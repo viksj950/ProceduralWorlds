@@ -1767,9 +1767,9 @@ void CreateLandscape::CreateRoadMaskTexture(TArray<Road>& inRoads, float const s
 					}
 
 					//Iterate through road kernel
-					for (size_t xRoad = (X - (r.Width - 1) / 2); xRoad < (X + (r.Width - 1) / 2); xRoad++)
+					for (size_t xRoad = (X - (r.Width - 1) / 2) - interpolationPadding; xRoad < (X + (r.Width - 1) / 2) + interpolationPadding; xRoad++)
 					{
-						for (size_t yRoad = (Y - (r.Width - 1) / 2); yRoad < (Y + (r.Width - 1) / 2); yRoad++)
+						for (size_t yRoad = (Y - (r.Width - 1) / 2) - interpolationPadding; yRoad < (Y + (r.Width - 1) / 2) + interpolationPadding; yRoad++)
 						{
 						
 							pixels[xRoad * 4 * width + yRoad * 4 + 0] = 255; // R
@@ -1804,67 +1804,69 @@ void CreateLandscape::CreateRoadMaskTexture(TArray<Road>& inRoads, float const s
 
 		}
 
-		TMap<uint32, uint32> modifiedPixels;
-		//Iterate through the road(s) and its internal splines (double foor loop)
-		//sp is NOT a control point, but rather a point on the spline curve
 		
-		float weightedKernelVertex;
-		for (auto& r : inRoads)
-		{
-			for (auto& s : r.splinePaths)
+			interpolationPadding += 5;
+			TMap<uint32, uint32> modifiedPixels;
+			//Iterate through the road(s) and its internal splines (double foor loop)
+			//sp is NOT a control point, but rather a point on the spline curve
+
+			float weightedKernelVertex;
+			for (auto& r : inRoads)
 			{
+				for (auto& s : r.splinePaths)
+				{
 
-				for (float t = 0; t < s.TotalLength; t++) {
-					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
-					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
-					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
-					//Check that the road is not outside of the landscape
-					if (X < 0 || X >= SizeX || Y < 0 || Y >= SizeY) {
-						break;
-					}
+					for (float t = 0; t < s.TotalLength; t++) {
+						sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+						X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+						Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+						//Check that the road is not outside of the landscape
+						if (X < 0 || X >= SizeX || Y < 0 || Y >= SizeY) {
+							break;
+						}
 
-					//Iterate through road kernel
-					for (size_t xRoad = (X - (r.Width - 1) / 2 - interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
-					{
-						for (size_t yRoad = (Y - (r.Width - 1) / 2 - interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
+						//Iterate through road kernel
+						for (size_t xRoad = (X - (r.Width - 1) / 2 - interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
 						{
-							//Iterate through Gauss kernel
-							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
-								weightedKernelVertex = 0;
+							for (size_t yRoad = (Y - (r.Width - 1) / 2 - interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
+							{
 								//Iterate through Gauss kernel
-								for (int j = 0; j < kernelSize * kernelSize; j++) {
-									if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
-									{
-										//weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
-										weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[(uint32)(kernel[j].coords.X + xRoad) * 4 * width + (uint32)(kernel[j].coords.Y + yRoad)*4 + 0];
+								if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
+									weightedKernelVertex = 0;
+									//Iterate through Gauss kernel
+									for (int j = 0; j < kernelSize * kernelSize; j++) {
+										if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+										{
+											//weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+											weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[(uint32)(kernel[j].coords.X + xRoad) * 4 * width + (uint32)(kernel[j].coords.Y + yRoad) * 4 + 0];
+										}
+										else {
+											weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[X * 4 * width + Y * 4 + 0]; //This can crash
+										}
 									}
-									else {
-										weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[X * 4 * width + Y * 4 + 0]; //This can crash
-									}
+									modifiedPixels.Add(xRoad * 4 * width + yRoad * 4 + 0, weightedKernelVertex);
+									//pixels[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
+									//pixels[xRoad * 4 * width + yRoad * 4 + 0] = weightedKernelVertex; // R
+									//pixels[xRoad * 4 * width + yRoad * 4 + 1] = weightedKernelVertex;  // G
+									//pixels[xRoad * 4 * width + yRoad * 4 + 2] = weightedKernelVertex;   // B
+									//pixels[xRoad * 4 * width + yRoad * 4 + 3] = 255; // A
 								}
-								modifiedPixels.Add(xRoad * 4 * width + yRoad * 4 + 0, weightedKernelVertex);
-								//pixels[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
-								//pixels[xRoad * 4 * width + yRoad * 4 + 0] = weightedKernelVertex; // R
-								//pixels[xRoad * 4 * width + yRoad * 4 + 1] = weightedKernelVertex;  // G
-								//pixels[xRoad * 4 * width + yRoad * 4 + 2] = weightedKernelVertex;   // B
-								//pixels[xRoad * 4 * width + yRoad * 4 + 3] = 255; // A
 							}
 						}
 					}
 				}
 			}
-		}
 
-		for (auto& it : modifiedPixels)
-		{
+			for (auto& it : modifiedPixels)
+			{
 
-			pixels[it.Key] = it.Value;
-			pixels[it.Key + 1] = it.Value;
-			pixels[it.Key + 2] = it.Value;
-			//No need to update alpha
+				pixels[it.Key] = it.Value;
+				pixels[it.Key + 1] = it.Value;
+				pixels[it.Key + 2] = it.Value;
+				//No need to update alpha
 
-		}
-
+			}
+		
 		// Texture Information
 		FString FileName = FString("MyRoadMask");
 		FString pathPackage = TEXT("/Game/Content/");

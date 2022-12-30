@@ -2356,8 +2356,8 @@ FReply FProceduralWorldModule::ListTiles()
 
 	}
 
-	//Create a roadMask
-	ptrToTerrain->CreateRoadMaskTexture(roads, 0.9, 7, 5);
+	//Create a roadMask //0.01, 9, j
+	ptrToTerrain->CreateRoadMaskTexture(roads, 0.8, 7, 5);
 	
 	return FReply::Handled();
 }
