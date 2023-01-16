@@ -42,8 +42,8 @@ public:
 	bool isRoad = false;
 	//Addd more (dungeons, biotope, river, lakes)
 
-	int biotope = 1;
-	//0 = city, 1 = plains, 2 = mountains
+	int biotope = -1;
+	// -1 = default flat, 0 = city, 1 = plains, 2 = mountains
 
 	int32 index{0};
 	int32 tileSize{0};

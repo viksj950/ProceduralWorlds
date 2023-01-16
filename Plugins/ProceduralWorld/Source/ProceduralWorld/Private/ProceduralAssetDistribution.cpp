@@ -11,6 +11,256 @@ ProceduralAssetDistribution::~ProceduralAssetDistribution()
 {
 }
 
+void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> biomeSettings, TArray<UTile*> tiles, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy,
+	const int32 GridSizeOfProxies, const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const int32& landscapeScale)
+{
+	UWorld* World = nullptr;
+	FWorldContext& EditorWorldContext = GEditor->GetEditorWorldContext();
+	World = EditorWorldContext.World();
+	
+	FVector proxyLocation;
+	FVector proxyScale;
+	FVector Location;
+	FVector assetScale;
+	FMath mathInstance;
+
+	float minPos = 0.05f;
+	float maxPos = 0.95f;
+	float minRot = 0.0f;
+	float maxRot = 2.0f * PI;
+	float minScale;
+	float maxScale;
+	float RotationAngle;
+	int AssetCount = 0; //used to count per tile assets
+
+	//Iterate through all tiles
+	for (size_t i = 0; i < tiles.Num(); i++)
+	{
+		//Check which type the tile is in terms of biotope
+		for (size_t j = 0; j < biomeSettings.Num(); j++) {
+			if (tiles[i]->biotope == biomeSettings[j]->biotopeIndex) {
+
+				//Make sure the tiles has properly setup a streaming proxy for world partitioning
+				if (tiles[i]->streamingProxy != nullptr)
+				{
+					//Fetch a location within the proxy
+					proxyLocation = tiles[i]->streamingProxy->GetActorLocation();
+					proxyScale = tiles[i]->streamingProxy->GetActorScale();
+
+				}
+				else {
+					UE_LOG(LogTemp, Warning, TEXT("Something went wrong, tiles are missing streamingproxies"));
+					break;
+				}
+
+				//Iterate through the number of assets types this tiles should contain
+				//UE_LOG(LogTemp, Warning, TEXT("Number of assetstypes : %d"), biomeSettings[j]->AssetSettings.Num());
+				for (size_t k = 0; k < biomeSettings[j]->AssetSettings.Num(); k++)
+				{
+					//Iterate through the number of instances of this specific asset the tile should countain
+					AssetCount = 0;
+					while (AssetCount < biomeSettings[j]->AssetSettings[k]->assetCount) {
+
+						//Random coordinates for X,Y within the bounds of the tiles
+						float randomValX = mathInstance.FRandRange(minPos, maxPos);
+						float randomValY = mathInstance.FRandRange(minPos, maxPos);
+
+						//Find position in tile, scales based on perProxy
+						Location = proxyLocation + (ComponentSizeQuads * proxyScale) * (ComponentsPerProxy / 2.0);
+
+						//Set position for X,Y
+						Location.X = proxyLocation.X + (ComponentSizeQuads * proxyScale.X) * (ComponentsPerProxy * randomValX);
+						Location.Y = proxyLocation.Y + (ComponentSizeQuads * proxyScale.Y) * (ComponentsPerProxy * randomValY);
+
+						//Create triangle for normal calculations to match ground tilt
+						Triangle tri(tiles[i], Location.X, Location.Y);
+
+						Location.Z = tiles[i]->streamingProxy->GetHeightAtLocation(Location).GetValue();
+
+						FVector UpVector = FVector(0, 0, 1);
+
+						RotationAngle = acosf(FVector::DotProduct(UpVector, tri.normal));
+
+						//Check if angle is acceptable to spawn the object within
+						if (RotationAngle > biomeSettings[j]->AssetSettings[k]->angleThreshold) {
+							AssetCount++;
+							continue;
+						}
+
+						FVector RotationAxis = FVector::CrossProduct(UpVector, tri.normal);
+						RotationAxis.Normalize();
+
+						float randomZRotation = mathInstance.FRandRange(minRot, maxRot);
+
+						FQuat Quat = FQuat(RotationAxis, RotationAngle);
+						FQuat quatRotZ = FQuat(tri.normal, randomZRotation);
+						Quat = quatRotZ * Quat;
+
+						FRotator Rotation(tri.normal.Rotation());
+						FActorSpawnParameters SpawnInfo;
+
+						//Specify where in the world it will spawn, using ground tilt
+						AStaticMeshActor* MyNewActor = World->SpawnActor<AStaticMeshActor>(Location, Quat.Rotator(), SpawnInfo);
+
+						//For scale variance (assumes uniform scale on all axises which "should" be true)
+						FVector defaultScale = MyNewActor->GetActorScale3D();
+						minScale = defaultScale.X - biomeSettings[j]->AssetSettings[k]->scaleVar;
+						maxScale = defaultScale.X + biomeSettings[j]->AssetSettings[k]->scaleVar;
+
+						float scaleValue = mathInstance.FRandRange(minScale, maxScale);
+
+						assetScale = { scaleValue ,scaleValue ,scaleValue };
+
+						MyNewActor->SetActorScale3D(assetScale);
+
+						UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *biomeSettings[j]->AssetSettings[k]->ObjectPath);
+
+						//If noCollide is true, we have to check bounding box to all previous spawned objects
+						if (biomeSettings[j]->AssetSettings[k]->noCollide && !biomeSettings[j]->AssetSettings[k]->considerRoad) {
+							spawnWithNoCollide(tiles[i], Location, scaleValue, biomeSettings[j]->AssetSettings[k]->density, MyNewActor, Mesh, AssetCount);
+						}
+						//If considerRoad is true, we have to check range to road spline points and see if it is above threshold
+						else if (biomeSettings[j]->AssetSettings[k]->considerRoad && !biomeSettings[j]->AssetSettings[k]->noCollide) {
+							if (roadConsiderCheck(inRoadCoords, roads, landscapeScale, Location)) {
+								AssetCount++;
+								culledAssets.Add(MyNewActor);
+							}
+							else {
+								UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+								if (MeshComponent)
+								{
+									MeshComponent->SetStaticMesh(Mesh);
+								}
+								tiles[i]->tileAssets.Add(MyNewActor);
+								AssetCount++;
+							}
+						}
+						//If both true, check first road dist, then if check if it collides with other object
+						else if (biomeSettings[j]->AssetSettings[k]->considerRoad && biomeSettings[j]->AssetSettings[k]->noCollide) {
+							if (roadConsiderCheck(inRoadCoords, roads, landscapeScale, Location)) {
+								AssetCount++;
+								culledAssets.Add(MyNewActor);
+							}
+							else {
+								spawnWithNoCollide(tiles[i], Location, scaleValue, biomeSettings[j]->AssetSettings[k]->density, MyNewActor, Mesh, AssetCount);
+							}
+						}
+						//Both false, spawn without any criterion
+						else if (!biomeSettings[j]->AssetSettings[k]->considerRoad && !biomeSettings[j]->AssetSettings[k]->noCollide) {
+							UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+							if (MeshComponent)
+							{
+								MeshComponent->SetStaticMesh(Mesh);
+							}
+							tiles[i]->tileAssets.Add(MyNewActor);
+							AssetCount++;
+						}
+						else {
+							UE_LOG(LogTemp, Warning, TEXT("This should never happen PA.cpp 163"));
+						}
+					}
+					for (auto& t : culledAssets)
+					{
+						if (t.IsValid())
+						{
+							t->Destroy();
+						}
+					}
+					culledAssets.Empty();
+				}
+				
+			}
+			else {
+				/*UE_LOG(LogTemp, Warning, TEXT("Something went wrong, no biome type of this tile exists (!)"));*/
+			}
+		}
+
+		
+	}
+	
+}
+
+void ProceduralAssetDistribution::spawnWithNoCollide(UTile* tile, const FVector& Location, const float& scaleValue, const float& density, AStaticMeshActor* MyNewActor , UStaticMesh* Mesh, int &AssetCount)
+{
+	//Check if location is suitable and not inside existing house
+	FVector newSize = density * scaleValue * Mesh->GetBounds().GetBox().GetSize();
+
+	Point2D currentObjectTL = { Location.X - (newSize.X / 2), Location.Y + (newSize.Y / 2) };
+	Point2D currentObjectBR = { Location.X + (newSize.X / 2), Location.Y - (newSize.Y / 2) };
+
+	Point2D prevObjectTL;
+	Point2D prevObjectBL;
+	bool shouldSpawn = true;
+
+	if (tile->tileAssets.IsEmpty()) { //first house in tile, no need to check intersect
+		UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+		if (MeshComponent)
+		{
+			MeshComponent->SetStaticMesh(Mesh);
+		}
+
+		tile->tileAssets.Add(MyNewActor);
+		AssetCount++;
+	}
+	else { //need to check intersect between other houses, as there is houses already in the tile
+		for (int l = 0; l < tile->tileAssets.Num(); l++) {
+			FVector scale = tile->tileAssets[l].Get()->GetStaticMeshComponent()->GetRelativeScale3D();
+
+			FVector prevSize = density * scale * tile->tileAssets[l].Get()->GetStaticMeshComponent()->GetStaticMesh()->GetBounds().GetBox().GetSize();
+			prevObjectTL = { tile->tileAssets[l]->GetActorLocation().X - (prevSize.X / 2) , tile->tileAssets[l]->GetActorLocation().Y + (prevSize.Y / 2) };
+			prevObjectBL = { tile->tileAssets[l]->GetActorLocation().X + (prevSize.X / 2) , tile->tileAssets[l]->GetActorLocation().Y - (prevSize.Y / 2) };
+
+			if (Intersecting(currentObjectTL, currentObjectBR, prevObjectTL, prevObjectBL)) {
+				shouldSpawn = false;
+				AssetCount++;
+				culledAssets.Add(MyNewActor);
+				break;
+			}
+		}
+		if (shouldSpawn) {
+			UStaticMeshComponent* MeshComponent = MyNewActor->GetStaticMeshComponent();
+			if (MeshComponent)
+			{
+				MeshComponent->SetStaticMesh(Mesh);
+			}
+			tile->tileAssets.Add(MyNewActor); 
+			AssetCount++;
+		}
+
+	}
+}
+
+bool ProceduralAssetDistribution::roadConsiderCheck(const TArray<ControlPoint>& inRoadCoords, const TArray<Road>& roads, const int32& landscapeScale, const FVector& Location)
+{
+	bool toCloseToRoad{ false };
+	//UE_LOG(LogTemp, Warning, TEXT("Number of roads: %d"), roads.Num());
+	for (size_t i = 0; i < roads.Num(); i++)
+	{
+		
+		uint32 maxDistToRoad{ roads[i].Width * landscapeScale };
+		float Xdiff, Ydiff;
+	/*	UE_LOG(LogTemp, Warning, TEXT("maxDistToRoad: %d"), maxDistToRoad);*/
+		
+		for (size_t j = 0; j < inRoadCoords.Num(); j++)
+		{
+			//Inverted beacause inverted devolopers (world map coords and height map coords are "mirrored")
+			Xdiff = abs(inRoadCoords[j].pos.Y - Location.X);
+			Ydiff = abs(inRoadCoords[j].pos.X - Location.Y);
+			if (Xdiff <= maxDistToRoad && Ydiff <= maxDistToRoad) {
+				toCloseToRoad = true;
+				break;
+			}
+		}
+
+		if (toCloseToRoad) {
+		/*	UE_LOG(LogTemp, Warning, TEXT("Asset to close to span to road, aborting!"));*/
+			continue;
+		}
+	}
+	return toCloseToRoad;
+	
+}
+
 void ProceduralAssetDistribution::spawnActorObjectsCity(UTile* t, const int32 ComponentSizeQuads, const int32 ComponentsPerProxy, const int32 GridSizeOfProxies, int32 assetCount, float spread, float scaleVar, const TArray<ControlPoint>& inRoadCoords, const int &roadWidth) {
 	UWorld* World = nullptr;
 

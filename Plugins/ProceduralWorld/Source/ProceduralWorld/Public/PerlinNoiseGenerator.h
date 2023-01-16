@@ -196,8 +196,8 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 	int ColumnStartIndex = inStartColumn;
 	//int RowStartIndex = FMath::Floor(TileIndex / inGridSizeOfProxies) * DataSideSize;
 	int RowStartIndex = inStartRow;
-	UE_LOG(LogTemp, Warning, TEXT("ColumnStartIndex %d"), ColumnStartIndex);
-	UE_LOG(LogTemp, Warning, TEXT("RowStartIndex %d"), RowStartIndex);
+	//UE_LOG(LogTemp, Warning, TEXT("ColumnStartIndex %d"), ColumnStartIndex);
+	//UE_LOG(LogTemp, Warning, TEXT("RowStartIndex %d"), RowStartIndex);
 
 	float sum = 0.0f;
 	int averageHeight = 32768;
@@ -220,7 +220,15 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 			float amplitudeLoc = settings.Amplitude;
 			float frequencyLoc = settings.Frequency;  //For rass 0.005625 is kinda good, rockieer biome: 0.015625 
 			for (int k = 0; k < settings.OctaveCount; k++) {
-				sum += generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * settings.HeightScale;
+				if (settings.Turbulence)
+				{
+					sum += abs(generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * settings.HeightScale);
+				}
+				else
+				{
+					sum += generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * settings.HeightScale;
+				}
+				
 				//sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625 * frequency) * Amplitude * heightScale;
 				//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
 
@@ -228,9 +236,9 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 				frequencyLoc *= settings.Lacunarity;
 
 			}
-
+			int32 diff = averageHeight - (sum + averageHeight);
 			if ((sum)+averageHeight < averageHeight) {
-				Data[column * DataSideSize + row] = averageHeight;
+				Data[column * DataSideSize + row] =  (sum + averageHeight);
 			}
 			else {
 				Data[column * DataSideSize + row] = (sum)+averageHeight;
@@ -242,7 +250,5 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 		endVert = ColumnStartIndex;
 	}
 	return ColumnStartIndex - DataSideSize - 1;
-	
-
 
 }

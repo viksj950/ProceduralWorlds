@@ -26,7 +26,7 @@
 #include "math.h"
 #include "Math/IntVector.h"
 #include "CoreFwd.h"
-
+#include "Containers/Map.h"
 //Tile system
 #include"Tile.h" 
 
@@ -66,10 +66,25 @@ public:
 	//Perlin interpolation (smoothstep)
 	void interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmount);
 
+	void copyToRawConcatData();
+
 	//Function for deforming the world height data based on road placement (brute force)
 	void roadAnamarphosis(const TArray<Road>& roads,float sigma = 0.3f, int kernelSize = 9, int interpolationPadding = 0);
-	//sugma func
+	//sugma func (deprecated)
 	void generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads);
+	//With start and end point
+	bool generateRoadV2(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries);
+	//Manual plotting of points
+	bool generateRoadPlot(TArray<Road>& inRoads, TArray<FVector> points);
+
+	float calcDist(const FVector& p1, const FVector& p2);
+
+	void GetCandidates(TMap<float, ControlPoint>& candidates, CRSpline& inSpline, const float& X, const float& Y, 
+		float &oldDist, float &newDist, const FVector& end, ControlPoint& EndCP, const int32& slopeThreshold, bool &regardDist);
+
+	bool checkBounds(const CRSpline& spline);
+
+	int16 GetTileIndex(const int32& X, const int32& Y);
 
 	//Main function for interpolation between biomes
 	void interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes);
@@ -77,12 +92,18 @@ public:
 	//new and improved gaussian blur 
 	void interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth);
 
+	//Randomly placing biotopes depending on nmbrOfBiomes and then fillin by Voronoi
 	void AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>&BiotopeSettings) const;
+
+	//Assign biotopes by using the data where the user manually place biotopes.
+	void AssignBiotopesToTiles(TArray<UTile*>& inTiles, const TMap<int32,int32>&inMarkedTiles) const;
 
 	//For now creating Perlin Noise and assigning it to the internal variable heightData asdwell as divide it among tiles
 	void GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);
 	ALandscape* generate();
 	ALandscape* generateFromTileData(TArray<UTile*> &inTiles);
+
+	void CreateRoadMaskTexture(TArray<Road>& inRoads, float const sigma, int kernelSize, int interpolationPadding) const;
 
 	FVector GetWorldCoordinates(const TArray<uint16>& inData, int32 inX, int32 inY) const;
 
@@ -91,7 +112,7 @@ public:
 
 	//contains the heightmap for the whole map
 	TArray<uint16> concatedHeightData;
-	//For debug purposes
+	//For 2D preview
 	TArray<uint16> rawConcatData;
 
 	//Struct for storing information of biomes that are placed in the landscape  
@@ -130,7 +151,7 @@ public:
 	int32 ComponentsPerProxy;
 	int32 SectionsPerComponent;
 	int32 TileSize;
-	FVector LandscapeScale = {100,100,100};
+	FVector LandscapeScale{100,100,100};
 
 	
 private:

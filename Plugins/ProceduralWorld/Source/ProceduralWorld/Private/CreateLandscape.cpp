@@ -109,8 +109,25 @@ void CreateLandscape::GenerateAndAssignHeightData(TArray<UTile*>& inTiles, const
 			X += (TileSize - 1);
 			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
 		}
+		int index{-1};
+		for (size_t i = 0; i < BiotopeSettings.Num(); i++)
+		{
+			if (it->biotope == BiotopeSettings[i]->BiotopeIndex)
+			{
+				index = i;
+				break;
+			}
 
-		currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *BiotopeSettings[it->biotope]);
+		}
+		if (index != -1)
+		{
+			currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *BiotopeSettings[index]);
+		}
+		else
+		{
+			currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *new BiotopePerlinNoiseSetting("default",-1,64,"",1,1,1,1,1,1,false));
+		}
+		
 
 		//assign correct noise values depending on tile index and biotope 
 		//Also need to have biotopeSettings
@@ -216,14 +233,13 @@ uint32 CreateLandscape::GetVertexIndex(int32 dataDimension, int32 inX, int32 inY
 {
 	if (inX <= dataDimension && inY <= dataDimension)
 	{
-		
-		return inX * dataDimension + inY;
 
+		return inX * dataDimension + inY;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Coordinates do not fit"));
-		return -1;
+		UE_LOG(LogTemp, Warning, TEXT("Coordinates do not fit, using index 0 as temp fix"));
+		return 0;//TEMP FIX, IDK.., used to be -1 which crashes the program
 	}
 	
 
@@ -481,6 +497,11 @@ void CreateLandscape::interpAllAdjTiles(TArray<UTile*>& inTiles, int32 stepAmoun
 	}
 }
 
+void CreateLandscape::copyToRawConcatData()
+{
+	rawConcatData = concatedHeightData;
+}
+
 void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, float const sigma, int kernelSize, int interpolationPadding)
 {
 	//Create kernel
@@ -514,6 +535,7 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, float const si
 		{
 			for(auto& s: r.splinePaths )
 			{
+				
 				for (float t = 0; t < s.TotalLength; t++) {
 					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
 					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
@@ -524,9 +546,9 @@ void CreateLandscape::roadAnamarphosis(const TArray<Road>& roads, float const si
 					}
 
 					//Iterate through road kernel
-					for (size_t xRoad = (X-(r.Width-1)/2 + interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
+					for (size_t xRoad = (X-(r.Width-1)/2 - interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
 					{
-						for (size_t yRoad = (Y - (r.Width - 1) / 2 + interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
+						for (size_t yRoad = (Y - (r.Width - 1) / 2 - interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
 						{
 							//Iterate through Gauss kernel
 							if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
@@ -697,6 +719,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 			//Random Tangent
 			spline.addControlPoint({ (float)math.RandRange(X,X + tileSize - 1),(float)math.RandRange(Y,Y + tileSize - 1),(float)35000 });
 
+			UE_LOG(LogTemp, Warning, TEXT("splinePoint coord %s"), *spline.points[0].pos.ToString());
 			//Iterate the new curve segment
 			spline.calcLengths();
 			float heightDifference = 0;
@@ -725,7 +748,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 					concatedHeightData[GetVertexIndex(SizeX, FGenericPlatformMath::RoundToInt(nextSP.pos.X), FGenericPlatformMath::RoundToInt(nextSP.pos.Y))])*(100.0f/128.0f);
 			/*	UE_LOG(LogTemp, Warning, TEXT("heightDiff = %f"), heightDifference);*/
 				if (heightDifference > threshold) {
-					UE_LOG(LogTemp, Warning, TEXT("Attempt at creating spline failed, to much height difference!"));
+				/*	UE_LOG(LogTemp, Warning, TEXT("Attempt at creating spline failed, to much height difference!"));*/
 					canSpawn = false;
 					spline.points.RemoveAt(spline.points.Num() - 1);
 					spline.points.RemoveAt(spline.points.Num() - 1);
@@ -755,6 +778,353 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 
 }
+//fix consts
+bool CreateLandscape::generateRoadV2(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries)
+{
+	FMath math;
+	uint16 tileIndex = GetTileIndex(start.X, start.Y);
+	uint16 prevTileIndex = 0;
+	uint16 endTile = GetTileIndex(end.X, end.Y);
+	CRSpline spline;
+	float oldDist = 0;
+	float newDist = 0;
+	float X = start.X;
+	float Y = start.Y;
+	bool sucess = false;
+
+	//tangent (Needs to be improved)
+	spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
+	//first control point
+	spline.addControlPoint({ X,Y,(float)45000 });
+	ControlPoint startCP = spline.points.Last();
+	ControlPoint EndCP;
+
+	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
+	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
+	//int maxRoadTiles{ 2500 }; //remove LATER
+	int Tries{ maxTries };
+	int32 adjIndex = 0;
+	int32 slopeThreshold = 600;
+	bool regardDist = true;
+;
+	uint16 oldTileIndex = 0;
+	TArray<uint16> visitedTiles{ tileIndex }; //used to not iterate to the same tile again
+	TMap<float, ControlPoint> candidates; //used for choosing which control point makes most sense to extend road to
+
+	while (Tries > 0 && !(calcDist(EndCP.pos, end) < TileSize/2)) {
+		Tries--;
+		bool goBack = true;
+
+		while(adjIndex < 8) { 
+			if (inTiles[tileIndex]->adjacentTiles[adjIndex] != nullptr)
+			{
+				if (!(visitedTiles.Contains(inTiles[tileIndex]->adjacentTiles[adjIndex]->index))) {
+					int32 adjTileIndex = inTiles[tileIndex]->adjacentTiles[adjIndex]->index;
+
+						X = adjTileIndex % gridSizeOfProxies * (TileSize - 1);
+						Y = FMath::Floor(adjTileIndex / gridSizeOfProxies) * (TileSize - 1);
+
+						GetCandidates(candidates, spline, X, Y, oldDist, newDist, end, EndCP, slopeThreshold, regardDist);
+				}
+			}
+			adjIndex++;
+		} //while adjIndex < 8 end
+	
+		if (!candidates.IsEmpty()) {
+			UE_LOG(LogTemp, Warning, TEXT("Number of candiates : %d"), candidates.Num());
+			float lowestDist = 100000;
+			ControlPoint bestCandidate;
+
+			for (auto t : candidates) {
+				if (t.Key < lowestDist) {
+					lowestDist = t.Key;
+					bestCandidate = t.Value;
+				}
+			}
+			//UE_LOG(LogTemp, Warning, TEXT("Choose candidate nr : %d"), actualBest);
+			spline.addControlPoint({ (float)bestCandidate.pos.X, (float)bestCandidate.pos.Y,(float)45000 }); //add that shit
+
+			//if (checkBounds(spline)) {
+			//	UE_LOG(LogTemp, Warning, TEXT("[BIG ISSUE]The new point choosen does create a spline out of bounds!!"));
+			//	spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+			//	spline.points.RemoveAt(spline.points.Num() - 1); //remove CP
+			//}
+
+			UE_LOG(LogTemp, Warning, TEXT("Added a spline segment succesfully"));
+			Tries = maxTries;
+			candidates.Empty();
+			prevTileIndex = tileIndex;
+			tileIndex = GetTileIndex(bestCandidate.pos.X, bestCandidate.pos.Y);
+			visitedTiles.Add(tileIndex);
+			adjIndex = 0;
+			regardDist = true;
+
+			if (tileIndex == endTile) {
+				//UE_LOG(LogTemp, Warning, TEXT("Road succesfully reached end point!"));
+				spline.points.RemoveAt(spline.points.Num() - 1); //remove best candidate
+				spline.addControlPoint({ (float)end.X, (float)end.Y,(float)45000 });
+				spline.addControlPoint({ (float)end.X + 50, (float)end.Y + 50,(float)40000 }); //add tangent to end point
+				sucess = true;
+				break;
+			}
+			
+		}
+		else if(candidates.IsEmpty() && Tries == (maxTries/2)) {
+			UE_LOG(LogTemp, Warning, TEXT("Turning off distance check as the path cant seem to ideal path!")); 
+			regardDist = false;
+			adjIndex = 0;
+		}
+		else if (candidates.IsEmpty() && Tries == 0 && goBack && visitedTiles.Num() > 1 && spline.points.Num() > 3)  {
+			UE_LOG(LogTemp, Warning, TEXT("No path can be found from here, trying to go back"));
+			spline.points.RemoveAt(spline.points.Num() - 1); //remove last point
+			tileIndex = prevTileIndex;
+			prevTileIndex = GetTileIndex(spline.points[spline.points.Num() - 2].pos.X, spline.points[spline.points.Num() - 2].pos.Y);
+			adjIndex = 0;
+			Tries = Tries + 5;
+			regardDist = true;
+			goBack = false;
+		}
+		else {
+			adjIndex = 0;
+		}
+
+	}
+
+	//Add the road spline as an actual road entry in road array
+	//if (spline.points.Num() >= 4) {
+	if (sucess) {
+		inRoads.Add(spline);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Bool value is: %s"), sucess ? TEXT("true") : TEXT("false"));
+	return sucess;
+}
+
+bool CreateLandscape::generateRoadPlot(TArray<Road>& inRoads, TArray<FVector> points)
+{
+	bool success = true;
+	bool firstPoint = true;
+	FMath math;
+	int16 counter = 0;
+	TArray<ControlPoint> roadCPs;
+	CRSpline spliner;
+	Road road;
+
+	if (points.Num() < 2) {
+		success = false;
+		UE_LOG(LogTemp, Warning, TEXT("Manual input points was either empty or just set to 1 [STOP CALLING THIS FUNCTION IN THIS CASE]"));
+	}
+	else {
+		while (counter < points.Num()) {
+			if (firstPoint) { //first tangent
+
+				roadCPs.Add({ (float)math.RandRange(points[counter].X,points[counter].X + TileSize - 1),
+					(float)math.RandRange(points[counter].Y,points[counter].Y + TileSize - 1),(float)45000 }); //A random start tangent based on input point
+
+				spliner.addControlPoint(roadCPs.Last()); //add first tangent to the spline
+
+				firstPoint = false; //Now first tangent is set
+			}
+			else {
+				roadCPs.Add({ (float)points[counter].X, (float) points[counter].Y, 45000});
+
+				spliner.addControlPoint(roadCPs.Last()); //Add the first "real" point
+
+				counter++;
+			}
+
+			
+		}
+		roadCPs.Add({ (float)math.RandRange(points[counter - 1].X,points[counter - 1].X + TileSize - 1),
+					(float)math.RandRange(points[counter - 1].Y,points[counter - 1].Y + TileSize - 1),(float)45000 }); //A random end tangent based on last input point
+
+		spliner.addControlPoint(roadCPs.Last()); //add last tangent to the spline
+
+		road = spliner;
+		inRoads.Add(road); 
+	}
+
+	return success;
+}
+
+float CreateLandscape::calcDist(const FVector& p1, const FVector& p2)
+{
+	int dx = abs(p2.X - p1.X);
+	int dy = abs(p2.Y - p1.Y);
+
+	int min = std::min(dx, dy);
+	int max = std::max(dx, dy);
+
+	int diagonalSteps = min;
+	int straightSteps = max - min;
+
+	return sqrt(2) * diagonalSteps + straightSteps;
+}
+
+void CreateLandscape::GetCandidates(TMap<float, ControlPoint>& candidates, CRSpline& spline, const float& X, const float& Y,
+	float& oldDist, float& newDist, const FVector& end, ControlPoint& EndCP, const int32& slopeThreshold, bool &regardDist)
+{
+	FMath math;
+
+	ControlPoint previousLastPoint = spline.points.Last();
+
+	//Random cp
+	spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
+
+	if (spline.points.Num() - 2 >= 0) { //Crashes if this isnt true, bad fix but it uses the old oldistl, so the results isnt as bad
+		oldDist = calcDist(spline.points[spline.points.Num() - 2].pos, end);
+	}
+
+	FVector u = spline.points.Last().pos - previousLastPoint.pos;
+	u.Normalize();
+	u = u * 4;
+
+	EndCP = spline.points.Last();
+	newDist = calcDist(EndCP.pos, end);
+
+	//Tangent with direction of previous spline segemtn, 2 units infront 
+	spline.addControlPoint({(float) (spline.points.Last().pos.X + u.X) , (float) (spline.points.Last().pos.Y + u.Y), (float)45000 });
+	//Rnadom as fuck
+	//spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
+	spline.calcLengths();
+
+	float steplength = spline.TotalLength / 150.0f;
+	float maxSlope = 0;
+	float maxSlopeH = 0;
+	//float xValueAtLoc, yValueAtLoc;
+	//FVector xLocation, yLocation;
+	FVector v, right_v, left_v;
+	int roadWidth = 10;
+	FVector Location, prevLocation;
+	for (float i = steplength; i < spline.TotalLength - steplength; i += steplength)
+	{
+		prevLocation = spline.GetSplinePoint(spline.GetNormalisedOffset(i - steplength)).pos; 
+		Location = spline.GetSplinePoint(spline.GetNormalisedOffset(i)).pos;
+	
+		/*xLocation.X = Location.X + roadWidth / 2;
+		yLocation.Y = Location.Y + roadWidth / 2;*/
+		v = (Location - prevLocation);
+
+		FVector right_normalized = { v.Y, -v.X, 0 };
+		FVector left_normalized = { -v.Y, v.X, 0 };
+
+		right_normalized.Normalize();
+		left_normalized.Normalize();
+
+		right_v = Location + (roadWidth) *  right_normalized;
+		left_v = Location + (roadWidth) * left_normalized;
+
+		if (FMath::RoundToInt(Location.X) >= 0 && FMath::RoundToInt(Location.Y) >= 0 && FMath::RoundToInt(prevLocation.X) >= 0 && FMath::RoundToInt(prevLocation.Y) >= 0) { //Avoids crashing
+			if (FMath::RoundToInt(Location.X) < SizeX && FMath::RoundToInt(Location.Y) < SizeX && FMath::RoundToInt(prevLocation.X) < SizeX && FMath::RoundToInt(prevLocation.Y) < SizeX) {
+				Location.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(Location.X), FMath::RoundToInt(Location.Y))];
+				prevLocation.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(prevLocation.X), FMath::RoundToInt(prevLocation.Y))];
+
+				if (FMath::RoundToInt(right_v.X) >= 0 && FMath::RoundToInt(right_v.Y) >= 0 && FMath::RoundToInt(left_v.X) >= 0 && FMath::RoundToInt(left_v.Y) >= 0
+					&& FMath::RoundToInt(right_v.X) < SizeX && FMath::RoundToInt(right_v.Y) < SizeX && FMath::RoundToInt(left_v.X) < SizeX && FMath::RoundToInt(left_v.Y) < SizeX) { //Avoids crashing
+					right_v.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(right_v.X), FMath::RoundToInt(right_v.Y))];
+					left_v.Z = concatedHeightData[GetVertexIndex(SizeX, FMath::RoundToInt(left_v.X), FMath::RoundToInt(left_v.Y))];
+					/*		UE_LOG(LogTemp, Warning, TEXT("right_v  = %s"), *right_v.ToString());
+							UE_LOG(LogTemp, Warning, TEXT("left_v = % s"), *left_v.ToString())*/
+
+					if (abs(right_v.Z - left_v.Z) > maxSlopeH) {
+						maxSlopeH = abs(right_v.Z - left_v.Z);
+						/*UE_LOG(LogTemp, Warning, TEXT("This NEVER happens right?!"));*/
+					}
+
+				}
+				if (abs(Location.Z - prevLocation.Z) > maxSlope) {
+					maxSlope = abs(Location.Z - prevLocation.Z);
+					//UE_LOG(LogTemp, Warning, TEXT("Location.Z = %f"), Location.Z);
+					//UE_LOG(LogTemp, Warning, TEXT("prevLocation.Z = %f"), prevLocation.Z);
+				}
+			}
+			else {
+				UE_LOG(LogTemp, Warning, TEXT("Coords are out of bounds, not computing these!"));
+			}
+		}
+	}
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Max Slope (Vertical) = %f"), maxSlope);
+	//UE_LOG(LogTemp, Warning, TEXT("Max Slope (Horizontal) = %f"), maxSlopeH);
+
+	if (regardDist && (oldDist < newDist || maxSlope > slopeThreshold || maxSlopeH > slopeThreshold)) {
+		
+		if (maxSlope > slopeThreshold) {
+			UE_LOG(LogTemp, Warning, TEXT("To much slope!"));
+		}
+		if (oldDist < newDist) {
+			UE_LOG(LogTemp, Warning, TEXT("To much distance!"));
+		}
+		if (maxSlopeH > slopeThreshold) {
+			UE_LOG(LogTemp, Warning, TEXT("To much slope (Horizontal)!"));
+		}
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove control point
+	}
+	else if (!regardDist && maxSlope < slopeThreshold && maxSlopeH < slopeThreshold) {
+		UE_LOG(LogTemp, Warning, TEXT("Couldnt find ideal point, found second best candidate"));
+		candidates.Add(newDist, EndCP);
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove control point
+		regardDist = true;
+	}
+	else if (!regardDist && (maxSlope > slopeThreshold || maxSlopeH > slopeThreshold)) {
+		if (maxSlope > slopeThreshold) {
+			UE_LOG(LogTemp, Warning, TEXT("To much slope!"));
+		}
+		if (maxSlopeH > slopeThreshold) {
+			UE_LOG(LogTemp, Warning, TEXT("To much slope (Horizontal)!"));
+		}
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove control point
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Good fit for new point, keeping as candidate path"));
+		candidates.Add(newDist, EndCP);
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove tangent
+		spline.points.RemoveAt(spline.points.Num() - 1); //remove control point
+
+	}
+}
+
+bool CreateLandscape::checkBounds(const CRSpline& spline)
+{
+
+	float startLength = 0;
+	if (spline.points.Num() > 4)
+	{
+		for (int i = 0; i > spline.points.Num() - 2; i++) {
+			startLength += spline.points[i].length;
+		}
+
+	}
+
+	ControlPoint nextSP;
+	for (; startLength < spline.TotalLength; startLength += 2) {
+		nextSP = spline.GetSplinePoint(spline.GetNormalisedOffset(startLength));
+
+		//Check so that the points exists within the map boundaries
+		if (0 > FGenericPlatformMath::RoundToInt(nextSP.pos.X) || SizeX <= FGenericPlatformMath::RoundToInt(nextSP.pos.X) ||
+			0 > FGenericPlatformMath::RoundToInt(nextSP.pos.Y) || SizeY <= FGenericPlatformMath::RoundToInt(nextSP.pos.Y))
+		{
+			return true;
+		}
+	
+
+	}
+	return false;
+
+
+}
+
+int16 CreateLandscape::GetTileIndex(const int32& X, const int32& Y)
+{
+	int32 x_floor = floor(X / TileSize);
+	int32 y_floor = floor(Y / TileSize);
+
+	return (y_floor * GetGridSizeOfProxies()) + x_floor;
+}
+
+	
 
 void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth, int32 passes)
 {
@@ -762,6 +1132,7 @@ void CreateLandscape::interpBiomes(TArray<UTile*>& inTiles, int kernelSize, floa
 	for (int i = 0; i < passes; i++) {
 
 		interpGaussianBlur(inTiles, kernelSize, sigma / (i + 1), dynamicStep);
+		//interpGaussianBlur(inTiles, kernelSize, sigma , interpWidth);
 		dynamicStep -= dynamicStep / passes;
 
 	}
@@ -1004,7 +1375,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		//Top right adjacent corner
 		if (t->adjacentTiles[0] != nullptr && t->biotope != t->adjacentTiles[0]->biotope && t->adjacentTiles[0]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[0]->biotope == t->adjacentTiles[3]->biotope) {
 
-			UE_LOG(LogTemp, Warning, TEXT("Interpolating top right corner of tile : %d"), t->index);
+			/*UE_LOG(LogTemp, Warning, TEXT("Interpolating top right corner of tile : %d"), t->index);*/
 			X = t->index % gridSizeOfProxies * (TileSize - 1);
 			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -1035,7 +1406,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		//top left adjacent corner
 		if (t->adjacentTiles[2] != nullptr && t->biotope != t->adjacentTiles[2]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[4]->biotope) {
 
-			UE_LOG(LogTemp, Warning, TEXT("Interpolating top left corner of tile : %d"), t->index);
+		/*	UE_LOG(LogTemp, Warning, TEXT("Interpolating top left corner of tile : %d"), t->index);*/
 			X = t->index % gridSizeOfProxies * (TileSize - 1);
 			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -1066,7 +1437,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		//Bottom right adjacent corner
 		if (t->adjacentTiles[5] != nullptr && t->biotope != t->adjacentTiles[5]->biotope && t->adjacentTiles[5]->biotope == t->adjacentTiles[3]->biotope && t->adjacentTiles[5]->biotope == t->adjacentTiles[6]->biotope) {
 
-			UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom right corner of tile : %d"), t->index);
+			//UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom right corner of tile : %d"), t->index);
 			X = t->index % gridSizeOfProxies * (TileSize - 1);
 			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -1097,7 +1468,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		//Bottom left adjacent corner
 		if (t->adjacentTiles[7] != nullptr && t->biotope != t->adjacentTiles[7]->biotope && t->adjacentTiles[7]->biotope == t->adjacentTiles[4]->biotope && t->adjacentTiles[7]->biotope == t->adjacentTiles[6]->biotope) {
 
-			UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom left corner of tile : %d"), t->index);
+		/*	UE_LOG(LogTemp, Warning, TEXT("Interpolating bottom left corner of tile : %d"), t->index);*/
 			X = t->index % gridSizeOfProxies * (TileSize - 1);
 			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
 
@@ -1182,6 +1553,16 @@ void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &
 	}
 }
 
+void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const TMap<int32, int32>& inMarkedTiles) const
+{
+
+	for (auto& it : inMarkedTiles)
+	{
+		inTiles[it.Key]->biotope = it.Value;
+	}
+
+}
+
 void CreateLandscape::GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
 {
 	//NoiseGenerator<uint16, 64> noise{}; //N is "cell size", 127 is tiny tiles 1009 is large tiles
@@ -1241,12 +1622,9 @@ ALandscape* CreateLandscape::generate()
 	//Original map template:505x505 1 63x63 64 2
 	//Smaller map template: 253x253 1 63x63 16 2
 
-
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
-
-	
 
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(rawConcatData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
@@ -1261,19 +1639,6 @@ ALandscape* CreateLandscape::generate()
 
 	Landscape->bCanHaveLayersContent = true;
 	Landscape->LandscapeMaterial = nullptr;
-	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Materials/YourMaterialName.YourMaterialName'"));
-	//static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/Test_assets/M_grassMaterial.M_grassMaterial'"));
-
-	//if (Material.Object != NULL)
-	//{
-	//	Landscape->LandscapeMaterial = (UMaterial*)Material.Object;
-	//	//TheMaterial = (UMaterial*)Material.Object;
-	//}else{ 
-	//	Landscape->LandscapeMaterial = nullptr; 
-	//}
-
-	
-	
 
 	Landscape->SetActorTransform(LandscapeTransform);
 	Landscape->Import(FGuid::NewGuid(), 0, 0, SizeX - 1, SizeY - 1, SectionsPerComponent, QuadsPerComponent,
@@ -1285,8 +1650,6 @@ ALandscape* CreateLandscape::generate()
 
 	LandscapeInfo->UpdateLayerInfoMap(Landscape);
 
-	
-
 	Landscape->RegisterAllComponents();
 
 	// Need to explicitly call PostEditChange on the LandscapeMaterial property or the landscape proxy won't update its material
@@ -1294,15 +1657,15 @@ ALandscape* CreateLandscape::generate()
 	Landscape->PostEditChangeProperty(MaterialPropertyChangedEvent);
 	Landscape->PostEditChange();
 
-	//Changing Gridsize which will create LandscapestreamProcies, Look at file: LandscapeEditorDetailCustomization_NewLandscape.cpp line 800
+	//Changing Gridsize which will create LandscapestreamProxies, 
 	EditorWorldContext.World()->GetSubsystem<ULandscapeSubsystem>()->ChangeGridSize(LandscapeInfo, ComponentsPerProxy);
 
 	gridSizeOfProxies = (SizeX - 1) / ((QuadsPerComponent * SectionsPerComponent) * ComponentsPerProxy);
 	
-	//LandscapeInfo->export
 	return Landscape;
 
 }
+//Look at file : LandscapeEditorDetailCustomization_NewLandscape.cpp line 800 for SUBSYSTEM
 
 ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 {
@@ -1314,10 +1677,10 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayers;
-	
-
+	UE_LOG(LogTemp, Warning, TEXT("Size of Conc before moveTemo: %d"), concatedHeightData.Num());
 	HeightDataPerLayers.Add(FGuid(), MoveTemp(concatedHeightData));
 	MaterialLayerDataPerLayers.Add(FGuid(), MoveTemp(MaterialImportLayers));
+	UE_LOG(LogTemp, Warning, TEXT("Size of Conc efter moveTemo: %d"), concatedHeightData.Num());
 
 	UWorld* World = nullptr;
 
@@ -1356,6 +1719,198 @@ ALandscape* CreateLandscape::generateFromTileData(TArray<UTile*>& inTiles)
 	//LandscapeInfo->export
 
 	return Landscape;
+}
+
+void CreateLandscape::CreateRoadMaskTexture(TArray<Road>& inRoads, float const sigma, int kernelSize, int interpolationPadding) const
+{
+	
+		int width = SizeX;
+		int height = SizeY;
+		uint8* pixels = (uint8*)malloc(height * width * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
+
+		// filling the pixels with dummy data (4 boxes: red, green, blue and white)
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+
+				/*ptrToTerrain->concatedHeightData;*/
+						//pixels[y * 4 * width + x * 4 + 0] = 255; // R
+						//pixels[y * 4 * width + x * 4 + 1] = 0;   // G
+						//pixels[y * 4 * width + x * 4 + 2] = 0;   // B
+						//pixels[y * 4 * width + x * 4 + 3] = 255; // A
+
+
+				pixels[x * 4 * width + (height - y - 1) * 4 + 0] = 0; // R
+				pixels[x * 4 * width + (height - y - 1) * 4 + 1] = 0;  // G
+				pixels[x * 4 * width + (height - y - 1) * 4 + 2] = 0;   // B
+				pixels[x * 4 * width + (height - y - 1) * 4 + 3] = 255; // A
+
+			}
+		}
+		//Paint pixels according to roads and their width
+		ControlPoint sp;
+		int X;
+		int Y;
+		for (auto& r : inRoads)
+		{
+			for (auto& s : r.splinePaths)
+			{
+
+				for (float t = 0; t < s.TotalLength; t++) {
+					sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+					X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+					Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+					//Check that the road is not outside of the landscape
+					if (X < 0 || X >= SizeX || Y < 0 || Y >= SizeY) {
+						break;
+					}
+
+					//Iterate through road kernel
+					for (size_t xRoad = (X - (r.Width - 1) / 2) - interpolationPadding; xRoad < (X + (r.Width - 1) / 2) + interpolationPadding; xRoad++)
+					{
+						for (size_t yRoad = (Y - (r.Width - 1) / 2) - interpolationPadding; yRoad < (Y + (r.Width - 1) / 2) + interpolationPadding; yRoad++)
+						{
+						
+							pixels[xRoad * 4 * width + yRoad * 4 + 0] = 255; // R
+							pixels[xRoad * 4 * width + yRoad * 4 + 1] = 255;  // G
+							pixels[xRoad * 4 * width + yRoad * 4 + 2] = 255;   // B
+							pixels[xRoad * 4 * width + yRoad * 4 + 3] = 255; // A
+
+						}
+					}
+				}
+			}
+		}
+
+		//Create kernel
+		TArray<kernelElement> kernel;
+
+		int firstIndex = floor(kernelSize / 2);
+
+		//create weights
+		float weight;
+		float sumWeights = 0;
+		//float sigma = 0.3;
+
+		for (int x = -firstIndex; x <= firstIndex; x++) {
+
+			for (int y = -firstIndex; y <= firstIndex; y++) {
+
+				weight = (1 / (2 * PI * pow(sigma, 2)) * pow(EULERS_NUMBER, -(pow(abs(x), 2) + pow(abs(y), 2)) / 2 * pow(sigma, 2)));
+				kernel.Add(kernelElement(weight, FVector2D(x, y)));
+				sumWeights += weight;
+			}
+
+		}
+
+		
+			interpolationPadding += 5;
+			TMap<uint32, uint32> modifiedPixels;
+			//Iterate through the road(s) and its internal splines (double foor loop)
+			//sp is NOT a control point, but rather a point on the spline curve
+
+			float weightedKernelVertex;
+			for (auto& r : inRoads)
+			{
+				for (auto& s : r.splinePaths)
+				{
+
+					for (float t = 0; t < s.TotalLength; t++) {
+						sp = s.GetSplinePoint(s.GetNormalisedOffset(t));
+						X = FGenericPlatformMath::RoundToInt(sp.pos.X);
+						Y = FGenericPlatformMath::RoundToInt(sp.pos.Y);
+						//Check that the road is not outside of the landscape
+						if (X < 0 || X >= SizeX || Y < 0 || Y >= SizeY) {
+							break;
+						}
+
+						//Iterate through road kernel
+						for (size_t xRoad = (X - (r.Width - 1) / 2 - interpolationPadding); xRoad < (X + (r.Width - 1) / 2 + interpolationPadding); xRoad++)
+						{
+							for (size_t yRoad = (Y - (r.Width - 1) / 2 - interpolationPadding); yRoad < (Y + (r.Width - 1) / 2 + interpolationPadding); yRoad++)
+							{
+								//Iterate through Gauss kernel
+								if (xRoad >= 0 && xRoad < SizeX && yRoad >= 0 && yRoad < SizeX) {
+									weightedKernelVertex = 0;
+									//Iterate through Gauss kernel
+									for (int j = 0; j < kernelSize * kernelSize; j++) {
+										if (0 <= (kernel[j].coords.X + xRoad) && (kernel[j].coords.X + xRoad) < SizeX && 0 <= (kernel[j].coords.Y + yRoad) && (kernel[j].coords.Y + yRoad) < SizeY)
+										{
+											//weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[GetVertexIndex(SizeX, kernel[j].coords.X + xRoad, kernel[j].coords.Y + yRoad)];
+											weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[(uint32)(kernel[j].coords.X + xRoad) * 4 * width + (uint32)(kernel[j].coords.Y + yRoad) * 4 + 0];
+										}
+										else {
+											weightedKernelVertex += (kernel[j].weight / sumWeights) * pixels[X * 4 * width + Y * 4 + 0]; //This can crash
+										}
+									}
+									modifiedPixels.Add(xRoad * 4 * width + yRoad * 4 + 0, weightedKernelVertex);
+									//pixels[GetVertexIndex(SizeX, xRoad, yRoad)] = weightedKernelVertex;
+									//pixels[xRoad * 4 * width + yRoad * 4 + 0] = weightedKernelVertex; // R
+									//pixels[xRoad * 4 * width + yRoad * 4 + 1] = weightedKernelVertex;  // G
+									//pixels[xRoad * 4 * width + yRoad * 4 + 2] = weightedKernelVertex;   // B
+									//pixels[xRoad * 4 * width + yRoad * 4 + 3] = 255; // A
+								}
+							}
+						}
+					}
+				}
+			}
+
+			for (auto& it : modifiedPixels)
+			{
+
+				pixels[it.Key] = it.Value;
+				pixels[it.Key + 1] = it.Value;
+				pixels[it.Key + 2] = it.Value;
+				//No need to update alpha
+
+			}
+		
+		// Texture Information
+		FString FileName = FString("MyRoadMask");
+		FString pathPackage = TEXT("/Game/Content/");
+		pathPackage += "roadMask_texture";
+
+
+
+		UPackage* Package = CreatePackage(nullptr, *pathPackage);
+		Package->FullyLoad();
+		// Create the Texture
+		FName TextureName = MakeUniqueObjectName(Package, UTexture2D::StaticClass(), FName(*FileName));
+		//UTexture2D *CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone);
+		UTexture2D* CustomTexture = NewObject<UTexture2D>(Package, TextureName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
+
+		//// Texture Settings
+		CustomTexture->PlatformData = new FTexturePlatformData();
+		CustomTexture->PlatformData->SizeX = width;
+		CustomTexture->PlatformData->SizeY = height;
+		CustomTexture->PlatformData->PixelFormat = PF_R8G8B8A8;
+		//TEST AT CREATING A UTEXTURE2D withot saving to "drawer"-------------------------------
+		//CustomTexture = UTexture2D::CreateTransient(width, height, PF_R8G8B8A8);
+		////CustomTexture->Compres
+		////CustomTexture
+		////-------------------------------------------------------------------------------
+
+		// Passing the pixels information to the texture
+		//FTexture2DMipMap* Mip = &CustomTexture->GetPlatformData()->Mips[0];
+		FTexture2DMipMap* Mip = new(CustomTexture->PlatformData->Mips) FTexture2DMipMap();
+		Mip->SizeX = width;
+		Mip->SizeY = height;
+		Mip->BulkData.Lock(LOCK_READ_WRITE);
+		uint8* TextureData = (uint8*)Mip->BulkData.Realloc(height * width * sizeof(uint8) * 4);
+		FMemory::Memcpy(TextureData, pixels, sizeof(uint8) * height * width * 4);
+		Mip->BulkData.Unlock();
+		//CustomTexture->Source.Init(width, height, 1, 1, ETextureSourceFormat::TSF_RGBA16, pixels);
+		// Updating Texture & mark it as unsaved
+		CustomTexture->AddToRoot();
+		CustomTexture->UpdateResource();
+		Package->MarkPackageDirty();
+
+		//UE_LOG(LogTemp, Log, TEXT("Texture created: %s"), *FileName);
+
+		free(pixels);
+		pixels = NULL;
 }
 
 FVector CreateLandscape::GetWorldCoordinates(const TArray<uint16>& inData, int32 inX, int32 inY) const
