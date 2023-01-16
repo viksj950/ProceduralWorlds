@@ -10,7 +10,7 @@ class PROCEDURALWORLD_API Road
 {
 public:
 	//temp constructor to start initiate a road with a spline
-	Road(const CRSpline& inSpline);
+	Road(const CRSpline& inSpline, const uint32 inWidth = 10);
 
 	Road();
 	~Road();
@@ -29,5 +29,5 @@ public:
 	TArray<CRSpline> splinePaths;
 
 	//Width for the total road width (should always be odd)
-	uint32 Width = 10;
+	uint32 Width;
 };

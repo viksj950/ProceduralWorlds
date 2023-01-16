@@ -14,6 +14,9 @@ struct RoadCoords
 	uint32 roadID;
 	TArray<FVector> Points;
 	FColor roadColor;
+
+	FString roadType;
+	uint32 Width;
 };
 
 class PROCEDURALWORLD_API S2DPreviewWindow
@@ -83,7 +86,7 @@ public:
 	//TSharedRef<STableRow<TSharedPtr<RoadCoords>>> OnGenerateWidgetForList(TSharedPtr<RoadCoords> inItem, const TSharedRef<STableViewBase>& OwnerTable);
 
 
-	void AddRoad();
+	void AddRoad(FString inType, uint32 inWidth);
 	void AddRoadPoint(FVector2D inCoords);
 	void UpdateRoadIDs();
 	void AssembleRoadListWidget();
