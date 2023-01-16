@@ -779,7 +779,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 }
 //fix consts
-bool CreateLandscape::generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries)
+bool CreateLandscape::generateRoadV2(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries)
 {
 	FMath math;
 	uint16 tileIndex = GetTileIndex(start.X, start.Y);

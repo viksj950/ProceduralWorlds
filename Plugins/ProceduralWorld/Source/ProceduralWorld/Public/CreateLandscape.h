@@ -73,7 +73,7 @@ public:
 	//sugma func (deprecated)
 	void generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Road> &inRoads);
 	//With start and end point
-	bool generateRoadSmarter(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries);
+	bool generateRoadV2(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries);
 	//Manual plotting of points
 	bool generateRoadPlot(TArray<Road>& inRoads, TArray<FVector> points);
 

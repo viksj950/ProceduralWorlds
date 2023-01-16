@@ -1776,7 +1776,7 @@ FReply FProceduralWorldModule::Setup()
 	FVector startPoint{ 50, 50, 0 };
 	FVector endPoint{ 500, 500, 0 };
 
-	myLand.generateRoadSmarter(tiles, roads, startPoint, endPoint, 10);
+	myLand.generateRoadV2(tiles, roads, startPoint, endPoint, 10);
 	if (!roads.IsEmpty()) {
 		roads[0].calcLengthsSplines();
 		roads[0].vizualizeRoad(myLand.LandscapeScale);
@@ -1989,11 +1989,11 @@ FReply FProceduralWorldModule::GenerateTerrain()
 		end = previewWindow.roadsData[0]->Points[1];
 		int16 hardCap = 20;
 		int16 counter = 0;
-		bool succeded = ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, adjTries);
+		bool succeded = ptrToTerrain->generateRoadV2(tiles, roads, start, end, adjTries);
 		while(!succeded && counter < hardCap){
 			counter++;
 			UE_LOG(LogTemp, Warning, TEXT("Previous road failed, new road generation attempt: %d"), counter);
-			succeded = ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, adjTries);
+			succeded = ptrToTerrain->generateRoadV2(tiles, roads, start, end, adjTries);
 		}
 		if (succeded) {
 			UE_LOG(LogTemp, Warning, TEXT("[Road generation was succesufull]"));
@@ -2005,13 +2005,13 @@ FReply FProceduralWorldModule::GenerateTerrain()
 	
 	if (!previewWindow.roadsData.IsEmpty() && previewWindow.roadsData[0]->Points.Num() > 2)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[MANUAL RODE GENERATION]"));
+		UE_LOG(LogTemp, Warning, TEXT("[MANUAL ROAD GENERATION]"));
 		ptrToTerrain->generateRoadPlot(roads, previewWindow.roadsData[0]->Points);
 
 	}
 	
 
-	//ptrToTerrain->generateRoadSmarter(tiles, roads, start, end, 100);
+	//ptrToTerrain->generateRoadV2(tiles, roads, start, end, 100);
 
 	if (!roads.IsEmpty()) {
 		for (auto& k : roads) {
