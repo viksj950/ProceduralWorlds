@@ -91,7 +91,9 @@ void CreateLandscape::GenerateAndAssignHeightData(TArray<UTile*>& inTiles, const
 	Y = FMath::Floor(tileIndex / gridSizeOfProxies);*/
 
 	PerlinNoiseGenerator<uint16, 64> PerlinNoise;
-	PerlinNoise.generateGradients();
+	PerlinNoise.generateGradients(0);
+	int32 currentSeed = 0;
+
 	
 	int X{ 0 };
 	int Y{ 0 };
@@ -121,11 +123,15 @@ void CreateLandscape::GenerateAndAssignHeightData(TArray<UTile*>& inTiles, const
 		}
 		if (index != -1)
 		{
+			if (currentSeed != BiotopeSettings[index]->Seed) {
+				PerlinNoise.generateGradients(BiotopeSettings[index]->Seed);
+				currentSeed = BiotopeSettings[index]->Seed;
+			}
 			currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *BiotopeSettings[index]);
 		}
 		else
 		{
-			currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *new BiotopePerlinNoiseSetting("default",-1,64,"",1,1,1,1,1,1,false));
+			currentStartVert = PerlinNoise.GenerateAndAssignTileData(it->tileHeightData, it->tileSize, it->index, gridSizeOfProxies, X, Y, *new BiotopePerlinNoiseSetting("default",-1,64,"",1,1,1,1,1,1,false,false,false,0));
 		}
 		
 
@@ -779,7 +785,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 }
 //fix consts
-bool CreateLandscape::generateRoadV2(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries)
+bool CreateLandscape::generateRoadV2(const TArray<UTile*>& inTiles, TArray<Road>& inRoads, FVector& start, FVector& end, int16 maxTries, const int32 slopeThreshold)
 {
 	FMath math;
 	uint16 tileIndex = GetTileIndex(start.X, start.Y);
@@ -792,7 +798,9 @@ bool CreateLandscape::generateRoadV2(const TArray<UTile*>& inTiles, TArray<Road>
 	float Y = start.Y;
 	bool sucess = false;
 
-	//tangent (Needs to be improved)
+	//tangent (Needs to be improved as it can reach outside in theory)
+	spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
+	//New tangent, just random in the start tile
 	spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
 	//first control point
 	spline.addControlPoint({ X,Y,(float)45000 });
@@ -804,7 +812,6 @@ bool CreateLandscape::generateRoadV2(const TArray<UTile*>& inTiles, TArray<Road>
 	//int maxRoadTiles{ 2500 }; //remove LATER
 	int Tries{ maxTries };
 	int32 adjIndex = 0;
-	int32 slopeThreshold = 600;
 	bool regardDist = true;
 ;
 	uint16 oldTileIndex = 0;
@@ -1571,17 +1578,17 @@ void CreateLandscape::GenerateHeightMapsForBiotopes(TArray<UTile*>& inTiles, con
 	//CANT CHANGE CellSize as template?
 	//Plains noise
 	PerlinNoiseGenerator<uint16, 64> PerlinNoise{};
-	PerlinNoise.generateGradients();
+	PerlinNoise.generateGradients(0);
 	PerlinNoise.generateBiotopeNoise(heightData, SizeX,*BiotopeSettings[1]);
 	
 	//City noise
 	PerlinNoiseGenerator<uint16, 64> PerlinNoisePlains{};
-	PerlinNoisePlains.generateGradients();
+	PerlinNoisePlains.generateGradients(0);
 	PerlinNoisePlains.generateBiotopeNoise(cityHeightData, SizeX, *BiotopeSettings[0]);
 
 	//Mountain noise
 	PerlinNoiseGenerator<uint16, 64> PerlinNoiseMountains{};
-	PerlinNoiseMountains.generateGradients();
+	PerlinNoiseMountains.generateGradients(0);
 	PerlinNoiseMountains.generateBiotopeNoise(mountainHeightData, SizeX, *BiotopeSettings[2]);
 
 

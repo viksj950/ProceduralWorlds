@@ -46,19 +46,23 @@ float dot(const Vec2<float>& v1, const Vec2<float>& v2) {
 struct BiotopePerlinNoiseSetting
 {
 	BiotopePerlinNoiseSetting(const FString inBiotope, const int inBiotopeIndex, const int inCellSize, const FString inMaterialPath, const int inHeightScale, const int inOctaveCount, const float inAmplitude, const float inPersistance,
-		const float inFrequency, const float inLacunarity, const bool inTurbulence) :
+		const float inFrequency, const float inLacunarity, const bool inTurbulence, const bool inCutOff, const bool inInvCutOff, const int32 inSeed) :
 		Biotope{inBiotope}, BiotopeIndex{inBiotopeIndex}, CellSize{
 		inCellSize},MaterialPath{inMaterialPath}, HeightScale{
 		inHeightScale}, OctaveCount{ inOctaveCount }, Amplitude{ inAmplitude }, Persistence{inPersistance},
-		Frequency{ inFrequency }, Lacunarity{ inLacunarity }, Turbulence{inTurbulence} {};
+		Frequency{ inFrequency }, Lacunarity{ inLacunarity }, Turbulence{ inTurbulence }, cutOff{ inCutOff }, invCutOff{ inInvCutOff },
+		Seed {inSeed } {};
 
 	BiotopePerlinNoiseSetting(const BiotopePerlinNoiseSetting &inCopy):
 		Biotope{ inCopy.Biotope }, BiotopeIndex{ inCopy.BiotopeIndex }, CellSize{ inCopy.CellSize },MaterialPath{inCopy.MaterialPath}, HeightScale{inCopy.HeightScale}, OctaveCount{inCopy.OctaveCount}, Amplitude{inCopy.Amplitude}, Persistence{inCopy.Persistence},
-		Frequency{ inCopy.Frequency }, Lacunarity{ inCopy.Lacunarity }, Turbulence{inCopy.Turbulence} {};
+		Frequency{ inCopy.Frequency }, Lacunarity{ inCopy.Lacunarity }, Turbulence{ inCopy.Turbulence }, cutOff{ inCopy.cutOff }, invCutOff{ inCopy.invCutOff }, Seed {
+		inCopy.Seed
+	} {};
 	
 	FString Biotope;
 	int BiotopeIndex;
 	int CellSize;
+	int32 Seed;
 
 	FString MaterialPath;
 
@@ -72,6 +76,8 @@ struct BiotopePerlinNoiseSetting
 	float Lacunarity; //Higher gives more frequent holes and hills
 
 	bool Turbulence;
+	bool cutOff;
+	bool invCutOff;
 
 
 

@@ -248,6 +248,57 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				]
 
 				+ SVerticalBox::Slot()
+					[
+						SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.MaxWidth(150)
+					.Padding(0)
+					.FillWidth(1.0f)
+					.VAlign(VAlign_Center)
+					.HAlign(HAlign_Left)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString("Seed"))
+
+
+
+					]
+
+				+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.MaxWidth(150)
+					[
+						SNew(SNumericEntryBox<int32>)
+						.AllowSpin(true)
+					.ToolTipText(FText::FromString("Seed for noise generation"))
+					.MinValue(-999999)
+					.MaxValue(999999)
+					.MaxSliderValue(999999)
+					.MinDesiredValueWidth(2)
+					.Value_Raw(this, &FProceduralWorldModule::GetSeed)
+					.OnValueChanged_Raw(this, &FProceduralWorldModule::SetSeed)
+					]
+
+				+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SBox) 
+						.Padding(10)
+						[
+							SNew(SButton)
+								.Text(FText::FromString("Randomize seed"))
+								.OnClicked_Lambda([&]() {
+								FMath math;
+								BiotopeSettings[BiomeSettingSelection]->Seed = math.RandRange(-999999, 999999);
+								return FReply::Handled();
+									})
+						]
+						]
+						
+					]
+
+				+ SVerticalBox::Slot()
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
@@ -449,7 +500,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			.AutoWidth()
 			.MaxWidth(150)
 			[
-				SNew(SCheckBox)
+				SAssignNew(turbCheckbox, SCheckBox)
 				.ToolTipText(FText::FromString("Turbulence ON takes the absolute value of the noise values\nTypically toggled as ON when valleys and dips are not desired"))
 				.IsChecked_Lambda([&]() {
 				
@@ -460,14 +511,106 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			if (inValue == ECheckBoxState::Checked)
 			{
 				BiotopeSettings[BiomeSettingSelection]->Turbulence = true;
+				BiotopeSettings[BiomeSettingSelection]->cutOff = false;
+				BiotopeSettings[BiomeSettingSelection]->invCutOff = false;
+
 			}
 			else
 			{
 				BiotopeSettings[BiomeSettingSelection]->Turbulence = false;
+				
 			}
 
 				})
 		
+			]
+
+		+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Right)
+			[
+
+				SNew(STextBlock)
+				.Text(FText::FromString("Cutoff"))
+
+
+
+			]
+
+		+ SHorizontalBox::Slot()
+			.MaxWidth(150)
+			.HAlign(HAlign_Right)
+			[
+				SAssignNew(cutOffCheckbox, SCheckBox)
+				.ToolTipText(FText::FromString("Cutoff sets a lower limit where the terrain flattens out \nTypically toggled as ON for archipelago structured landscapes"))
+			.IsChecked_Lambda([&]() {
+
+			return BiotopeSettings[BiomeSettingSelection]->cutOff ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+				})
+			.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
+
+					if (inValue == ECheckBoxState::Checked)
+					{
+						BiotopeSettings[BiomeSettingSelection]->cutOff = true;
+						BiotopeSettings[BiomeSettingSelection]->Turbulence = false;
+						BiotopeSettings[BiomeSettingSelection]->invCutOff = false;
+					}
+					else
+					{
+						BiotopeSettings[BiomeSettingSelection]->cutOff = false;
+						
+					}
+
+				})
+
+			]
+
+		+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.MaxWidth(150)
+			.Padding(0)
+			.FillWidth(1.0f)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Right)
+			[
+
+				SNew(STextBlock)
+				.Text(FText::FromString("Inverted Cutoff"))
+
+
+
+			]
+
+		+ SHorizontalBox::Slot()
+			.MaxWidth(150)
+			.HAlign(HAlign_Right)
+			[
+				SAssignNew(invCutOffCheckbox, SCheckBox)
+				.ToolTipText(FText::FromString("Cutoff sets a higher limit where the terrain flattens out \nTypically toggled as ON for archipelago structured landscapes"))
+			.IsChecked_Lambda([&]() {
+
+			return BiotopeSettings[BiomeSettingSelection]->invCutOff ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+				})
+			.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
+
+					if (inValue == ECheckBoxState::Checked)
+					{
+						BiotopeSettings[BiomeSettingSelection]->invCutOff = true;
+						BiotopeSettings[BiomeSettingSelection]->Turbulence = false;
+						BiotopeSettings[BiomeSettingSelection]->cutOff = false;
+					}
+					else
+					{
+						BiotopeSettings[BiomeSettingSelection]->cutOff = false;
+
+					}
+
+				})
+
 			]
 
 
@@ -866,7 +1009,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 							if (newState == ECheckBoxState::Checked)
 							{
 								biotopeGenerationMode->SetEnabled(false);
-								previewWindow.AddRoad("Smart Road", currentRoadWidth);
+								previewWindow.AddRoad("Smart Road", currentRoadWidth, roadSlopeThreshold);
 								previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
 								manualRoadPlacementMode->SetEnabled(false);
 							}
@@ -902,7 +1045,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						if (newState == ECheckBoxState::Checked)
 						{
 							biotopeGenerationMode->SetEnabled(false);
-							previewWindow.AddRoad("Manual Road",currentRoadWidth);
+							previewWindow.AddRoad("Manual Road",currentRoadWidth, roadSlopeThreshold);
 							previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
 							smartRoadPlacementMode->SetEnabled(false);
 						}
@@ -941,12 +1084,34 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 						SNew(SNumericEntryBox<uint32>)
 						.AllowSpin(true)
-						.MinValue(3)
+						.MinValue(1)
 						.MaxValue(30)
 						.Value_Lambda([&]() {return this->currentRoadWidth; })
 						.OnValueChanged_Lambda([&](const int32& inValue) {currentRoadWidth = inValue; })
 					]
 				
+				]
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				.MaxHeight(50)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+				[
+					SNew(STextBlock).Text(FText::FromString("Slope threshold:"))
+				]
+			+ SHorizontalBox::Slot()
+				[
+
+
+					SNew(SNumericEntryBox<uint32>)
+					.AllowSpin(true)
+				.MinValue(0)
+				.MaxValue(10000)
+				.Value_Lambda([&]() {return this->roadSlopeThreshold; })
+				.OnValueChanged_Lambda([&](const int32& inValue) {roadSlopeThreshold = inValue; })
+				]
+
 				]
 			+ SVerticalBox::Slot()
 				.AutoHeight()
@@ -1081,7 +1246,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.VAlign(VAlign_Center)
 				[
 				SNew(SButton)
-				.Text(FText::FromString("Generate Heightmap"))
+				.Text(FText::FromString("Update heightmap"))
 				.ToolTipText(FText::FromString("Creates a 2D noise preview of the world"))
 				.OnClicked_Raw(this, &FProceduralWorldModule::GenerateTerrainData) //Setup
 				.HAlign(HAlign_Left)
@@ -1874,13 +2039,13 @@ FReply FProceduralWorldModule::Setup()
 	FVector startPoint{ 50, 50, 0 };
 	FVector endPoint{ 500, 500, 0 };
 
-	myLand.generateRoadV2(tiles, roads, startPoint, endPoint, 10);
+	myLand.generateRoadV2(tiles, roads, startPoint, endPoint, 10, roadSlopeThreshold);
 	if (!roads.IsEmpty()) {
 		roads[0].calcLengthsSplines();
 		roads[0].vizualizeRoad(myLand.LandscapeScale);
 		//roads[1].calcLengthsSplines();
 		//roads[1].vizualizeRoad(myLand.LandscapeScale);
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 2; i++) {
 			myLand.roadAnamarphosis(roads, 0.01, 9, i);
 		}
 	}
@@ -2091,11 +2256,12 @@ FReply FProceduralWorldModule::GenerateTerrain()
 			end = previewWindow.roadsData[i]->Points[1];
 			int16 hardCap = 20;
 			int16 counter = 0;
-			bool succeded = ptrToTerrain->generateRoadV2(tiles, roads, start, end, adjTries);
+
+			bool succeded = ptrToTerrain->generateRoadV2(tiles, roads, start, end, adjTries, previewWindow.roadsData[i]->slopeThreshold);
 			while (!succeded && counter < hardCap) {
 				counter++;
 				UE_LOG(LogTemp, Warning, TEXT("Previous road failed, new road generation attempt: %d"), counter);
-				succeded = ptrToTerrain->generateRoadV2(tiles, roads, start, end, adjTries);
+				succeded = ptrToTerrain->generateRoadV2(tiles, roads, start, end, adjTries, roadSlopeThreshold);
 			}
 			if (succeded) {
 				UE_LOG(LogTemp, Warning, TEXT("[Road generation was succesufull]"));
@@ -2122,9 +2288,9 @@ FReply FProceduralWorldModule::GenerateTerrain()
 		if (!roads.IsEmpty()) {
 			for (auto& k : roads) {
 				k.calcLengthsSplines();
-				k.vizualizeRoad(ptrToTerrain->LandscapeScale);
+				//k.vizualizeRoad(ptrToTerrain->LandscapeScale);
 				for (int j = 0; j < 5; j++) {
-					ptrToTerrain->roadAnamarphosis(roads, 0.01, 9, j);
+					ptrToTerrain->roadAnamarphosis(roads, 0.01, 9, 0);
 				}
 			}
 		}
@@ -2373,7 +2539,7 @@ FReply FProceduralWorldModule::ListTiles()
 	}
 
 	//Create a roadMask //0.01, 9, j
-	ptrToTerrain->CreateRoadMaskTexture(roads, 0.8, 7, 5);
+	ptrToTerrain->CreateRoadMaskTexture(roads, 0.8, 7, 0);
 	
 	return FReply::Handled();
 }

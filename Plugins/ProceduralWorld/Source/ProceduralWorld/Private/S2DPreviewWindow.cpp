@@ -554,7 +554,7 @@ void S2DPreviewWindow::RandomizeVoronoi(const TArray<int32> &Biotopes, int32 nmb
 //		SNew(STextBlock).Text("A Road")];
 //}
 
-void S2DPreviewWindow::AddRoad(FString inType, uint32 inWidth)
+void S2DPreviewWindow::AddRoad(FString inType, uint32 inWidth, uint32 inSlopeThreshold)
 {
 	roadsData.Add(MakeShareable(new RoadCoords));
 	roadsData.Last()->roadID = roadsData.Num() - 1;
@@ -564,6 +564,7 @@ void S2DPreviewWindow::AddRoad(FString inType, uint32 inWidth)
 	roadsData.Last()->roadColor.A = 255;
 	roadsData.Last()->roadType = inType;
 	roadsData.Last()->Width = inWidth;
+	roadsData.Last()->slopeThreshold = inSlopeThreshold;
 	roadColorAssigner++;
 	if (roadColorAssigner >= colors.Num())
 	{
