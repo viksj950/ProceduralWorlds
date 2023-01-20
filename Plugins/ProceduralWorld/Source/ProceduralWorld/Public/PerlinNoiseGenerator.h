@@ -32,7 +32,7 @@ public:
 	float generateNoiseVal(const Vec2<float> p);
 	void generateBiotopeNoise(TArray<uint16>& Data, const int& DataSideSize, const BiotopePerlinNoiseSetting& settings);
 	//Generates random vectors and inserts them into gradients array + sets up and randiomizes pe tablerm
-	void generateGradients();
+	void generateGradients(const int32 seed);
 
 
 	int32 GenerateAndAssignTileData(TArray<uint16>& Data, const int& DataSideSize,const int &TileIndex, const uint32 &inGridSizeOfProxies, const int& inStartColumn, const int& inStartRow, const BiotopePerlinNoiseSetting& settings);
@@ -100,9 +100,9 @@ float PerlinNoiseGenerator<T, N>::generateNoiseVal(const Vec2<float> p) {
 }
 
 template <typename T, unsigned N>
-void PerlinNoiseGenerator<T, N>::generateGradients() {
+void PerlinNoiseGenerator<T, N>::generateGradients(const int32 seed) {
 
-	FMath mathInstance;
+	FRandomStream mathInstance{seed};
 	float gradientLength = 0;
 
 	for (int i = 0; i < N; ++i) {
@@ -228,6 +228,8 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 				{
 					sum += generateNoiseVal(Vec2<float>(i, j) * frequencyLoc) * amplitudeLoc * settings.HeightScale;
 				}
+
+
 				
 				//sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625 * frequency) * Amplitude * heightScale;
 				//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
@@ -237,8 +239,12 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 
 			}
 			int32 diff = averageHeight - (sum + averageHeight);
-			if ((sum)+averageHeight < averageHeight) {
-				Data[column * DataSideSize + row] =  (sum + averageHeight);
+			
+			if ((sum)+averageHeight < averageHeight && settings.cutOff) {
+				Data[column * DataSideSize + row] =  averageHeight;
+			}
+			else if ((sum)+averageHeight > averageHeight && settings.invCutOff) {
+				Data[column * DataSideSize + row] = averageHeight;
 			}
 			else {
 				Data[column * DataSideSize + row] = (sum)+averageHeight;

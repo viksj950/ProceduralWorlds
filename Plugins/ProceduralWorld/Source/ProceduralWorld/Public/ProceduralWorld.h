@@ -245,16 +245,20 @@ public:
 		{"Plains",1,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} ,
 		{"Mountains",2,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} };*/
 
-	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64,"Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'",4096,3,0.17f,0.5f,0.015f,1.0f,false)) ,
-		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64,"Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'" ,4096,3,0.25f,0.5f,0.015f,1.0f,false)) ,
-		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64,"Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'", 4096,12,7.0f,0.5f,0.0015f,2.0f,true))};
+	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64,"Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'",4096,3,0.17f,0.5f,0.015f,1.0f,false,false,false,0)) ,
+		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64,"Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'" ,4096,3,0.25f,0.5f,0.015f,1.0f,false,false,false,0)) ,
+		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64,"Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'", 4096,12,7.0f,0.5f,0.0015f,2.0f,true,false,false,0))};
 	
 	uint32 BiotopePerlinNoiseSettingIndexer{ 3 };
 	//TSharedPtr<FString> newBiotopeName;
 	//void SetNewBiotopeName(const FText& NewText) { newBiotopeName = MakeShareable(new FString(NewText.ToString())); };
 	FText newBiomeName;
 	FReply addNewBiotope() {
-		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(newBiomeName.ToString(), BiotopePerlinNoiseSettingIndexer, 64,"", 4096, 5, 2.3f, 0.92f, 0.0015f, 1.96f, false)));
+		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(newBiomeName.ToString(), BiotopePerlinNoiseSettingIndexer, 64,
+			BiotopeSettings[BiomeSettingSelection]->MaterialPath, BiotopeSettings[BiomeSettingSelection]->HeightScale, BiotopeSettings[BiomeSettingSelection]->OctaveCount,
+			BiotopeSettings[BiomeSettingSelection]->Amplitude, BiotopeSettings[BiomeSettingSelection]->Persistence, BiotopeSettings[BiomeSettingSelection]->Frequency,
+			BiotopeSettings[BiomeSettingSelection]->Lacunarity, BiotopeSettings[BiomeSettingSelection]->Turbulence, BiotopeSettings[BiomeSettingSelection]->cutOff, 
+			BiotopeSettings[BiomeSettingSelection]->invCutOff, BiotopeSettings[BiomeSettingSelection]->Seed)));
 		BiomeAssetsData.Add(MakeShareable(new biomeAssets(newBiomeName.ToString(), BiomeAssetsData.Num())));
 		BiotopePerlinNoiseSettingIndexer++;
 		return FReply::Handled();
@@ -326,8 +330,11 @@ public:
 	TOptional<float> GetFrequency() const { return BiotopeSettings[BiomeSettingSelection]->Frequency; }
 	void SetFrequency(float inFreq) { BiotopeSettings[BiomeSettingSelection]->Frequency = inFreq; }
 	//Height
-	TOptional<int32> GetHeightScale() const { return BiotopeSettings[BiomeSettingSelection]->HeightScale; }
-	void SetHeightScale(int32 inScale) { BiotopeSettings[BiomeSettingSelection]->HeightScale = inScale; }
+	/*TOptional<int32> GetHeightScale() const { return BiotopeSettings[BiomeSettingSelection]->HeightScale; }
+	void SetHeightScale(int32 inScale) { BiotopeSettings[BiomeSettingSelection]->HeightScale = inScale; }*/
+	//Seed
+	TOptional<int32> GetSeed() const { return BiotopeSettings[BiomeSettingSelection]->Seed; }
+	void SetSeed(int32 inSeed) { BiotopeSettings[BiomeSettingSelection]->Seed = inSeed; }
 	//OctaveCount
 	TOptional<int32> GetOctaveCount() const { return BiotopeSettings[BiomeSettingSelection]->OctaveCount; }
 	void SetOctaveCount(int32 inOct) { BiotopeSettings[BiomeSettingSelection]->OctaveCount= inOct; }
@@ -340,6 +347,12 @@ public:
 	//Amplitude
 	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
+
+	TSharedPtr<SCheckBox> turbCheckbox;
+
+	TSharedPtr<SCheckBox> cutOffCheckbox;
+
+	TSharedPtr<SCheckBox> invCutOffCheckbox;
 	
 
 	//UI 2D INTERFACE----------------------------------------------------------------------------------------------
@@ -364,6 +377,8 @@ public:
 
 	//TSharedPtr<SNumericEntryBox<uint32>> roadWidthEntryBox;
 	uint32 currentRoadWidth{10};
+
+	uint32 roadSlopeThreshold{ 600 };
 	
 	//UI Asset Distribution ---------------------------------------------------------------------------------------
 	 
@@ -382,7 +397,7 @@ public:
 
 	TSharedPtr<SNumericEntryBox<float>> myDensityNumBox;
 	//Intermediate setting used as a placeholder when displaying settings for assets.
-	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("",0,0,0,false,0,false ));
+	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("",1,0,0.5,false,1.0,false ));
 
 	//EXPERIMENTAL THUMBNAIL STUFF
 	TSharedPtr<FAssetThumbnail> slateThumbnail{nullptr}; //= MakeShareable(new FAssetThumbnail());
