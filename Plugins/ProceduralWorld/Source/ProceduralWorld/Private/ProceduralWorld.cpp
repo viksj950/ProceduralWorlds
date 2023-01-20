@@ -1009,7 +1009,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 							if (newState == ECheckBoxState::Checked)
 							{
 								biotopeGenerationMode->SetEnabled(false);
-								previewWindow.AddRoad("Smart Road", currentRoadWidth, roadSlopeThreshold);
+								previewWindow.AddRoad("Smart Road", currentRoadWidth, roadSlopeThreshold, deformationStrength);
 								previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
 								manualRoadPlacementMode->SetEnabled(false);
 							}
@@ -1045,7 +1045,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						if (newState == ECheckBoxState::Checked)
 						{
 							biotopeGenerationMode->SetEnabled(false);
-							previewWindow.AddRoad("Manual Road",currentRoadWidth, roadSlopeThreshold);
+							previewWindow.AddRoad("Manual Road",currentRoadWidth, roadSlopeThreshold, deformationStrength);
 							previewWindow.roadIndex = previewWindow.roadsData.Num() - 1;
 							smartRoadPlacementMode->SetEnabled(false);
 						}
@@ -1086,6 +1086,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						.AllowSpin(true)
 						.MinValue(1)
 						.MaxValue(30)
+						.MaxSliderValue(30)
 						.Value_Lambda([&]() {return this->currentRoadWidth; })
 						.OnValueChanged_Lambda([&](const int32& inValue) {currentRoadWidth = inValue; })
 					]
@@ -1107,9 +1108,33 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					SNew(SNumericEntryBox<uint32>)
 					.AllowSpin(true)
 				.MinValue(0)
-				.MaxValue(10000)
+				.MaxValue(5000)
+				.MaxSliderValue(5000)
 				.Value_Lambda([&]() {return this->roadSlopeThreshold; })
 				.OnValueChanged_Lambda([&](const int32& inValue) {roadSlopeThreshold = inValue; })
+				]
+
+				]
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				.MaxHeight(50)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+				[
+					SNew(STextBlock).Text(FText::FromString("Deformation strength"))
+				]
+			+ SHorizontalBox::Slot()
+				[
+
+
+					SNew(SNumericEntryBox<uint32>)
+					.AllowSpin(true)
+				.MinValue(0)
+				.MaxValue(10)
+				.MaxSliderValue(10)
+				.Value_Lambda([&]() {return this->deformationStrength; })
+				.OnValueChanged_Lambda([&](const int32& inValue) {deformationStrength = inValue; })
 				]
 
 				]
@@ -2289,7 +2314,7 @@ FReply FProceduralWorldModule::GenerateTerrain()
 			for (auto& k : roads) {
 				k.calcLengthsSplines();
 				//k.vizualizeRoad(ptrToTerrain->LandscapeScale);
-				for (int j = 0; j < 5; j++) {
+				for (uint32 j = 0; j < previewWindow.roadsData[i]->deformationStrength; j++) {
 					ptrToTerrain->roadAnamarphosis(roads, 0.01, 9, 0);
 				}
 			}
