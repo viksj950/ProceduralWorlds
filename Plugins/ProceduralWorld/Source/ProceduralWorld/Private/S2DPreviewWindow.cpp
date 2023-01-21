@@ -341,9 +341,9 @@ void S2DPreviewWindow::CreateRoadMarkTexture()
 					if (pixelIndex >= 0 && pixelIndex < SizeX*SizeY * 4)
 					{
 						
-						pixels[pixelIndex + 0] = colors[i->roadID % colors.Num()].X; //R
-						pixels[pixelIndex + 1] = colors[i->roadID % colors.Num()].Y; //G
-						pixels[pixelIndex + 2] = colors[i->roadID % colors.Num()].Z; //B
+						pixels[pixelIndex + 0] = i->roadColor.R; //R
+						pixels[pixelIndex + 1] = i->roadColor.G; //G
+						pixels[pixelIndex + 2] = i->roadColor.B; //B
 						pixels[pixelIndex + 3] = 255; //A
 						//UE_LOG(LogTemp, Warning, TEXT("Drew a road mark at index: %d"), pixelIndex);
 					}

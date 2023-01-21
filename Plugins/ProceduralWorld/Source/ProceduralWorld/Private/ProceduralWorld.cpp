@@ -101,9 +101,16 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					[
 						SNew(SComboBox<TSharedPtr<BiotopePerlinNoiseSetting>>)
 						.OptionsSource(&BiotopeSettings)
-						.OnGenerateWidget_Lambda([](TSharedPtr<BiotopePerlinNoiseSetting> Item)
+						.OnGenerateWidget_Lambda([&](TSharedPtr<BiotopePerlinNoiseSetting> Item)
 						{
-							return SNew(STextBlock).Text(FText::FromString(*Item->Biotope));
+								FColor tempColor;
+								tempColor.R = previewWindow.colors[Item->BiotopeIndex % previewWindow.colors.Num()].X;
+								tempColor.G = previewWindow.colors[Item->BiotopeIndex % previewWindow.colors.Num()].Y;
+								tempColor.B = previewWindow.colors[Item->BiotopeIndex % previewWindow.colors.Num()].Z;
+								tempColor.A = 255;
+							return SNew(STextBlock)
+								.ColorAndOpacity(tempColor)
+								.Text(FText::FromString(*Item->Biotope));
 							//return SNew(SButton).Text(FText::FromString(*Item->Description));
 						})
 						.OnSelectionChanged_Lambda([this](TSharedPtr<BiotopePerlinNoiseSetting> InSelection, ESelectInfo::Type InSelectInfo)
@@ -111,6 +118,12 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 								if (InSelection.IsValid() && ComboBoxTitleBlockNoise.IsValid())
 								{
 									ComboBoxTitleBlockNoise->SetText(FText::FromString(*InSelection->Biotope));
+									FColor tempColor;
+									tempColor.R = previewWindow.colors[InSelection->BiotopeIndex % previewWindow.colors.Num()].X;
+									tempColor.G = previewWindow.colors[InSelection->BiotopeIndex % previewWindow.colors.Num()].Y;
+									tempColor.B = previewWindow.colors[InSelection->BiotopeIndex % previewWindow.colors.Num()].Z;
+									tempColor.A = 255;
+									ComboBoxTitleBlockNoise->SetColorAndOpacity(tempColor);
 
 									for (size_t i = 0; i < BiotopeSettings.Num(); i++)
 									{
@@ -131,7 +144,9 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 						})
 							[
-								SAssignNew(ComboBoxTitleBlockNoise, STextBlock).Text(LOCTEXT("ComboLabel", "City"))
+								SAssignNew(ComboBoxTitleBlockNoise, STextBlock)
+								
+								.Text(LOCTEXT("ComboLabel", "City"))
 							]
 
 
@@ -750,7 +765,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						if (megh == EAppReturnType::Ok)
 						{
 							biotopePlacementSelection = newValue;
-
+							GenerateTerrainData();
 							TArray<int32> tempBiotopes;
 
 							for (auto& it: BiotopeSettings)
@@ -1224,7 +1239,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			
 
 
-	+ SHorizontalBox::Slot() //Main horizontal slot nr3
+	+ SHorizontalBox::Slot() //Main horizontal slot nr3-----------------------------------------------------------------
 		[
 
 			SNew(SVerticalBox)
@@ -1233,14 +1248,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			.HAlign(HAlign_Center)
 			[
 
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("If you press this when aldready having created a landscape, you will loose connection to the already created"))
-			]
-			+ SHorizontalBox::Slot()
-			[
+			
 				SNew(SBox)
 				.HAlign(HAlign_Left)
 				.VAlign(VAlign_Center)
@@ -1251,7 +1259,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.OnClicked_Raw(this, &FProceduralWorldModule::GenerateTerrainData) //Setup
 				.HAlign(HAlign_Left)
 				]
-			]
+			
 		]
 
 
@@ -1286,7 +1294,9 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				]
 			]
 		]
-	+ SVerticalBox::Slot()
+		+ SVerticalBox::Slot()
+		.Padding(1.0f)
+		.HAlign(HAlign_Center)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
