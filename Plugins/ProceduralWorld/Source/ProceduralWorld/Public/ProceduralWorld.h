@@ -266,55 +266,59 @@ public:
 
 	FReply deleteBiotope() {
 
-		UE_LOG(LogTemp, Warning, TEXT("Deleting Biotope %s"), *BiotopeSettings[BiomeSettingSelection]->Biotope);
-		FString biotopeToDelete = BiotopeSettings[BiomeSettingSelection]->Biotope;
-		
-
-		//2D 
-		for (auto it = previewWindow.markedTiles.CreateConstIterator();it; ++it)
+		auto megh = FMessageDialog::Open(EAppMsgType::OkCancel, FText::FromString("Do you want to DELETE the selected biotope?"));
+		if (megh == EAppReturnType::Ok)
 		{
-			if (it.Value() == BiotopeSettings[BiomeSettingSelection]->BiotopeIndex)
+
+			UE_LOG(LogTemp, Warning, TEXT("Deleting Biotope %s"), *BiotopeSettings[BiomeSettingSelection]->Biotope);
+			FString biotopeToDelete = BiotopeSettings[BiomeSettingSelection]->Biotope;
+
+
+			//2D 
+			for (auto it = previewWindow.markedTiles.CreateConstIterator(); it; ++it)
 			{
-				previewWindow.markedTiles.Remove(it.Key());
+				if (it.Value() == BiotopeSettings[BiomeSettingSelection]->BiotopeIndex)
+				{
+					previewWindow.markedTiles.Remove(it.Key());
+				}
+
+			}
+			for (auto it = previewWindow.markedTilesVoronoi.CreateConstIterator(); it; ++it)
+			{
+				if (it.Value() == BiotopeSettings[BiomeSettingSelection]->BiotopeIndex)
+				{
+					previewWindow.markedTilesVoronoi.Remove(it.Key());
+				}
+
 			}
 
-		}
-		for (auto it = previewWindow.markedTilesVoronoi.CreateConstIterator();it;++it)
-		{
-			if (it.Value() == BiotopeSettings[BiomeSettingSelection]->BiotopeIndex)
+
+			//Remove noise settings for the biotope and change the selection aswell
+			BiotopeSettings.RemoveAt(BiomeSettingSelection);
+			BiomeSettingSelection = 0;
+
+			//Remove asset placement for the deleted biotope
+			for (size_t i = 0; i < BiomeAssetsData.Num(); i++)
 			{
-				previewWindow.markedTilesVoronoi.Remove(it.Key());
+				if (biotopeToDelete.Equals(BiomeAssetsData[i]->biotopeName))
+				{
+					BiomeAssetsData.RemoveAt(i);
+					break;
+				}
 			}
 
+			//BiomeAssetsData.RemoveAt(BiomeAssetSettingSelection);
+
+
+
+
+
+			BiomeAssetSettingSelection = 0;
+			assetSettingList->RebuildList();
+
+
+
 		}
-
-
-		//Remove noise settings for the biotope and change the selection aswell
-		BiotopeSettings.RemoveAt(BiomeSettingSelection);
-		BiomeSettingSelection = 0;
-
-		//Remove asset placement for the deleted biotope
-		for (size_t i = 0; i < BiomeAssetsData.Num(); i++)
-		{
-			if (biotopeToDelete.Equals(BiomeAssetsData[i]->biotopeName))
-			{
-				BiomeAssetsData.RemoveAt(i);
-				break;
-			}
-		}
-
-		//BiomeAssetsData.RemoveAt(BiomeAssetSettingSelection);
-
-
-
-
-
-		BiomeAssetSettingSelection = 0;
-		assetSettingList->RebuildList();
-
-
-
-
 		
 		
 

@@ -748,7 +748,37 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					.OnValueChanged_Lambda([&](auto newValue) {this->nmbrOfBiomes = newValue; })
 				]
 
+				+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.MaxWidth(150)
+					[
+						SNew(SButton)
+						.Text(FText::FromString("Randomize Voronoi"))
+					.OnClicked_Lambda([&]() {
+
+					auto megh = FMessageDialog::Open(EAppMsgType::OkCancel, FText::FromString("Do you want to randomize biotopes? Your previous placements will be lost."));
+					if (megh == EAppReturnType::Ok)
+					{
+						//biotopePlacementSelection = newValue;
+						GenerateTerrainData();
+						TArray<int32> tempBiotopes;
+
+						for (auto& it : BiotopeSettings)
+						{
+							tempBiotopes.Add(it->BiotopeIndex);
+						}
+						previewWindow.RandomizeVoronoi(tempBiotopes, nmbrOfBiomes);
+						previewWindow.CreateBiotopeTexture();
+						previewWindow.AssembleWidget();
+					}
+
+					return FReply::Handled();
+						})
+
+					]
+
 				]
+			
 				
 			+SVerticalBox::Slot()
 				.AutoHeight()
@@ -761,7 +791,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 					if (newValue == 0)
 					{
-						auto megh = FMessageDialog::Open(EAppMsgType::OkCancel, FText::FromString("Do you want to randomize biotopes? Your previous placements will be lost."));
+						/*auto megh = FMessageDialog::Open(EAppMsgType::OkCancel, FText::FromString("Do you want to randomize biotopes? Your previous placements will be lost."));
 						if (megh == EAppReturnType::Ok)
 						{
 							biotopePlacementSelection = newValue;
@@ -778,7 +808,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 						}
 
 
-						biotopeGenerationMode->SetValue(biotopePlacementSelection);
+						biotopeGenerationMode->SetValue(biotopePlacementSelection);*/
 						
 					}
 					else
@@ -793,9 +823,9 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 						})
 					.Value(biotopePlacementSelection)
-					+ SSegmentedControl<int32>::Slot(0)
+					/*+ SSegmentedControl<int32>::Slot(0)
 				.Icon(FAppStyle::Get().GetBrush("Icons.box-perspective"))
-				.Text(LOCTEXT("Voronoi", "Random Voroni"))
+				.Text(LOCTEXT("Voronoi", "Random Voroni"))*/
 
 				+ SSegmentedControl<int32>::Slot(1)
 				.Icon(FAppStyle::Get().GetBrush("Icons.cylinder"))
@@ -842,63 +872,66 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 
 
 							//Check road mode or biotope mode
-
-							if (smartRoadPlacementMode->IsChecked())
+							if (ptrToTerrain != nullptr)
 							{
-								previewWindow.AddRoadPoint(heightmapPosition);
 
-								if (previewWindow.roadsData[previewWindow.roadIndex]->Points.Num() >= 2) //Check if we now have 2 points, if we do toggle smart Road Mode OFF
+
+								if (smartRoadPlacementMode->IsChecked())
 								{
-									smartRoadPlacementMode->SetIsChecked(ECheckBoxState::Unchecked);
-									manualRoadPlacementMode->SetEnabled(true);
-									biotopeGenerationMode->SetEnabled(true);
-								}
-								previewWindow.roadsDataList->RebuildList();
-								previewWindow.CreateRoadMarkTexture();
-								previewWindow.AssembleWidget();
+									previewWindow.AddRoadPoint(heightmapPosition);
 
-
-							}
-							else if (manualRoadPlacementMode->IsChecked())
-							{
-								previewWindow.AddRoadPoint(heightmapPosition);
-								previewWindow.roadsDataList->RebuildList();
-								previewWindow.CreateRoadMarkTexture();
-								previewWindow.AssembleWidget();
-							}
-							else {
-								int32 biotope = -1;
-								if (!BiotopeSettings.IsEmpty())
-								{
-									biotope = BiotopeSettings[BiomeSettingSelection]->BiotopeIndex;
-								}
-
-
-								switch (biotopePlacementSelection)
-								{
-								case 0:
-
-
-									break;
-								case 1:
-									previewWindow.MarkTile(biotope, heightmapPosition);
-									previewWindow.CreateBiotopeTexture();
+									if (previewWindow.roadsData[previewWindow.roadIndex]->Points.Num() >= 2) //Check if we now have 2 points, if we do toggle smart Road Mode OFF
+									{
+										smartRoadPlacementMode->SetIsChecked(ECheckBoxState::Unchecked);
+										manualRoadPlacementMode->SetEnabled(true);
+										biotopeGenerationMode->SetEnabled(true);
+									}
+									previewWindow.roadsDataList->RebuildList();
+									previewWindow.CreateRoadMarkTexture();
 									previewWindow.AssembleWidget();
 
-									break;
-								case 2:
-									previewWindow.MarkTileVoronoi(biotope, heightmapPosition);
-									previewWindow.CreateBiotopeTexture();
-									previewWindow.AssembleWidget();
-									UE_LOG(LogTemp, Log, TEXT("Clicked using MarkTileVoronoi"));
-									UE_LOG(LogTemp, Log, TEXT("Nmbr of marked Voronoi tiles: %d"), previewWindow.markedTilesVoronoi.Num());
-									break;
-								default:
-									break;
+
 								}
+								else if (manualRoadPlacementMode->IsChecked())
+								{
+									previewWindow.AddRoadPoint(heightmapPosition);
+									previewWindow.roadsDataList->RebuildList();
+									previewWindow.CreateRoadMarkTexture();
+									previewWindow.AssembleWidget();
+								}
+								else {
+									int32 biotope = -1;
+									if (!BiotopeSettings.IsEmpty())
+									{
+										biotope = BiotopeSettings[BiomeSettingSelection]->BiotopeIndex;
+									}
 
+
+									switch (biotopePlacementSelection)
+									{
+									case 0:
+
+
+										break;
+									case 1:
+										previewWindow.MarkTile(biotope, heightmapPosition);
+										previewWindow.CreateBiotopeTexture();
+										previewWindow.AssembleWidget();
+
+										break;
+									case 2:
+										previewWindow.MarkTileVoronoi(biotope, heightmapPosition);
+										previewWindow.CreateBiotopeTexture();
+										previewWindow.AssembleWidget();
+										UE_LOG(LogTemp, Log, TEXT("Clicked using MarkTileVoronoi"));
+										UE_LOG(LogTemp, Log, TEXT("Nmbr of marked Voronoi tiles: %d"), previewWindow.markedTilesVoronoi.Num());
+										break;
+									default:
+										break;
+									}
+
+								}
 							}
-
 						
 							UE_LOG(LogTemp, Log, TEXT("Clicked Texture at tile index: %d"), previewWindow.FromCoordToTileIndex(heightmapPosition));
 							return FReply::Handled();
