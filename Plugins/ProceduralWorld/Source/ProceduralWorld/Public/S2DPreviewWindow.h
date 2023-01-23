@@ -18,6 +18,7 @@ struct RoadCoords
 	FString roadType;
 	uint32 Width;
 	uint32 slopeThreshold;
+	uint32 deformationStrength;
 };
 
 class PROCEDURALWORLD_API S2DPreviewWindow
@@ -87,7 +88,7 @@ public:
 	//TSharedRef<STableRow<TSharedPtr<RoadCoords>>> OnGenerateWidgetForList(TSharedPtr<RoadCoords> inItem, const TSharedRef<STableViewBase>& OwnerTable);
 
 
-	void AddRoad(FString inType, uint32 inWidth, uint32 inSlopeThreshold);
+	void AddRoad(FString inType, uint32 inWidth, uint32 inSlopeThreshold, uint32 inDeformationStrength);
 	void AddRoadPoint(FVector2D inCoords);
 	void UpdateRoadIDs();
 	void AssembleRoadListWidget();

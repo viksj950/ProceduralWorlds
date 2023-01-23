@@ -24,8 +24,8 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 	FVector assetScale;
 	FMath mathInstance;
 
-	float minPos = 0.05f;
-	float maxPos = 0.95f;
+	float minPos = 0.0f;
+	float maxPos = 1.0f;
 	float minRot = 0.0f;
 	float maxRot = 2.0f * PI;
 	float minScale;
@@ -768,19 +768,32 @@ Triangle::Triangle(UTile* tile, float x, float y, float edgeLength /*= 1 */)
 	//Get actual Z value if fetch was succesfull
 
 	if (!heightOptP0.IsSet()) {
-		heightOptP0 = tile->streamingProxy->GetHeightAtLocation(FVector(x, y, 0.0));
+		//heightOptP0 = tile->streamingProxy->GetHeightAtLocation(FVector(x, y, 0.0));
+		p0 = FVector(x, y + (i / 2), tile->streamingProxy->GetHeightAtLocation(FVector(x, y, 0.0)).GetValue());
+	}
+	else {
+		p0 = FVector(x, y + (i / 2), heightOptP0.GetValue());
 	}
 	if (!heightOptP1.IsSet()) {
-		heightOptP1 = tile->streamingProxy->GetHeightAtLocation(FVector(x, y , 0.0));
+		//heightOptP1 = tile->streamingProxy->GetHeightAtLocation(FVector(x, y , 0.0));
+		p1 = FVector(x + (edgeLength / 2), y - (i / 2), tile->streamingProxy->GetHeightAtLocation(FVector(x, y, 0.0)).GetValue());
 	}
+	else {
+		p1 = FVector(x + (edgeLength / 2), y - (i / 2), heightOptP1.GetValue());
+	}
+	
 	if (!heightOptP2.IsSet()) {
-		heightOptP2 = tile->streamingProxy->GetHeightAtLocation(FVector(x, y , 0.0));
+		/*heightOptP2 = tile->streamingProxy->GetHeightAtLocation(FVector(x, y , 0.0));*/
+		p2 = FVector(x - (edgeLength / 2), y - (i / 2), tile->streamingProxy->GetHeightAtLocation(FVector(x, y, 0.0)).GetValue());
+	}
+	else {
+		p2 = FVector(x - (edgeLength / 2), y - (i / 2), heightOptP2.GetValue());
 	}
 	
 	//Assigning triangle corners
-	p0 = FVector(x, y + (i / 2), heightOptP0.GetValue());
-	p1 = FVector(x + (edgeLength / 2), y - (i / 2), heightOptP1.GetValue());
-	p2 = FVector(x - (edgeLength / 2), y - (i / 2), heightOptP2.GetValue());
+	//p0 = FVector(x, y + (i / 2), heightOptP0.GetValue());
+	//p1 = FVector(x + (edgeLength / 2), y - (i / 2), heightOptP1.GetValue());
+	//p2 = FVector(x - (edgeLength / 2), y - (i / 2), heightOptP2.GetValue());
 
 	//Calc normal
 	normal =  FVector::CrossProduct((p2 - p0), (p1 - p2));

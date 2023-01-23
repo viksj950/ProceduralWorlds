@@ -383,6 +383,8 @@ public:
 	uint32 currentRoadWidth{10};
 
 	uint32 roadSlopeThreshold{ 600 };
+
+	uint32 deformationStrength{ 3 };
 	
 	//UI Asset Distribution ---------------------------------------------------------------------------------------
 	 
