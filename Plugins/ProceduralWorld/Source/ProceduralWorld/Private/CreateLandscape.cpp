@@ -1385,8 +1385,8 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		if (t->adjacentTiles[2] != nullptr && t->biotope != t->adjacentTiles[2]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[4]->biotope) {
 
 		/*	UE_LOG(LogTemp, Warning, TEXT("Interpolating top left corner of tile : %d"), t->index);*/
-			X = t->index % gridSizeOfProxies * (TileSize - 1);
-			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
+			X = (t->index % gridSizeOfProxies) * (TileSize - 1); //X = 2 * 63 = 126
+			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);	//Y = 1 * 63 = 63
 
 			//Iteratethrough all interpolation points columns/rows 
 			yStart = Y - interpWidth;

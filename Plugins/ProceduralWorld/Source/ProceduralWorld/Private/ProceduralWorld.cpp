@@ -375,7 +375,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		.MinValue(0)
 		.MaxValue(100)
 		.MaxSliderValue(100)
-		.MinDesiredValueWidth(2)
+		.MinDesiredValueWidth(1)
 		.Value_Raw(this, &FProceduralWorldModule::GetAmplitude)
 		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetAmplitude)
 		]
