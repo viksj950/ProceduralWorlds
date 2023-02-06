@@ -1414,14 +1414,14 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		if (t->adjacentTiles[2] != nullptr && t->biotope != t->adjacentTiles[2]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[2]->biotope == t->adjacentTiles[4]->biotope) {
 
 		/*	UE_LOG(LogTemp, Warning, TEXT("Interpolating top left corner of tile : %d"), t->index);*/
-			X = t->index % gridSizeOfProxies * (TileSize - 1);
-			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
+			X = (t->index % gridSizeOfProxies) * (TileSize - 1); //X = 2 * 63 = 126
+			Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);	//Y = 1 * 63 = 63
 
 			//Iteratethrough all interpolation points columns/rows 
-			yStart = Y - interpWidth;
-			xStart = X + TileSize;
-			for (int c = xStart + interpWidth; c < X; c++) {	//Iterate X (Rolumn)
-				for (int r = yStart; r < Y; r++) { //Iterate Y (Row)
+			yStart = Y - interpWidth;	//63 - 20 = 43
+			xStart = X + TileSize;		//126 + 63	189
+			for (int c = xStart; c < xStart + interpWidth; c++) {	//Iterate X (Rolumn) c = 189 + 20 = 209
+				for (int r = yStart; r < Y; r++) { //Iterate Y (Row)	r = 43 
 					weightedKernelVertex = 0;
 
 					for (int j = 0; j < kernelSize * kernelSize; j++) {

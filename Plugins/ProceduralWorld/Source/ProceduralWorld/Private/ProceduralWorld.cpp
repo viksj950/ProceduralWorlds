@@ -373,9 +373,9 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			.AllowSpin(true)
 		.ToolTipText(FText::FromString("The height scale for the noise \nA higher value will create more intense peaks and dips"))
 		.MinValue(0)
-		.MaxValue(10)
-		.MaxSliderValue(10)
-		.MinDesiredValueWidth(2)
+		.MaxValue(100)
+		.MaxSliderValue(100)
+		.MinDesiredValueWidth(1)
 		.Value_Raw(this, &FProceduralWorldModule::GetAmplitude)
 		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetAmplitude)
 		]
