@@ -39,6 +39,13 @@
 #include "Brushes/SlateImageBrush.h"
 #include "Widgets/SCanvas.h"
 
+//Ouput/input
+#include "HAL/PlatformFileManager.h"
+#include "Misc/FileHelper.h"
+#include <string>
+#include <iostream>
+#include <fstream>
+
 
 //#include "AssetThumbnail.h"
 
@@ -141,7 +148,9 @@ public:
 	FReply Setup(); //old generate landscape
 
 	FReply GenerateTerrainData();
+	FReply GenerateTerrainDataNoInterp();
 	FReply GenerateTerrain();
+	FReply GenerateTerrainNoInterp();
 	FReply PlaceAssets();
 	FReply ListTiles();
 	FReply DeleteLandscape();
@@ -249,9 +258,193 @@ public:
 		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64,"Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'" ,4096,3,0.25f,0.5f,0.015f,1.0f,false,false,false,0)) ,
 		MakeShareable(new BiotopePerlinNoiseSetting("Mountains",2,64,"Material'/Game/Test_assets/M_Default_Landscape_Material.M_Default_Landscape_Material'", 4096,12,7.0f,0.5f,0.0015f,2.0f,true,false,false,0))};
 	
+
 	uint32 BiotopePerlinNoiseSettingIndexer{ 3 };
-	//TSharedPtr<FString> newBiotopeName;
-	//void SetNewBiotopeName(const FText& NewText) { newBiotopeName = MakeShareable(new FString(NewText.ToString())); };
+
+	//helper func for saving biomes
+	FString boolToString(const bool &inBool) {
+
+		if (inBool) {
+			return "1";
+		}
+		return "0";
+	};
+	bool stringToBool(const std::string inString) {
+
+		if (inString.compare("0") == 0) {
+			return false;
+		}
+		return true;
+	};
+
+	FReply saveAllBiomeSettings() {
+
+		//FString filePath = "/Content/BiomeSettings/settings.txt";
+		FString filePath = "C:/Users/viksj950/Desktop/TEMP.txt"; 
+
+		FString Line = "";
+		FString Delimiter = "\n";
+
+		for (int i = 0; i < BiotopeSettings.Num(); i++) {
+
+			Line += BiotopeSettings[i]->Biotope + Delimiter;
+			Line += FString::FromInt(BiotopeSettings[i].Get()->OctaveCount);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Amplitude);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Persistence);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Frequency);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Lacunarity);
+			Line += Delimiter;
+			Line += boolToString(BiotopeSettings[i].Get()->Turbulence);
+			Line += Delimiter;
+			Line += boolToString(BiotopeSettings[i].Get()->cutOff);
+			Line += Delimiter;
+			Line += boolToString(BiotopeSettings[i].Get()->invCutOff);
+			Line += Delimiter;
+			Line += FString::FromInt(BiotopeSettings[i].Get()->Seed);
+			Line += Delimiter;
+			Line += "---";
+			Line += Delimiter;
+		}
+		
+		if (FFileHelper::SaveStringToFile(Line, *filePath)) {
+			//UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED"));
+			UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED : %s") , *Line);
+
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Save to file FAILED"));
+		}
+
+		return FReply::Handled();
+	};
+
+	FReply saveBiomeSettings() {
+
+		//FString filePath = "/Content/BiomeSettings/settings.txt";
+		FString filePath = "C:/Users/viksj950/Desktop/TEMP.txt";
+
+		FString Line = "";
+		FString Delimiter = "\n";
+
+
+			Line += BiotopeSettings[BiomeSettingSelection]->Biotope + Delimiter;
+			Line += FString::FromInt(BiotopeSettings[BiomeSettingSelection].Get()->OctaveCount);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[BiomeSettingSelection].Get()->Amplitude);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[BiomeSettingSelection].Get()->Persistence);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[BiomeSettingSelection].Get()->Frequency);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[BiomeSettingSelection].Get()->Lacunarity);
+			Line += Delimiter;
+			Line += boolToString(BiotopeSettings[BiomeSettingSelection].Get()->Turbulence);
+			Line += Delimiter;
+			Line += boolToString(BiotopeSettings[BiomeSettingSelection].Get()->cutOff);
+			Line += Delimiter;
+			Line += boolToString(BiotopeSettings[BiomeSettingSelection].Get()->invCutOff);
+			Line += Delimiter;
+			Line += FString::FromInt(BiotopeSettings[BiomeSettingSelection].Get()->Seed);
+			Line += Delimiter;
+		
+
+		if (FFileHelper::SaveStringToFile(Line, *filePath)) {
+
+			UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED : %s"), *Line);
+
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Save to file FAILED"));
+		}
+
+		return FReply::Handled();
+	};
+
+	
+
+	FReply fetchAllBiomeSettings() {
+
+		std::fstream myFile;
+		std::string line;
+		TArray<std::string> biomeInfo;
+		myFile.open("C:/Users/viksj950/Desktop/TEMP.txt", std::ios::in);
+
+		if (myFile.is_open()) {
+			while (std::getline(myFile, line)) {
+				if (line.compare("---") == 0) {
+					continue;
+				}
+				biomeInfo.Add(line);
+				
+			}
+
+		}
+
+		if (!biomeInfo.IsEmpty()) {
+			for (int i = 0; i < BiotopeSettings.Num(); i++) {
+
+				
+				BiotopeSettings.Empty();
+				BiomeAssetsData.Empty();
+				BiotopePerlinNoiseSettingIndexer = 1;
+
+			}
+
+			FString copyOfName(biomeInfo[0].c_str());
+			FString tempMat = "";
+
+			//Each biome contains 10 settings, for eaach 10th row a new biome exists
+			for (int k = 0; k < biomeInfo.Num(); k += 10) {
+					copyOfName = biomeInfo[k].c_str();
+
+					BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(copyOfName, BiotopePerlinNoiseSettingIndexer, 64,
+						tempMat, 4096, std::stoi(biomeInfo[k+1]),
+						std::stof(biomeInfo[k+2]), std::stof(biomeInfo[k+3]), std::stof(biomeInfo[k+4]),
+						std::stof(biomeInfo[k+5]), stringToBool(biomeInfo[k+6]), stringToBool(biomeInfo[k+7]),
+						stringToBool(biomeInfo[k+8]), std::stoi(biomeInfo[k+9]))));
+					BiomeAssetsData.Add(MakeShareable(new biomeAssets(newBiomeName.ToString(), BiomeAssetsData.Num())));
+					BiotopePerlinNoiseSettingIndexer++;
+				
+			}
+			
+		}
+		myFile.close();
+		return FReply::Handled();
+	};
+
+	FReply fetchBiomeSettings() {
+
+		std::fstream myFile;
+		std::string line;
+		TArray<std::string> biomeInfo;
+		//CHANGE THIS 
+		myFile.open("C:/Users/viksj950/Desktop/TEMP.txt", std::ios::in);
+
+		if (myFile.is_open()) {
+			while (std::getline(myFile, line)) {
+				biomeInfo.Add(line);
+			}
+
+		}
+		FString copyOfName(biomeInfo[0].c_str());
+		FString tempMat = "";
+
+		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(copyOfName, BiotopePerlinNoiseSettingIndexer, 64,
+			tempMat, 4096, std::stoi(biomeInfo[1]),
+			std::stof(biomeInfo[2]), std::stof(biomeInfo[3]), std::stof(biomeInfo[4]),
+			std::stof(biomeInfo[5]), stringToBool(biomeInfo[6]), stringToBool(biomeInfo[7]),
+			stringToBool(biomeInfo[8]), std::stoi(biomeInfo[9]))));
+		BiomeAssetsData.Add(MakeShareable(new biomeAssets(newBiomeName.ToString(), BiomeAssetsData.Num())));
+		BiotopePerlinNoiseSettingIndexer++;
+
+		myFile.close();
+		return FReply::Handled();
+	};
+
 	FText newBiomeName;
 	FReply addNewBiotope() {
 		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(newBiomeName.ToString(), BiotopePerlinNoiseSettingIndexer, 64,
@@ -263,6 +456,7 @@ public:
 		BiotopePerlinNoiseSettingIndexer++;
 		return FReply::Handled();
 	};
+
 
 	FReply deleteBiotope() {
 
@@ -331,25 +525,24 @@ public:
 	int nmbrOfBiomes{ 5 };
 
 	//Frequency
-	TOptional<float> GetFrequency() const { return BiotopeSettings[BiomeSettingSelection]->Frequency; }
+	TOptional<float> GetFrequency() const { return BiotopeSettings.IsEmpty() ?  0 : BiotopeSettings[BiomeSettingSelection]->Frequency; }
 	void SetFrequency(float inFreq) { BiotopeSettings[BiomeSettingSelection]->Frequency = inFreq; }
-	//Height
-	/*TOptional<int32> GetHeightScale() const { return BiotopeSettings[BiomeSettingSelection]->HeightScale; }
-	void SetHeightScale(int32 inScale) { BiotopeSettings[BiomeSettingSelection]->HeightScale = inScale; }*/
 	//Seed
-	TOptional<int32> GetSeed() const { return BiotopeSettings[BiomeSettingSelection]->Seed; }
+	TOptional<int32> GetSeed() const {
+		return BiotopeSettings.IsEmpty() ? 0 : BiotopeSettings[BiomeSettingSelection]->Seed;
+	}
 	void SetSeed(int32 inSeed) { BiotopeSettings[BiomeSettingSelection]->Seed = inSeed; }
 	//OctaveCount
-	TOptional<int32> GetOctaveCount() const { return BiotopeSettings[BiomeSettingSelection]->OctaveCount; }
+	TOptional<int32> GetOctaveCount() const { return BiotopeSettings.IsEmpty() ? 0: BiotopeSettings[BiomeSettingSelection]->OctaveCount; }
 	void SetOctaveCount(int32 inOct) { BiotopeSettings[BiomeSettingSelection]->OctaveCount= inOct; }
 	//Persistance
-	TOptional<float> GetPersistence() const { return BiotopeSettings[BiomeSettingSelection]->Persistence; }
+	TOptional<float> GetPersistence() const { return BiotopeSettings.IsEmpty() ? 0 : BiotopeSettings[BiomeSettingSelection]->Persistence; }
 	void SetPersistence(float inPers) { BiotopeSettings[BiomeSettingSelection]->Persistence = inPers; }
 	//Lacunarity
-	TOptional<float> GetLacunarity() const { return BiotopeSettings[BiomeSettingSelection]->Lacunarity; }
+	TOptional<float> GetLacunarity() const { return BiotopeSettings.IsEmpty() ? 0 : BiotopeSettings[BiomeSettingSelection]->Lacunarity; }
 	void SetLacunarity(float inLac) { BiotopeSettings[BiomeSettingSelection]->Lacunarity = inLac; }
 	//Amplitude
-	TOptional<float> GetAmplitude() const { return BiotopeSettings[BiomeSettingSelection]->Amplitude; }
+	TOptional<float> GetAmplitude() const { return BiotopeSettings.IsEmpty() ? 0 : BiotopeSettings[BiomeSettingSelection]->Amplitude; }
 	void SetAmplitude(float inAmp) { BiotopeSettings[BiomeSettingSelection]->Amplitude = inAmp;}
 
 	TSharedPtr<SCheckBox> turbCheckbox;

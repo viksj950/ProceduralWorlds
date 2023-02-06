@@ -373,8 +373,8 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			.AllowSpin(true)
 		.ToolTipText(FText::FromString("The height scale for the noise \nA higher value will create more intense peaks and dips"))
 		.MinValue(0)
-		.MaxValue(10)
-		.MaxSliderValue(10)
+		.MaxValue(100)
+		.MaxSliderValue(100)
 		.MinDesiredValueWidth(2)
 		.Value_Raw(this, &FProceduralWorldModule::GetAmplitude)
 		.OnValueChanged_Raw(this, &FProceduralWorldModule::SetAmplitude)
@@ -519,7 +519,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.ToolTipText(FText::FromString("Turbulence ON takes the absolute value of the noise values\nTypically toggled as ON when valleys and dips are not desired"))
 				.IsChecked_Lambda([&]() {
 				
-				return BiotopeSettings[BiomeSettingSelection]->Turbulence ? ECheckBoxState::Checked: ECheckBoxState::Unchecked;
+				return BiotopeSettings.IsEmpty() ? ECheckBoxState::Unchecked  : BiotopeSettings[BiomeSettingSelection]->Turbulence ? ECheckBoxState::Checked: ECheckBoxState::Unchecked;
 					})
 				.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
 				
@@ -564,7 +564,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.ToolTipText(FText::FromString("Cutoff sets a lower limit where the terrain flattens out \nTypically toggled as ON for archipelago structured landscapes"))
 			.IsChecked_Lambda([&]() {
 
-			return BiotopeSettings[BiomeSettingSelection]->cutOff ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			return BiotopeSettings.IsEmpty() ? ECheckBoxState::Unchecked : BiotopeSettings[BiomeSettingSelection]->cutOff ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 				})
 			.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
 
@@ -608,7 +608,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.ToolTipText(FText::FromString("Cutoff sets a higher limit where the terrain flattens out \nTypically toggled as ON for archipelago structured landscapes"))
 			.IsChecked_Lambda([&]() {
 
-			return BiotopeSettings[BiomeSettingSelection]->invCutOff ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			return BiotopeSettings.IsEmpty() ? ECheckBoxState::Unchecked : BiotopeSettings[BiomeSettingSelection]->invCutOff ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 				})
 			.OnCheckStateChanged_Lambda([&](const ECheckBoxState& inValue) {
 
@@ -1305,7 +1305,12 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			.Padding(1.0f)
 			.HAlign(HAlign_Center)
 			[
-
+				SNew(SHorizontalBox) 
+				+SHorizontalBox::Slot()
+				.Padding(1.0f)
+				.HAlign(HAlign_Center)
+				[
+					
 			
 				SNew(SBox)
 				.HAlign(HAlign_Left)
@@ -1317,7 +1322,59 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.OnClicked_Raw(this, &FProceduralWorldModule::GenerateTerrainData) //Setup
 				.HAlign(HAlign_Left)
 				]
-			
+				]
+				+ SHorizontalBox::Slot()	
+					[
+					SNew(SBox)
+					.HAlign(HAlign_Left)
+					.VAlign(VAlign_Center)
+					[
+						SNew(SButton)
+						.Text(FText::FromString("Save"))
+					.ToolTipText(FText::FromString("Saves current biome settings"))
+					.OnClicked_Raw(this, &FProceduralWorldModule::saveBiomeSettings) //Setup
+					.HAlign(HAlign_Left)
+					]
+					]
+				+ SHorizontalBox::Slot()
+					[
+						SNew(SBox)
+						.HAlign(HAlign_Left)
+					.VAlign(VAlign_Center)
+					[
+						SNew(SButton)
+						.Text(FText::FromString("Save ALL"))
+					.ToolTipText(FText::FromString("Saves all biome settings"))
+					.OnClicked_Raw(this, &FProceduralWorldModule::saveAllBiomeSettings) //Setup
+					.HAlign(HAlign_Left)
+					]
+					]
+				+ SHorizontalBox::Slot()
+					[
+						SNew(SBox)
+						.HAlign(HAlign_Left)
+					.VAlign(VAlign_Center)
+					[
+						SNew(SButton)
+						.Text(FText::FromString("READ"))
+					.ToolTipText(FText::FromString("Copies biome settings"))
+					.OnClicked_Raw(this, &FProceduralWorldModule::fetchBiomeSettings) //Setup
+					.HAlign(HAlign_Left)
+					]
+					]
+				+ SHorizontalBox::Slot()
+					[
+						SNew(SBox)
+						.HAlign(HAlign_Left)
+					.VAlign(VAlign_Center)
+					[
+						SNew(SButton)
+						.Text(FText::FromString("READ ALL"))
+					.ToolTipText(FText::FromString("Copies biome settings"))
+					.OnClicked_Raw(this, &FProceduralWorldModule::fetchAllBiomeSettings) //Setup
+					.HAlign(HAlign_Left)
+					]
+					]
 		]
 
 
@@ -1340,6 +1397,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 		.OnClicked_Raw(this, &FProceduralWorldModule::GenerateTerrain) //Setup
 		]
 		]
+
 			+ SHorizontalBox::Slot()
 			[
 					SNew(SBox)
@@ -1351,6 +1409,17 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 				.OnClicked_Raw(this, &FProceduralWorldModule::DeleteTerrain)
 				]
 			]
+			+ SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.HAlign(HAlign_Center)
+				.VAlign(VAlign_Center)
+				[
+					SNew(SButton)
+					.Text(FText::FromString("Alt gen"))
+				.OnClicked_Raw(this, &FProceduralWorldModule::GenerateTerrainNoInterp)
+				]
+				]
 		]
 		+ SVerticalBox::Slot()
 		.Padding(1.0f)
@@ -1506,6 +1575,20 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginAssetTab(const FSpawnT
 	+SVerticalBox::Slot()
 		[
 			SAssignNew(assetSettingList, SListView< TSharedPtr<biomeAssetSettings>>)
+		/*	.IsEnabled_Lambda([&]() {
+				if (BiomeAssetsData.IsEmpty()) {
+					return false;
+				}
+				else {
+					if (!BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings.IsEmpty()) {
+						assetSettingList->SetListItemsSource(BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings);
+						return true;
+					}
+					else {
+						return false;
+					}
+				}
+				})*/
 			.SelectionMode(ESelectionMode::Single)
 			.ItemHeight(50)
 			.ListItemsSource(&BiomeAssetsData[BiomeAssetSettingSelection]->AssetSettings)
@@ -2280,7 +2363,7 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	//Concatinate heightData from all tiles and spawn a landscape
 	ptrToTerrain->concatHeightData(tiles);
 	//Interpolate using gaussian blur
-	ptrToTerrain->interpBiomes(tiles, 3, 1.0, 30, 20);
+	ptrToTerrain->interpBiomes(tiles, 3, 1.0, 30, 10);
 
 	
 	ptrToTerrain->copyToRawConcatData();
@@ -2293,6 +2376,68 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	previewWindow.AssembleRoadListWidget();
 	previewWindow.roadsDataList->RebuildList();
 	
+	UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
+
+
+
+	return FReply::Handled();
+}
+
+FReply FProceduralWorldModule::GenerateTerrainDataNoInterp()
+{
+	//Call to CreateLandscape and generate its properties 
+	ptrToTerrain = new CreateLandscape(SizeX, SizeY, QuadsPerComponent, ComponentsPerProxy, SectionsPerComponent, TileSize);
+
+	//DO THIS BETTER----------------
+	int32 nmbrOfTilesInARow = (SizeX - 1) / (QuadsPerComponent * ComponentsPerProxy);
+
+
+	if (!tiles.IsEmpty())
+	{
+		tiles.Empty();
+	}
+
+	if (!roads.IsEmpty())
+	{
+		roads.Empty();
+	}
+	for (size_t i{ 0 }; i < nmbrOfTilesInARow * nmbrOfTilesInARow; i++)
+	{
+
+		UTile* temp = new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize);
+		temp->index = i;
+		tiles.Add(temp);
+	}
+
+	for (size_t i = 0; i < tiles.Num(); i++)
+	{
+
+		tiles[i]->updateAdjacentTiles(tiles, nmbrOfTilesInARow);
+
+	}
+
+	//ptrToTerrain->AssignBiotopesToTiles(tiles, nmbrOfBiomes, BiotopeSettings);
+	ptrToTerrain->AssignBiotopesToTiles(tiles, previewWindow.markedTiles);
+
+	//Generate Perlin Noise and assign it to all tiles
+	//myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
+
+	//Creates proxies used in world partioning
+	ptrToTerrain->GenerateAndAssignHeightData(tiles, BiotopeSettings);
+
+	//Concatinate heightData from all tiles and spawn a landscape
+	ptrToTerrain->concatHeightData(tiles);
+
+	ptrToTerrain->copyToRawConcatData();
+
+	previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);
+	previewWindow.CreateGridTexture();
+	previewWindow.CreateBiotopeTexture();
+	previewWindow.CreateRoadMarkTexture();
+	previewWindow.AssembleWidget();
+	previewWindow.AssembleRoadListWidget();
+	previewWindow.roadsDataList->RebuildList();
+
 	UE_LOG(LogTemp, Warning, TEXT("Number of textures: %d"), previewWindow.textures.Num());
 
 
@@ -2352,6 +2497,95 @@ FReply FProceduralWorldModule::GenerateTerrain()
 
 
 	//ptrToTerrain->generateRoadV2(tiles, roads, start, end, 100);
+
+		if (!roads.IsEmpty()) {
+			for (auto& k : roads) {
+				k.calcLengthsSplines();
+				k.vizualizeRoad(ptrToTerrain->LandscapeScale);
+				for (uint32 j = 0; j < previewWindow.roadsData[i]->deformationStrength; j++) {
+					ptrToTerrain->roadAnamarphosis(roads, 0.01, 9, 0);
+				}
+			}
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("[Road generation failed] OR [No road was marked]"));
+
+		}
+	}
+	//Currently only imports the landscape settings to the landscape "mesh"mountainAssets
+	landscapePtr = ptrToTerrain->generateFromTileData(tiles);
+
+	//createTextureFromArray(500, 500, myLand.concatedHeightData);
+	//LandscapeInfo used for accessing proxies
+	ULandscapeInfo* LandscapeInfo = landscapePtr->GetLandscapeInfo();
+
+	int i{ 0 };
+	for (auto& it : LandscapeInfo->Proxies)
+	{
+		tiles[i]->streamingProxy = it;
+
+		for (auto& k : BiotopeSettings)
+		{
+			if (tiles[i]->biotope == k->BiotopeIndex)
+			{
+				//tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, TEXT("Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'")));
+				tiles[i]->updateMaterial(LoadObject<UMaterial>(nullptr, *k->MaterialPath));
+			}
+		}
+
+
+		i++;
+	}
+
+	return FReply::Handled();
+}
+
+FReply FProceduralWorldModule::GenerateTerrainNoInterp()
+{
+	GenerateTerrainDataNoInterp();
+
+	FVector start;
+	FVector end;
+	for (size_t i = 0; i < previewWindow.roadsData.Num(); i++)
+	{
+
+		int16 adjTries = 10;
+		//Auto generation of road based on start and end point
+		if (previewWindow.roadsData[i]->roadType.Equals("Smart Road") && previewWindow.roadsData[i]->Points.Num() == 2)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[AUTO ROAD GENERATION]"));
+			start = previewWindow.roadsData[i]->Points[0];
+			end = previewWindow.roadsData[i]->Points[1];
+			int16 hardCap = 20;
+			int16 counter = 0;
+
+			bool succeded = ptrToTerrain->generateRoadV2(tiles, roads, start, end, adjTries, previewWindow.roadsData[i]->slopeThreshold);
+			while (!succeded && counter < hardCap) {
+				counter++;
+				UE_LOG(LogTemp, Warning, TEXT("Previous road failed, new road generation attempt: %d"), counter);
+				succeded = ptrToTerrain->generateRoadV2(tiles, roads, start, end, adjTries, roadSlopeThreshold);
+			}
+			if (succeded) {
+				UE_LOG(LogTemp, Warning, TEXT("[Road generation was succesufull]"));
+				//Set the Width to selected
+				roads.Last().Width = previewWindow.roadsData[i]->Width;
+			}
+
+
+		}
+		//Manual plotting of road
+
+		if (previewWindow.roadsData[i]->roadType.Equals("Manual Road") && previewWindow.roadsData[i]->Points.Num() > 2)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[MANUAL RODE GENERATION]"));
+			ptrToTerrain->generateRoadPlot(roads, previewWindow.roadsData[i]->Points);
+			//Set the Width to selected
+			roads.Last().Width = previewWindow.roadsData[i]->Width;
+
+		}
+
+
+		//ptrToTerrain->generateRoadV2(tiles, roads, start, end, 100);
 
 		if (!roads.IsEmpty()) {
 			for (auto& k : roads) {
@@ -2710,6 +2944,7 @@ FReply FProceduralWorldModule::DeleteTerrain()
 		landscapePtr->Destroy();
 		landscapePtr = nullptr;
 		ptrToTerrain = nullptr;
+		GenerateTerrainData();
 		return FReply::Handled();
 	
 }

@@ -1212,35 +1212,6 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 		for (int i = 0; i < 8; i++) {
 			if (t->adjacentTiles[i] != nullptr && t->biotope != t->adjacentTiles[i]->biotope) {
 
-				//if (i == 0 && t->adjacentTiles[0]->biotope == t->adjacentTiles[1]->biotope && t->adjacentTiles[0]->biotope == t->adjacentTiles[3]->biotope ) { //top right corner (all 3 other biotopes are different to t but of same different type) 
-				//	UE_LOG(LogTemp, Warning, TEXT("Interpolating top corner of tile : %d"), t->index);
-				//	X = t->index % gridSizeOfProxies * (TileSize - 1);
-				//	Y = FMath::Floor(t->index / gridSizeOfProxies) * (TileSize - 1);
-
-				//	//Iteratethrough all interpolation points columns/rows 
-				//	yStart = Y - interpWidth;
-				//	xStart = X - interpWidth;
-				//	for (int c = xStart; c < X; c++) {	//Iterate X (Rolumn)
-				//		for (int r = yStart; r < Y; r++) { //Iterate Y (Row)
-				//			weightedKernelVertex = 0;
-
-				//			for (int j = 0; j < kernelSize * kernelSize; j++) {
-
-				//				if ((kernel[j].coords.X + c) < 0 || (kernel[j].coords.Y + r) < 0 || (kernel[j].coords.X + c) >= SizeX || (kernel[j].coords.Y + r) >= SizeX)	//NEEDS TO BE FIXED, LAZY PADDING WITH HARD CODED VALUE
-				//				{
-				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(concatedHeightData, SizeX, c, r)];
-				//				}
-				//				else
-				//				{
-				//					weightedKernelVertex += (kernel[j].weight / sumWeights) * concatedHeightData[GetVertexIndex(concatedHeightData, SizeX, kernel[j].coords.X + c, kernel[j].coords.Y + r)];
-				//				}
-				//			}
-
-				//			concatedHeightData[GetVertexIndex(concatedHeightData, SizeX, c, r)] = weightedKernelVertex;
-				//		}
-				//	}
-				//}
-
 				if(i == 1){ //top 
 				/*	UE_LOG(LogTemp, Warning, TEXT("Interpolating from tile : %d"), t->index);
 					UE_LOG(LogTemp, Warning, TEXT("Interpolating adjacent tile : : %d"), i); */
@@ -1420,7 +1391,7 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 			//Iteratethrough all interpolation points columns/rows 
 			yStart = Y - interpWidth;
 			xStart = X + TileSize;
-			for (int c = xStart + interpWidth; c < X; c++) {	//Iterate X (Rolumn)
+			for (int c = xStart; c < xStart + interpWidth; c++) {	//Iterate X (Rolumn)
 				for (int r = yStart; r < Y; r++) { //Iterate Y (Row)
 					weightedKernelVertex = 0;
 

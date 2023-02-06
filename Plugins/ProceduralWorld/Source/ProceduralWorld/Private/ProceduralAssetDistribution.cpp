@@ -24,8 +24,8 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 	FVector assetScale;
 	FMath mathInstance;
 
-	float minPos = 0.0f;
-	float maxPos = 1.0f;
+	float minPos = 0.01f;
+	float maxPos = 0.99f;
 	float minRot = 0.0f;
 	float maxRot = 2.0f * PI;
 	float minScale;
