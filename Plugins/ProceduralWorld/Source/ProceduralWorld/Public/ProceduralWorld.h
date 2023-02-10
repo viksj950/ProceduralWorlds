@@ -280,7 +280,7 @@ public:
 	FReply saveAllBiomeSettings() {
 
 		//FString filePath = "/Content/BiomeSettings/settings.txt";
-		FString filePath = "C:/Users/viksj950/Desktop/TEMP.txt"; 
+		FString filePath = "C:/Users/William/Desktop/TEMP.txt"; 
 
 		FString Line = "";
 		FString Delimiter = "\n";
@@ -325,7 +325,7 @@ public:
 	FReply saveBiomeSettings() {
 
 		//FString filePath = "/Content/BiomeSettings/settings.txt";
-		FString filePath = "C:/Users/viksj950/Desktop/TEMP.txt";
+		FString filePath = "C:/Users/William/Desktop/TEMP.txt";
 
 		FString Line = "";
 		FString Delimiter = "\n";
@@ -371,7 +371,7 @@ public:
 		std::fstream myFile;
 		std::string line;
 		TArray<std::string> biomeInfo;
-		myFile.open("C:/Users/viksj950/Desktop/TEMP.txt", std::ios::in);
+		myFile.open("C:/Users/William/Desktop/TEMP.txt", std::ios::in);
 
 		if (myFile.is_open()) {
 			while (std::getline(myFile, line)) {
@@ -422,7 +422,7 @@ public:
 		std::string line;
 		TArray<std::string> biomeInfo;
 		//CHANGE THIS 
-		myFile.open("C:/Users/viksj950/Desktop/TEMP.txt", std::ios::in);
+		myFile.open("C:/Users/William/Desktop/TEMP.txt", std::ios::in);
 
 		if (myFile.is_open()) {
 			while (std::getline(myFile, line)) {

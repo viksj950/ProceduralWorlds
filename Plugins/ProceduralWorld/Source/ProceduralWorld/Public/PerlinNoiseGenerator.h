@@ -36,7 +36,7 @@ public:
 
 
 	int32 GenerateAndAssignTileData(TArray<uint16>& Data, const int& DataSideSize,const int &TileIndex, const uint32 &inGridSizeOfProxies, const int& inStartColumn, const int& inStartRow, const BiotopePerlinNoiseSetting& settings);
-
+	int32 GenerateNoiseValBiotope(const uint32& inGridSizeOfProxies, const int& inX, const int& inY, const BiotopePerlinNoiseSetting& settings);
 	int hash(const int& x, const int& y) const;
 
 	T size;
@@ -257,4 +257,48 @@ int32 PerlinNoiseGenerator<T, N>::GenerateAndAssignTileData(TArray<uint16>& Data
 	}
 	return ColumnStartIndex - DataSideSize - 1;
 
+}
+
+
+template<typename T, unsigned N>
+int32 PerlinNoiseGenerator<T, N>::GenerateNoiseValBiotope(const uint32& inGridSizeOfProxies, const int& inX, const int& inY, const BiotopePerlinNoiseSetting& settings)
+{
+
+	float amplitudeLoc = settings.Amplitude;
+	float frequencyLoc = settings.Frequency;  //For rass 0.005625 is kinda good, rockieer biome: 0.015625 
+	int averageHeight = 32768;
+
+	int32 sum{ 0 };
+	for (int k = 0; k < settings.OctaveCount; k++) {
+		if (settings.Turbulence)
+		{
+			sum += abs(generateNoiseVal(Vec2<float>(inX, inY) * frequencyLoc) * amplitudeLoc * settings.HeightScale);
+		}
+		else
+		{
+			sum += generateNoiseVal(Vec2<float>(inX, inY) * frequencyLoc) * amplitudeLoc * settings.HeightScale;
+		}
+
+
+
+		//sum += PerlinNoise.generateNoiseVal(Vec2<float>(i, j) * 0.015625 * frequency) * Amplitude * heightScale;
+		//HeightData[j * SizeX + i] = noise.processCoord(Vec2<float>(i, j)) * heightScale + 32768;
+
+		amplitudeLoc *= settings.Persistence;
+		frequencyLoc *= settings.Lacunarity;
+
+	}
+	
+
+	if ((sum)+averageHeight < averageHeight && settings.cutOff) {
+		sum = averageHeight;
+	}
+	else if ((sum)+averageHeight > averageHeight && settings.invCutOff) {
+		sum = averageHeight;
+	}
+	else {
+		sum = (sum)+averageHeight;
+	}
+
+	return sum;
 }

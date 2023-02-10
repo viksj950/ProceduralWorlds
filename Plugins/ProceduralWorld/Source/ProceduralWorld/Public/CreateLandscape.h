@@ -92,6 +92,9 @@ public:
 	//new and improved gaussian blur 
 	void interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize, float sigma, int32 interpWidth);
 
+	void interpBiomesMixedNoise(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);
+	void createAndInterpBiomesNoise(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);
+
 	//Randomly placing biotopes depending on nmbrOfBiomes and then fillin by Voronoi
 	void AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>&BiotopeSettings) const;
 
