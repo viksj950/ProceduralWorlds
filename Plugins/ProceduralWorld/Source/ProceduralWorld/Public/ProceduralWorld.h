@@ -280,7 +280,7 @@ public:
 	FReply saveAllBiomeSettings() {
 
 		//FString filePath = "/Content/BiomeSettings/settings.txt";
-		FString filePath = "C:/Users/viksj950/Desktop/TEMP.txt"; 
+		FString filePath = "C:/Users/viksj950/Desktop/TEMP2.txt"; 
 
 		FString Line = "";
 		FString Delimiter = "\n";
@@ -322,10 +322,79 @@ public:
 		return FReply::Handled();
 	};
 
+	FReply saveAllBiomeSettings2() {
+
+		FString filePath = "C:/Users/viksj950/Desktop/TEMP2.txt";
+
+		FString Line = "";
+		FString Delimiter = "\n";
+
+		for (int i = 0; i < BiotopeSettings.Num(); i++) {
+
+			
+
+			Line += BiotopeSettings[i]->Biotope + Delimiter;
+			Line += FString::FromInt(BiotopeSettings[i].Get()->OctaveCount);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Amplitude);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Persistence);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Frequency);
+			Line += Delimiter;
+			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Lacunarity);
+			Line += Delimiter;
+			Line += boolToString(BiotopeSettings[i].Get()->Turbulence);
+			Line += Delimiter;
+			Line += boolToString(BiotopeSettings[i].Get()->cutOff);
+			Line += Delimiter;
+			Line += boolToString(BiotopeSettings[i].Get()->invCutOff);
+			Line += Delimiter;
+			Line += FString::FromInt(BiotopeSettings[i].Get()->Seed);
+			Line += Delimiter;
+
+			Line += "Asset_Settings:";
+			Line += Delimiter;
+			for (int index = 0; index < BiomeAssetsData[i]->AssetSettings.Num(); index++) {
+
+				Line += BiomeAssetsData[i]->AssetSettings[index]->ObjectPath;
+				Line += Delimiter;
+				Line += FString::FromInt(BiomeAssetsData[i].Get()->AssetSettings[index]->assetCount);
+				Line += Delimiter;
+				Line += FString::SanitizeFloat(BiomeAssetsData[i].Get()->AssetSettings[index]->scaleVar);
+				Line += Delimiter;
+				Line += FString::SanitizeFloat(BiomeAssetsData[i].Get()->AssetSettings[index]->angleThreshold);
+				Line += Delimiter;
+				Line += boolToString(BiomeAssetsData[i].Get()->AssetSettings[index]->noCollide);
+				Line += Delimiter;
+				Line += FString::SanitizeFloat(BiomeAssetsData[i].Get()->AssetSettings[index]->density);
+				Line += Delimiter;
+				Line += boolToString(BiomeAssetsData[i].Get()->AssetSettings[index]->considerRoad);
+				Line += Delimiter;
+				Line += FString::FromInt(BiomeAssetsData[i].Get()->AssetSettings[index]->heightThreshold);
+				Line += Delimiter;
+				Line += "xxxxx";
+				Line += Delimiter;
+			}
+			Line += "-----";
+			Line += Delimiter;
+		}
+
+		if (FFileHelper::SaveStringToFile(Line, *filePath)) {
+			UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED : %s"), *Line);
+
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Save to file FAILED (wrong path OR file is read-only?"));
+		}
+
+		return FReply::Handled();
+	};
+
 	FReply saveBiomeSettings() {
 
 		//FString filePath = "/Content/BiomeSettings/settings.txt";
-		FString filePath = "C:/Users/viksj950/Desktop/TEMP.txt";
+		FString filePath = "C:/Users/viksj950/Desktop/TEMP2.txt";
 
 		FString Line = "";
 		FString Delimiter = "\n";
@@ -371,11 +440,11 @@ public:
 		std::fstream myFile;
 		std::string line;
 		TArray<std::string> biomeInfo;
-		myFile.open("C:/Users/viksj950/Desktop/TEMP.txt", std::ios::in);
+		myFile.open("C:/Users/viksj950/Desktop/TEMP2.txt", std::ios::in);
 
 		if (myFile.is_open()) {
 			while (std::getline(myFile, line)) {
-				if (line.compare("---") == 0) {
+				if (line.compare("-----") == 0) {
 					continue;
 				}
 				biomeInfo.Add(line);
@@ -387,10 +456,9 @@ public:
 		if (!biomeInfo.IsEmpty()) {
 			for (int i = 0; i < BiotopeSettings.Num(); i++) {
 
-				
 				BiotopeSettings.Empty();
 				BiomeAssetsData.Empty();
-				BiotopePerlinNoiseSettingIndexer = 1;
+				BiotopePerlinNoiseSettingIndexer = 0;
 
 			}
 
@@ -406,12 +474,114 @@ public:
 						std::stof(biomeInfo[k+2]), std::stof(biomeInfo[k+3]), std::stof(biomeInfo[k+4]),
 						std::stof(biomeInfo[k+5]), stringToBool(biomeInfo[k+6]), stringToBool(biomeInfo[k+7]),
 						stringToBool(biomeInfo[k+8]), std::stoi(biomeInfo[k+9]))));
-					BiomeAssetsData.Add(MakeShareable(new biomeAssets(newBiomeName.ToString(), BiomeAssetsData.Num())));
+					BiomeAssetsData.Add(MakeShareable(new biomeAssets(copyOfName, BiomeAssetsData.Num())));
 					BiotopePerlinNoiseSettingIndexer++;
 				
 			}
 			
 		}
+		myFile.close();
+		return FReply::Handled();
+	};
+
+	FReply fetchAllBiomeSettings2() {
+
+		std::fstream myFile;
+		std::string line;
+		TArray<std::string> biomeInfo;
+		TArray<int> newBiomeIndexes;
+	/*	TArray<int> BiomeAssetIndex;
+		TArray<int> AssetIndex;*/
+
+		myFile.open("C:/Users/viksj950/Desktop/TEMP2.txt", std::ios::in);
+		int fileLength = 0;
+
+		newBiomeIndexes.Add(0);
+
+		if (myFile.is_open()) {
+			while (std::getline(myFile, line)) {
+				biomeInfo.Add(line);
+				fileLength++;
+				if (line.compare("-----") == 0) {
+					newBiomeIndexes.Add(fileLength+1);
+				}
+
+			}
+
+		}
+
+		if (!biomeInfo.IsEmpty()) {
+			newBiomeIndexes.RemoveAt(newBiomeIndexes.Num() - 1); //Remove eof instance
+
+			for (int i = 0; i < BiotopeSettings.Num(); i++) {
+
+				BiotopeSettings.Empty();
+				BiomeAssetsData.Empty();
+				BiotopePerlinNoiseSettingIndexer = 0;
+
+			}
+
+			FString copyOfName(biomeInfo[0].c_str()); //fetch first line which will always be the first biome name
+			FString tempMat = "";
+
+			copyOfName = biomeInfo[0].c_str();
+			int startPos = 0;
+			int index = 0;
+			UE_LOG(LogTemp, Warning, TEXT("Number of lines : %d"), fileLength)
+			for (int k = 0; k < fileLength - 1; k += startPos) {
+
+				
+				UE_LOG(LogTemp, Warning, TEXT("Name of Biome : %s"), *copyOfName);
+				
+				
+				
+
+				if (k < newBiomeIndexes[index]) {//first biotopoe
+					startPos = newBiomeIndexes[index];
+
+				}
+				else {
+					index++;
+					startPos = newBiomeIndexes[index];
+				}
+
+
+				BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(copyOfName, BiotopePerlinNoiseSettingIndexer, 64,
+					tempMat, 4096, std::stoi(biomeInfo[startPos + 1]),
+					std::stof(biomeInfo[startPos + 2]), std::stof(biomeInfo[startPos + 3]), std::stof(biomeInfo[startPos + 4]),
+					std::stof(biomeInfo[startPos + 5]), stringToBool(biomeInfo[startPos + 6]), stringToBool(biomeInfo[startPos + 7]),
+					stringToBool(biomeInfo[startPos + 8]), std::stoi(biomeInfo[startPos + 9]))));
+
+				if (biomeInfo[k + 10].compare("Asset_Settings") == 0) { //Biome has asset settings
+					//while for all xxxxx
+					TArray<TSharedPtr<biomeAssetSettings>> AssetSettings;
+
+					//AssetSettings.Add(new biomeAssetSettings(biomeInfo[startPos+11].c_str(), std::stoi(biomeInfo[k + 12], std::stof(biomeInfo[k + 13], std::stof(biomeInfo[k + 14], stringToBool(biomeInfo[k + 1]));
+					//UE_LOG(LogTemp, Warning, TEXT("Index k + 12 : %s"), *biomeInfo[k +12]);
+				/*	BiomeAssetsData.Add(MakeShareable(new biomeAssets(copyOfName, BiomeAssetsData.Num(), AssetSettings)));
+					BiotopePerlinNoiseSettingIndexer++;*/
+				}
+				else { //Imported biome has no asset settings, just add empty data
+					BiomeAssetsData.Add(MakeShareable(new biomeAssets(copyOfName, BiomeAssetsData.Num())));
+					BiotopePerlinNoiseSettingIndexer++;
+
+				}
+
+
+				
+					/*int k = nextBiomeLine;
+					BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(copyOfName, BiotopePerlinNoiseSettingIndexer, 64,
+						tempMat, 4096, std::stoi(biomeInfo[k + 1]),
+						std::stof(biomeInfo[k + 2]), std::stof(biomeInfo[k + 3]), std::stof(biomeInfo[k + 4]),
+						std::stof(biomeInfo[k + 5]), stringToBool(biomeInfo[k + 6]), stringToBool(biomeInfo[k + 7]),
+						stringToBool(biomeInfo[k + 8]), std::stoi(biomeInfo[k + 9]))));
+					BiomeAssetsData.Add(MakeShareable(new biomeAssets(copyOfName, BiomeAssetsData.Num())));
+					BiotopePerlinNoiseSettingIndexer++;*/
+			}
+		}
+			
+
+		
 		myFile.close();
 		return FReply::Handled();
 	};
@@ -422,7 +592,7 @@ public:
 		std::string line;
 		TArray<std::string> biomeInfo;
 		//CHANGE THIS 
-		myFile.open("C:/Users/viksj950/Desktop/TEMP.txt", std::ios::in);
+		myFile.open("C:/Users/viksj950/Desktop/TEMP2.txt", std::ios::in);
 
 		if (myFile.is_open()) {
 			while (std::getline(myFile, line)) {
@@ -438,7 +608,7 @@ public:
 			std::stof(biomeInfo[2]), std::stof(biomeInfo[3]), std::stof(biomeInfo[4]),
 			std::stof(biomeInfo[5]), stringToBool(biomeInfo[6]), stringToBool(biomeInfo[7]),
 			stringToBool(biomeInfo[8]), std::stoi(biomeInfo[9]))));
-		BiomeAssetsData.Add(MakeShareable(new biomeAssets(newBiomeName.ToString(), BiomeAssetsData.Num())));
+		BiomeAssetsData.Add(MakeShareable(new biomeAssets(copyOfName, BiomeAssetsData.Num())));
 		BiotopePerlinNoiseSettingIndexer++;
 
 		myFile.close();
@@ -596,7 +766,7 @@ public:
 
 	TSharedPtr<SNumericEntryBox<float>> myDensityNumBox;
 	//Intermediate setting used as a placeholder when displaying settings for assets.
-	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("",1,0,0.5,false,1.0,false ));
+	TSharedPtr<biomeAssetSettings> IntermediateBiomeAssetSetting =MakeShareable(new biomeAssetSettings("",1,0,0.5,false,1.0,false,0 ));
 
 	//EXPERIMENTAL THUMBNAIL STUFF
 	TSharedPtr<FAssetThumbnail> slateThumbnail{nullptr}; //= MakeShareable(new FAssetThumbnail());

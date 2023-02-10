@@ -36,17 +36,17 @@ struct Point2D
 struct biomeAssetSettings
 {
 	biomeAssetSettings(FString inObjectPath, int32 inAssetCount,
-		float inScaleVar, float inAngleThreshold, bool inNoCollide, float inDensity, bool inConsiderRoad) : ObjectPath{ inObjectPath },
+		float inScaleVar, float inAngleThreshold, bool inNoCollide, float inDensity, bool inConsiderRoad, int16 inHeightTreshold) : ObjectPath{ inObjectPath },
 		assetCount{ inAssetCount }, scaleVar{ inScaleVar }, angleThreshold{ inAngleThreshold}, noCollide {
 		inNoCollide },
-		density { inDensity }, considerRoad{ inConsiderRoad }
+		density{ inDensity }, considerRoad{ inConsiderRoad }, heightThreshold{inHeightTreshold}
 
 	{
 	};
 
 	biomeAssetSettings(const biomeAssetSettings& inSettings):ObjectPath{ inSettings.ObjectPath },
 		assetCount{ inSettings.assetCount }, scaleVar{ inSettings.scaleVar }, angleThreshold{ inSettings.angleThreshold }, noCollide{
-		inSettings.noCollide }, density{ inSettings.density }, considerRoad{ inSettings.considerRoad }
+		inSettings.noCollide }, density{ inSettings.density }, considerRoad{ inSettings.considerRoad }, heightThreshold{ inSettings.heightThreshold }
 
 	{
 		slateThumbnail = inSettings.slateThumbnail;
@@ -61,6 +61,7 @@ struct biomeAssetSettings
 	bool noCollide;
 	float density;
 	bool considerRoad;
+	int16 heightThreshold;
 
 	FString MaterialPath;
 
@@ -88,6 +89,9 @@ struct biomeAssetSettings
 struct biomeAssets
 {
 	biomeAssets(FString biotopeName, int32 biotopeIndex) : biotopeName{ biotopeName }, biotopeIndex{ biotopeIndex } {
+	};
+
+	biomeAssets(FString biotopeName, int32 biotopeIndex, TArray<TSharedPtr<biomeAssetSettings>> inAssetSettings) : biotopeName{ biotopeName }, biotopeIndex{ biotopeIndex }, AssetSettings{ inAssetSettings } {
 	};
 
 	FString biotopeName;

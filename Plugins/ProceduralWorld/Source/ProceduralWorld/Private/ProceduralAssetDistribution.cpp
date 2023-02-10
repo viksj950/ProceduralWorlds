@@ -33,12 +33,17 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 	float RotationAngle;
 	int AssetCount = 0; //used to count per tile assets
 
+
+
 	//Iterate through all tiles
 	for (size_t i = 0; i < tiles.Num(); i++)
 	{
 		//Check which type the tile is in terms of biotope
 		for (size_t j = 0; j < biomeSettings.Num(); j++) {
 			if (tiles[i]->biotope == biomeSettings[j]->biotopeIndex) {
+
+
+				
 
 				//Make sure the tiles has properly setup a streaming proxy for world partitioning
 				if (tiles[i]->streamingProxy != nullptr)
@@ -83,6 +88,12 @@ void ProceduralAssetDistribution::spawnAssets(TArray<TSharedPtr<biomeAssets>> bi
 
 						//Check if angle is acceptable to spawn the object within
 						if (RotationAngle > biomeSettings[j]->AssetSettings[k]->angleThreshold) {
+							AssetCount++;
+							continue;
+						}
+
+						//Check if height is acceptable to spawn the object within
+						if (Location.Z < biomeSettings[j]->AssetSettings[k]->heightThreshold) {
 							AssetCount++;
 							continue;
 						}
