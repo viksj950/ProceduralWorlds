@@ -2358,15 +2358,19 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	//myLand.GenerateHeightMapsForBiotopes(tiles,BiotopeSettings);
 
 	//Creates proxies used in world partioning
-	//ptrToTerrain->GenerateAndAssignHeightData(tiles, BiotopeSettings);
+	ptrToTerrain->GenerateAndAssignHeightData(tiles, BiotopeSettings);
 
 	//Concatinate heightData from all tiles and spawn a landscape
-	//ptrToTerrain->concatHeightData(tiles);
+	ptrToTerrain->concatHeightData(tiles);
 	//Interpolate using gaussian blur
-	//ptrToTerrain->interpBiomes(tiles, 3, 1.0, 30, 10);
+	ptrToTerrain->interpBiomes(tiles, 3, 1.0, 30, 10);
 	//ptrToTerrain->interpBiomesMixedNoise(tiles, BiotopeSettings); //EXPERIMENTAL
-	ptrToTerrain->createAndInterpBiomesNoise(tiles, BiotopeSettings); //MORE EXPERIMENTAL
-	
+	//ptrToTerrain->createAndInterpBiomesNoise(tiles, BiotopeSettings); //MORE EXPERIMENTAL
+	//ptrToTerrain->createAndInterpBiomesNoise2(tiles, BiotopeSettings); //MOST EXPERIMENTAL
+	//ptrToTerrain->createAndInterpBiomesNoiseBilinear(tiles, BiotopeSettings); //New test Billinear Interpolation
+	//ptrToTerrain->createAndInterpBiomesNoiseBicubic(tiles, BiotopeSettings);
+
+
 	ptrToTerrain->copyToRawConcatData();
 	
 	previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);

@@ -94,6 +94,10 @@ public:
 
 	void interpBiomesMixedNoise(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);
 	void createAndInterpBiomesNoise(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);
+	void createAndInterpBiomesNoise2(TArray<UTile*>&inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>&BiotopeSettings);
+	void createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);
+	void createAndInterpBiomesNoiseBicubic(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings);
+
 
 	//Randomly placing biotopes depending on nmbrOfBiomes and then fillin by Voronoi
 	void AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>&BiotopeSettings) const;
