@@ -19,6 +19,7 @@ class PROCEDURALWORLD_API UTile //: public UObject
 
 
 public:
+	UTile();
 	UTile(int32 NumOfQuads, int32 ComponentsPerProxy, int32 inTileSize);
 	UTile(TObjectPtr<ALandscapeStreamingProxy> inProxy, int32 NumOfQuads, int32 ComponentsPerProxy);
 	~UTile() = default;

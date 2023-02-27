@@ -3147,17 +3147,18 @@ void CreateLandscape::createAndInterpBiomesNoiseBicubic(TArray<UTile*>& inTiles,
 {
 	uint16 paddWidth = 2;
 	int rowLength = GetGridSizeOfProxies();
+	int nmbrPaddedColumns = rowLength + 4;
 
 	TArray<UTile*> tilesWithPad;
 
-	tilesWithPad.InsertDefaulted(0, (rowLength + paddWidth * 2) * 2);
-	/*for (size_t i = 0; i < (rowLength+paddWidth*2)*2; i++)
+	//tilesWithPad.InsertDefaulted(0, (rowLength + paddWidth * 2) * 2);
+	for (size_t i = 0; i < (rowLength+paddWidth*2)*2; i++)
 	{
 		tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
 
-	}*/
+	}
 
-	for (auto it : inTiles)
+	for (auto& it : inTiles)
 	{
 
 		if (it->index % rowLength == 0)
@@ -3165,36 +3166,56 @@ void CreateLandscape::createAndInterpBiomesNoiseBicubic(TArray<UTile*>& inTiles,
 			tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
 			tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
 		}
+
+		tilesWithPad.Add(it);
+
 		if ((it->index +1) % rowLength == 0)
 		{
 			tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
 			tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
 		}
 
-		tilesWithPad.Add(it);
+		
 
 	}
-	tilesWithPad.InsertDefaulted(0, (rowLength + paddWidth * 2)*2);
-	/*for (size_t i = 0; i < (rowLength + paddWidth * 2) * 2; i++)
+	//tilesWithPad.InsertDefaulted(0, (rowLength + paddWidth * 2)*2);
+	for (size_t i = 0; i < (rowLength + paddWidth * 2) * 2; i++)
 	{
 		tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
 
-	}*/
-
-
-	for (int i = 0; i < rowLength; ++i)
-	{
-		// top and bottom
-		tilesWithPad[i] = tilesWithPad[i + rowLength];
-		tilesWithPad[i + rowLength * (rowLength - 1)] = tilesWithPad[i + rowLength * (rowLength - 1) - rowLength];
-	}
-	for (int j = 0; j < rowLength; ++j)
-	{
-		// left and right
-		//rowLength[j * rowLength] = rowLength[j * rowLength + 1];
-		tilesWithPad[j * rowLength + rowLength - 1] = tilesWithPad[j * rowLength + rowLength - 2];
 	}
 
+
+	for (int i = 0; i < nmbrPaddedColumns; ++i)
+	{
+		// top
+		tilesWithPad[i]->biotope = tilesWithPad[i + nmbrPaddedColumns*2]->biotope;
+		tilesWithPad[i + nmbrPaddedColumns]->biotope = tilesWithPad[i + nmbrPaddedColumns * 2 ]->biotope;
+
+
+		//Bottom
+		tilesWithPad[i + nmbrPaddedColumns * (nmbrPaddedColumns - 1)]->biotope = tilesWithPad[i + nmbrPaddedColumns * (nmbrPaddedColumns - 1) - nmbrPaddedColumns*2]->biotope;
+		tilesWithPad[i + nmbrPaddedColumns * (nmbrPaddedColumns - 1) - nmbrPaddedColumns]->biotope = tilesWithPad[i + nmbrPaddedColumns * (nmbrPaddedColumns - 1) - nmbrPaddedColumns * 2]->biotope;
+	}
+
+	for (int j = 0; j < nmbrPaddedColumns; ++j)
+	{
+		// Right
+		tilesWithPad[j * nmbrPaddedColumns] = tilesWithPad[j * nmbrPaddedColumns + 2];
+		tilesWithPad[j * nmbrPaddedColumns + 1] = tilesWithPad[j * nmbrPaddedColumns + 2];
+
+		tilesWithPad[j * nmbrPaddedColumns + (nmbrPaddedColumns - 1)]->biotope = tilesWithPad[j * nmbrPaddedColumns + (nmbrPaddedColumns - 1) - 2]->biotope;
+		tilesWithPad[j * nmbrPaddedColumns + (nmbrPaddedColumns - 1) - 1]->biotope = tilesWithPad[j * nmbrPaddedColumns + (nmbrPaddedColumns - 1) - 2]->biotope;
+	}
+
+	for (auto& it: tilesWithPad)
+	{
+
+		it->updateAdjacentTiles(tilesWithPad, nmbrPaddedColumns);
+		UE_LOG(LogTemp, Warning, TEXT("Biotope: %d"), it->biotope);
+	}
+
+	
 
 	UE_LOG(LogTemp, Warning, TEXT("Array Length: %d"), tilesWithPad.Num());
 }
