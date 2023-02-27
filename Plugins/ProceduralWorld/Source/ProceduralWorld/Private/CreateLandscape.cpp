@@ -700,7 +700,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 
 	//Move to random adjacent tiles but also check if the control point is in a "good" location, meaning check that its not on a hill
 	//Can be done by randomly place the CP but then iterate the segment and check the height of the heightmap, thus detecting hills and such
-	int maxRoadTiles{ 24 };
+	int maxRoadTiles{ 12 };
 	int AdjTries{ 100 };
 	int randomPointTries = 200;
 	int32 tileSize;
@@ -737,7 +737,7 @@ void CreateLandscape::generateRoadSmart(const TArray<UTile*>& inTiles, TArray<Ro
 				}
 
 			}
-			int threshold = 1300;
+			int threshold = 1000;
 			bool canSpawn = true;
 			ControlPoint nextSP;
 			for (; startLength < spline.TotalLength; startLength += 2) {
@@ -799,7 +799,7 @@ bool CreateLandscape::generateRoadV2(const TArray<UTile*>& inTiles, TArray<Road>
 	bool sucess = false;
 
 	//tangent (Needs to be improved as it can reach outside in theory)
-	spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
+	//spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
 	//New tangent, just random in the start tile
 	spline.addControlPoint({ (float)math.RandRange(X,X + TileSize - 1),(float)math.RandRange(Y,Y + TileSize - 1),(float)45000 });
 	//first control point

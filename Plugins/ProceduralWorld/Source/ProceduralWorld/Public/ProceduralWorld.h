@@ -249,10 +249,6 @@ public:
 
 	void SetSizeOfLandscape(int32 inSize);
 	TOptional<int32> GetSizeOfLandscape() const;
-	//0 = city, 1 = plains, 2 = mountains
-	/*TArray<BiotopePerlinNoiseSetting> BiotopeSettings = { {"City",0,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} ,
-		{"Plains",1,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} ,
-		{"Mountains",2,64, 2050,1,1.0f,0.5f,0.0015f,1.0f} };*/
 
 	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = { MakeShareable(new BiotopePerlinNoiseSetting("City",0,64,"Material'/Game/Test_assets/M_Landscape_City.M_Landscape_City'",4096,3,0.17f,0.5f,0.015f,1.0f,false,false,false,0)) ,
 		MakeShareable(new BiotopePerlinNoiseSetting("Plains",1,64,"Material'/Game/Test_assets/M_Landscape_Plains.M_Landscape_Plains'" ,4096,3,0.25f,0.5f,0.015f,1.0f,false,false,false,0)) ,
@@ -277,61 +273,38 @@ public:
 		return true;
 	};
 
-	FReply saveAllBiomeSettings() {
-
-		//FString filePath = "/Content/BiomeSettings/settings.txt";
-		FString filePath = "C:/Users/viksj950/Desktop/TEMP2.txt"; 
-
-		FString Line = "";
-		FString Delimiter = "\n";
-
-		for (int i = 0; i < BiotopeSettings.Num(); i++) {
-
-			Line += BiotopeSettings[i]->Biotope + Delimiter;
-			Line += FString::FromInt(BiotopeSettings[i].Get()->OctaveCount);
-			Line += Delimiter;
-			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Amplitude);
-			Line += Delimiter;
-			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Persistence);
-			Line += Delimiter;
-			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Frequency);
-			Line += Delimiter;
-			Line += FString::SanitizeFloat(BiotopeSettings[i].Get()->Lacunarity);
-			Line += Delimiter;
-			Line += boolToString(BiotopeSettings[i].Get()->Turbulence);
-			Line += Delimiter;
-			Line += boolToString(BiotopeSettings[i].Get()->cutOff);
-			Line += Delimiter;
-			Line += boolToString(BiotopeSettings[i].Get()->invCutOff);
-			Line += Delimiter;
-			Line += FString::FromInt(BiotopeSettings[i].Get()->Seed);
-			Line += Delimiter;
-			Line += "---";
-			Line += Delimiter;
-		}
-		
-		if (FFileHelper::SaveStringToFile(Line, *filePath)) {
-			//UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED"));
-			UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED : %s") , *Line);
-
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("Save to file FAILED"));
-		}
-
-		return FReply::Handled();
-	};
 
 	FReply saveAllBiomeSettings2() {
 
 		FString filePath = "C:/Users/viksj950/Desktop/TEMP2.txt";
+		FString filePathPre = "C:/Users/viksj950/Desktop/TEMP3.txt";
 
 		FString Line = "";
+		FString LinePre = "";
 		FString Delimiter = "\n";
 
-		for (int i = 0; i < BiotopeSettings.Num(); i++) {
+		for (auto& it : previewWindow.markedTiles) {
+			LinePre += FString::FromInt(it.Key);
+			LinePre += Delimiter;
+			LinePre += FString::FromInt(it.Value);
+			LinePre += Delimiter;
+			/*UE_LOG(LogTemp, Warning, TEXT("markedTiles data : %d"), it.Key);
+			UE_LOG(LogTemp, Warning, TEXT("markedTiles Value : %d"), it.Value);*/
+		}
+		if (!previewWindow.markedTilesVoronoi.IsEmpty()) {
+			LinePre += "Voronoi marked tiles";
+			LinePre += Delimiter;
+			for (auto& it : previewWindow.markedTilesVoronoi) {
+				LinePre += FString::FromInt(it.Key);
+				LinePre += Delimiter;
+				LinePre += FString::FromInt(it.Value);
+				LinePre += Delimiter;
+				/*UE_LOG(LogTemp, Warning, TEXT("voronoiTILE data : %d"), it.Key);
+				UE_LOG(LogTemp, Warning, TEXT("voronoiTILE Value : %d"), it.Value);*/
+			}
+		}
 
-			
+		for (int i = 0; i < BiotopeSettings.Num(); i++) {
 
 			Line += BiotopeSettings[i]->Biotope + Delimiter;
 			Line += FString::FromInt(BiotopeSettings[i].Get()->OctaveCount);
@@ -381,114 +354,26 @@ public:
 		}
 
 		if (FFileHelper::SaveStringToFile(Line, *filePath)) {
-			UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED : %s"), *Line);
-
+			UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED"));
 		}
 		else {
 			UE_LOG(LogTemp, Warning, TEXT("Save to file FAILED (wrong path OR file is read-only?"));
 		}
-
-		return FReply::Handled();
-	};
-
-	FReply saveBiomeSettings() {
-
-		//FString filePath = "/Content/BiomeSettings/settings.txt";
-		FString filePath = "C:/Users/viksj950/Desktop/TEMP2.txt";
-
-		FString Line = "";
-		FString Delimiter = "\n";
-
-
-			Line += BiotopeSettings[BiomeSettingSelection]->Biotope + Delimiter;
-			Line += FString::FromInt(BiotopeSettings[BiomeSettingSelection].Get()->OctaveCount);
-			Line += Delimiter;
-			Line += FString::SanitizeFloat(BiotopeSettings[BiomeSettingSelection].Get()->Amplitude);
-			Line += Delimiter;
-			Line += FString::SanitizeFloat(BiotopeSettings[BiomeSettingSelection].Get()->Persistence);
-			Line += Delimiter;
-			Line += FString::SanitizeFloat(BiotopeSettings[BiomeSettingSelection].Get()->Frequency);
-			Line += Delimiter;
-			Line += FString::SanitizeFloat(BiotopeSettings[BiomeSettingSelection].Get()->Lacunarity);
-			Line += Delimiter;
-			Line += boolToString(BiotopeSettings[BiomeSettingSelection].Get()->Turbulence);
-			Line += Delimiter;
-			Line += boolToString(BiotopeSettings[BiomeSettingSelection].Get()->cutOff);
-			Line += Delimiter;
-			Line += boolToString(BiotopeSettings[BiomeSettingSelection].Get()->invCutOff);
-			Line += Delimiter;
-			Line += FString::FromInt(BiotopeSettings[BiomeSettingSelection].Get()->Seed);
-			Line += Delimiter;
-		
-
-		if (FFileHelper::SaveStringToFile(Line, *filePath)) {
-
-			UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED : %s"), *Line);
-
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("Save to file FAILED"));
+		if (FFileHelper::SaveStringToFile(LinePre, *filePathPre)) {
+			UE_LOG(LogTemp, Warning, TEXT("Save to file SUCCEDED preview"));
 		}
 
-		return FReply::Handled();
-	};
-
-	
-
-	FReply fetchAllBiomeSettings() {
-
-		std::fstream myFile;
-		std::string line;
-		TArray<std::string> biomeInfo;
-		myFile.open("C:/Users/viksj950/Desktop/TEMP2.txt", std::ios::in);
-
-		if (myFile.is_open()) {
-			while (std::getline(myFile, line)) {
-				if (line.compare("-----") == 0) {
-					continue;
-				}
-				biomeInfo.Add(line);
-				
-			}
-
-		}
-
-		if (!biomeInfo.IsEmpty()) {
-			for (int i = 0; i < BiotopeSettings.Num(); i++) {
-
-				BiotopeSettings.Empty();
-				BiomeAssetsData.Empty();
-				BiotopePerlinNoiseSettingIndexer = 0;
-
-			}
-
-			FString copyOfName(biomeInfo[0].c_str());
-			FString tempMat = "";
-
-			//Each biome contains 10 settings, for eaach 10th row a new biome exists
-			for (int k = 0; k < biomeInfo.Num(); k += 10) {
-					copyOfName = biomeInfo[k].c_str();
-
-					BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(copyOfName, BiotopePerlinNoiseSettingIndexer, 64,
-						tempMat, 4096, std::stoi(biomeInfo[k+1]),
-						std::stof(biomeInfo[k+2]), std::stof(biomeInfo[k+3]), std::stof(biomeInfo[k+4]),
-						std::stof(biomeInfo[k+5]), stringToBool(biomeInfo[k+6]), stringToBool(biomeInfo[k+7]),
-						stringToBool(biomeInfo[k+8]), std::stoi(biomeInfo[k+9]))));
-					BiomeAssetsData.Add(MakeShareable(new biomeAssets(copyOfName, BiomeAssetsData.Num())));
-					BiotopePerlinNoiseSettingIndexer++;
-				
-			}
-			
-		}
-		myFile.close();
 		return FReply::Handled();
 	};
 
 	FReply fetchAllBiomeSettings2() { //spagethios codeos
 
 		std::fstream myFile;
+		std::fstream myFilePre;
 		std::string line;
+		std::string linePre;
 		TArray<std::string> biomeInfo;
+		TArray<std::string> previewInfo;
 		TArray<int> newBiomeIndexes;
 
 		myFile.open("C:/Users/viksj950/Desktop/TEMP2.txt", std::ios::in);
@@ -519,17 +404,10 @@ public:
 
 			}
 
-			for (size_t l = 0; l < newBiomeIndexes.Num(); l++)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Biome index : %d"), newBiomeIndexes[l])
-			}
-
 			FString copyOfName = "";
 			FString tempMat = "";
 
 			TArray<TSharedPtr<biomeAssetSettings>> AssetSettings;
-
-			//copyOfName = biomeInfo[0].c_str();
 			int startPos = 0; //line row where new biome starts
 			int index = 0;
 			int k = 0;
@@ -547,15 +425,12 @@ public:
 
 				if (!hasAssets.Equals("-----")) { //Biome has asset settings
 
-					//UE_LOG(LogTemp, Warning, TEXT("Biome has assets"));
 					AssetSettings.Empty();
 
 					FString objPath = biomeInfo[startPos + 11].c_str();
 					
 					AssetSettings.Add(MakeShareable((new biomeAssetSettings(objPath, (int32)std::stoi(biomeInfo[startPos + 12]), std::stof(biomeInfo[startPos + 13]), std::stof(biomeInfo[startPos + 14]), stringToBool(biomeInfo[startPos + 15]),
 						std::stof(biomeInfo[startPos + 16]), stringToBool(biomeInfo[startPos + 17]), std::stof(biomeInfo[startPos + 18])))));
-				
-					//BiomeAssetsData.Add(MakeShareable(new biomeAssets(copyOfName, BiomeAssetsData.Num(), AssetSettings)));
 					
 					FString ass_separator = biomeInfo[startPos + 19].c_str();
 
@@ -596,35 +471,52 @@ public:
 			
 
 		}
-			
 		myFile.close();
-		return FReply::Handled();
-	};
 
-	FReply fetchBiomeSettings() {
 
-		std::fstream myFile;
-		std::string line;
-		TArray<std::string> biomeInfo;
-		//CHANGE THIS 
-		myFile.open("C:/Users/viksj950/Desktop/TEMP2.txt", std::ios::in);
-
+		//Here starts the preview read
+		myFile.open("C:/Users/viksj950/Desktop/TEMP3.txt", std::ios::in);
+		fileLength = 0;
+		bool voronoiMarked = false;
+		previewWindow.markedTiles.Empty();
+		previewWindow.markedTilesVoronoi.Empty();
 		if (myFile.is_open()) {
-			while (std::getline(myFile, line)) {
-				biomeInfo.Add(line);
+			while (std::getline(myFile, linePre)) {
+				previewInfo.Add(linePre);
+				fileLength++;
+
 			}
 
 		}
-		FString copyOfName(biomeInfo[0].c_str());
-		FString tempMat = "";
+		
+		for (size_t i = 0; i < fileLength-1; i += 2)
+		{
+			
+			FString tileIndx = previewInfo[i].c_str();
+			FString tileBiome = previewInfo[i+1].c_str();
 
-		BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting(copyOfName, BiotopePerlinNoiseSettingIndexer, 64,
-			tempMat, 4096, std::stoi(biomeInfo[1]),
-			std::stof(biomeInfo[2]), std::stof(biomeInfo[3]), std::stof(biomeInfo[4]),
-			std::stof(biomeInfo[5]), stringToBool(biomeInfo[6]), stringToBool(biomeInfo[7]),
-			stringToBool(biomeInfo[8]), std::stoi(biomeInfo[9]))));
-		BiomeAssetsData.Add(MakeShareable(new biomeAssets(copyOfName, BiomeAssetsData.Num())));
-		BiotopePerlinNoiseSettingIndexer++;
+			UE_LOG(LogTemp, Warning, TEXT("Content in string = %s"), *tileIndx);
+			
+			if (previewInfo[i].compare("Voronoi marked tiles") == 0) {
+				voronoiMarked = true;
+				//continue;
+				UE_LOG(LogTemp, Warning, TEXT("Voronoi marked tile starts at i = %d"), i);
+				
+			}
+
+			if (!voronoiMarked) {
+				/*UE_LOG(LogTemp, Warning, TEXT("Added marked tile INDEX = %s"), *retarded)*/
+				/*UE_LOG(LogTemp, Warning, TEXT("Added marked tile BIOME = %s"), *retarded2);*/
+				previewWindow.markedTiles.Add(FCString::Atoi(*tileIndx), FCString::Atoi(*tileBiome));
+			}
+			else {
+			/*	UE_LOG(LogTemp, Warning, TEXT("Added voronoi tile INDEX = %s"), *retarded)
+				UE_LOG(LogTemp, Warning, TEXT("Added voronoi tile BIOME = %s"), *retarded2);*/
+				previewWindow.markedTilesVoronoi.Add(FCString::Atoi(*tileIndx), FCString::Atoi(*tileBiome));
+			}
+		}
+
+		//FProceduralWorldModule::GenerateTerrainData();
 
 		myFile.close();
 		return FReply::Handled();

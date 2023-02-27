@@ -42,7 +42,7 @@ void Road::generateRoad(const TArray<UTile*>& inTiles, const uint32& inGridSize)
 
 	//Now we iterate through all adjacent tiles until the road is maxRoadTiles long
 	int tries{30};
-	int maxRoadTiles{ 6 };
+	int maxRoadTiles{ 12 };
 	int32 tileSize;
 		while(maxRoadTiles > 0 && tries > 0) {
 			tries--;

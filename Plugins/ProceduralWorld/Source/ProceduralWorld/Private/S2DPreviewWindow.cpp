@@ -213,16 +213,10 @@ void S2DPreviewWindow::CreateBiotopeTexture()
 {
 	uint8* pixels = (uint8*)malloc(SizeX * SizeY * 4); // x4 because it's RGBA. 4 integers, one for Red, one for Green, one for Blue, one for Alpha
 
-
-	
-
 	for (int y = 0; y < SizeY; y++)
 	{
 		for (int x = 0; x < SizeX; x++)
 		{
-
-			
-
 
 
 				pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 0] = 0;
@@ -230,12 +224,6 @@ void S2DPreviewWindow::CreateBiotopeTexture()
 				pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 2] = 0;
 				pixels[x * 4 * SizeX + (SizeY - y - 1) * 4 + 3] = 0;
 
-
-
-
-				
-
-			
 
 		}
 	}
@@ -246,10 +234,6 @@ void S2DPreviewWindow::CreateBiotopeTexture()
 		{
 			for (uint32 x = (it.Key % gridSizeOfProxies) * (TileSize - 1); x < (it.Key % gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1); x++)
 			{
-
-
-				
-
 
 				pixels[y * 4 * SizeX + (SizeX - x) * 4+ 0] = colors[it.Value % colors.Num()].X;
 				pixels[y * 4 * SizeX + (SizeX - x) * 4 + 1] = colors[it.Value % colors.Num()].Y;

@@ -1336,19 +1336,19 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					.HAlign(HAlign_Left)
 					]
 					]
-				+ SHorizontalBox::Slot()
-					[
-						SNew(SBox)
-						.HAlign(HAlign_Left)
-					.VAlign(VAlign_Center)
-					[
-						SNew(SButton)
-						.Text(FText::FromString("Export ALL"))
-					.ToolTipText(FText::FromString("Saves all biome settings"))
-					.OnClicked_Raw(this, &FProceduralWorldModule::saveAllBiomeSettings) //Setup
-					.HAlign(HAlign_Left)
-					]
-					]
+				//+ SHorizontalBox::Slot()
+				//	[
+				//		SNew(SBox)
+				//		.HAlign(HAlign_Left)
+				//	.VAlign(VAlign_Center)
+				//	[
+				//		SNew(SButton)
+				//		.Text(FText::FromString("Export ALL"))
+				//	.ToolTipText(FText::FromString("Saves all biome settings"))
+				//	.OnClicked_Raw(this, &FProceduralWorldModule::saveAllBiomeSettings) //Setup
+				//	.HAlign(HAlign_Left)
+				//	]
+				//	]
 				+ SHorizontalBox::Slot()
 					[
 						SNew(SBox)
@@ -1362,19 +1362,19 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 					.HAlign(HAlign_Left)
 					]
 					]
-				+ SHorizontalBox::Slot()
-					[
-						SNew(SBox)
-						.HAlign(HAlign_Left)
-					.VAlign(VAlign_Center)
-					[
-						SNew(SButton)
-						.Text(FText::FromString("Import ALL"))
-					.ToolTipText(FText::FromString("Copies biome settings"))
-					.OnClicked_Raw(this, &FProceduralWorldModule::fetchAllBiomeSettings) //Setup
-					.HAlign(HAlign_Left)
-					]
-					]
+				//+ SHorizontalBox::Slot()
+				//	[
+				//		SNew(SBox)
+				//		.HAlign(HAlign_Left)
+				//	.VAlign(VAlign_Center)
+				//	[
+				//		SNew(SButton)
+				//		.Text(FText::FromString("Import ALL"))
+				//	.ToolTipText(FText::FromString("Copies biome settings"))
+				//	.OnClicked_Raw(this, &FProceduralWorldModule::fetchAllBiomeSettings) //Setup
+				//	.HAlign(HAlign_Left)
+				//	]
+				//	]
 		]
 
 
@@ -2232,7 +2232,7 @@ FReply FProceduralWorldModule::Setup()
 	myLand.generateRoadV2(tiles, roads, startPoint, endPoint, 10, roadSlopeThreshold);
 	if (!roads.IsEmpty()) {
 		roads[0].calcLengthsSplines();
-		roads[0].vizualizeRoad(myLand.LandscapeScale);
+		//roads[0].vizualizeRoad(myLand.LandscapeScale);
 		//roads[1].calcLengthsSplines();
 		//roads[1].vizualizeRoad(myLand.LandscapeScale);
 		for (int i = 0; i < 2; i++) {
