@@ -495,28 +495,27 @@ public:
 			FString tileIndx = previewInfo[i].c_str();
 			FString tileBiome = previewInfo[i+1].c_str();
 
-			UE_LOG(LogTemp, Warning, TEXT("Content in string = %s"), *tileIndx);
+		
 			
 			if (previewInfo[i].compare("Voronoi marked tiles") == 0) {
 				voronoiMarked = true;
 				//continue;
-				UE_LOG(LogTemp, Warning, TEXT("Voronoi marked tile starts at i = %d"), i);
 				
 			}
 
 			if (!voronoiMarked) {
-				/*UE_LOG(LogTemp, Warning, TEXT("Added marked tile INDEX = %s"), *retarded)*/
-				/*UE_LOG(LogTemp, Warning, TEXT("Added marked tile BIOME = %s"), *retarded2);*/
+	
 				previewWindow.markedTiles.Add(FCString::Atoi(*tileIndx), FCString::Atoi(*tileBiome));
 			}
 			else {
-			/*	UE_LOG(LogTemp, Warning, TEXT("Added voronoi tile INDEX = %s"), *retarded)
-				UE_LOG(LogTemp, Warning, TEXT("Added voronoi tile BIOME = %s"), *retarded2);*/
+				
+					tileIndx = previewInfo[i+1].c_str();
+					tileBiome = previewInfo[i + 2].c_str();
+	
 				previewWindow.markedTilesVoronoi.Add(FCString::Atoi(*tileIndx), FCString::Atoi(*tileBiome));
 			}
 		}
 
-		//FProceduralWorldModule::GenerateTerrainData();
 
 		myFile.close();
 		return FReply::Handled();
