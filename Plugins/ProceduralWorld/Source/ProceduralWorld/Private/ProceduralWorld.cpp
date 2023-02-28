@@ -2368,7 +2368,7 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	//ptrToTerrain->createAndInterpBiomesNoise(tiles, BiotopeSettings); //MORE EXPERIMENTAL
 	//ptrToTerrain->createAndInterpBiomesNoise2(tiles, BiotopeSettings); //MOST EXPERIMENTAL
 	ptrToTerrain->createAndInterpBiomesNoiseBilinear(tiles, BiotopeSettings); //New test Billinear Interpolation
-	ptrToTerrain->createAndInterpBiomesNoiseBicubic(tiles, BiotopeSettings);
+	//ptrToTerrain->createAndInterpBiomesNoiseBicubic(tiles, BiotopeSettings);
 
 
 	ptrToTerrain->copyToRawConcatData();

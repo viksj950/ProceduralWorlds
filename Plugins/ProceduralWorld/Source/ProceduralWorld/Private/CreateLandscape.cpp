@@ -3026,11 +3026,11 @@ void CreateLandscape::createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles
 
 				//Calculate Noise1///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				
-				//lerpNoise1 = noise1 * (1-x) + noise2 * x;
+				lerpNoise1 = noise1 * (1-x) + noise2 * x;
 
 				//Test with using smoothstep
-				step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
-				lerpNoise1 = noise1 * (1 - step) + noise2 * step;
+				//step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
+				//lerpNoise1 = noise1 * (1 - step) + noise2 * step;
 				//Bottom Right Corner
 				if (it->adjacentTiles[3])
 				{
@@ -3125,11 +3125,11 @@ void CreateLandscape::createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles
 				//noise1 = j
 
 				//Calculate leprNoise2 and lerpNoise3
-				//lerpNoise2  = noise3 * (1 - x) + noise4 * x;
+				lerpNoise2  = noise3 * (1 - x) + noise4 * x;
 
 				//test with smoothstep
-				step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
-				lerpNoise2 = noise3 * (1 - step) + noise4 * step;
+				//step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
+				//lerpNoise2 = noise3 * (1 - step) + noise4 * step;
 
 
 				//lerpNoise3 = lerpNoise1 * (1 - y) + lerpNoise2 * y;
@@ -3215,7 +3215,23 @@ void CreateLandscape::createAndInterpBiomesNoiseBicubic(TArray<UTile*>& inTiles,
 		UE_LOG(LogTemp, Warning, TEXT("Biotope: %d"), it->biotope);
 	}
 
-	
+
+
+	//Bicubic interpolation-----------------------------------------------------------------------------------------------------
+	for (size_t i = paddWidth; i < rowLength + paddWidth; i++) //X
+	{
+		for (size_t j = paddWidth; j < rowLength + paddWidth; j++) //Y
+		{
+			//tilesWithPad[i*rowLength + j]
+		}
+	}
+
+
+
+	FMatrix F;
+
+
+
 
 	UE_LOG(LogTemp, Warning, TEXT("Array Length: %d"), tilesWithPad.Num());
 }
