@@ -2886,10 +2886,11 @@ void CreateLandscape::createAndInterpBiomesNoise2(TArray<UTile*>& inTiles, const
 	}
 }
 
-void CreateLandscape::createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
+void CreateLandscape::createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& inBiotopeSettings)
 {
 	TMap<int32, PerlinNoiseGenerator<uint16, 64>*> NoiseGenerators;
-
+	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = inBiotopeSettings;
+	//BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)));
 	for (auto it : BiotopeSettings)
 	{
 		if (!NoiseGenerators.Contains(it->Seed))
@@ -2919,7 +2920,6 @@ void CreateLandscape::createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles
 	float x, y;
 	float step;
 	float noiseScale = 0.25f;
-
 	int rowLength = GetGridSizeOfProxies();
 	for (auto it : inTiles)
 	{
@@ -2943,6 +2943,15 @@ void CreateLandscape::createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles
 				//Upper Right Corner
 				if (it->adjacentTiles[0])
 				{
+					/*tempNoiseGen = NoiseGenerators.Find(it->adjacentTiles[0]->biotope);
+					if (tempNoiseGen)
+					{
+						&tempNoiseGen->
+					}*/
+					
+					
+					//noise1 += noiseScale * NoiseGenerators[it->adjacentTiles[0]->biotope]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[0]->biotope]);
+
 					if (it->adjacentTiles[0]->biotope != -1){noise1 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[0]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[0]->biotope]);}
 					else{noise1 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));}
 				}
@@ -3029,8 +3038,8 @@ void CreateLandscape::createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles
 				lerpNoise1 = noise1 * (1-x) + noise2 * x;
 
 				//Test with using smoothstep
-				//step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
-				//lerpNoise1 = noise1 * (1 - step) + noise2 * step;
+				step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
+				lerpNoise1 = noise1 * (1 - step) + noise2 * step;
 				//Bottom Right Corner
 				if (it->adjacentTiles[3])
 				{
@@ -3128,11 +3137,11 @@ void CreateLandscape::createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles
 				lerpNoise2  = noise3 * (1 - x) + noise4 * x;
 
 				//test with smoothstep
-				//step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
-				//lerpNoise2 = noise3 * (1 - step) + noise4 * step;
+				step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
+				lerpNoise2 = noise3 * (1 - step) + noise4 * step;
 
 
-				//lerpNoise3 = lerpNoise1 * (1 - y) + lerpNoise2 * y;
+				lerpNoise3 = lerpNoise1 * (1 - y) + lerpNoise2 * y;
 
 				step = 6 * pow(y, 5) - (15 * pow(y, 4)) + (10 * pow(y, 3));
 				lerpNoise3 = lerpNoise1 * (1 - step) + lerpNoise2 * step;
