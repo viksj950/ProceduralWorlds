@@ -79,7 +79,26 @@ struct BiotopePerlinNoiseSetting
 	bool cutOff;
 	bool invCutOff;
 
+	BiotopePerlinNoiseSetting& operator=(const BiotopePerlinNoiseSetting& t){
+		Biotope = t.Biotope;
+		BiotopeIndex = t.BiotopeIndex;
+		CellSize = t.CellSize;
+		Seed = t.Seed;
+		MaterialPath = t.MaterialPath;
+		HeightScale = t.HeightScale;
+		OctaveCount = t.OctaveCount;
+		Amplitude = t.Amplitude;
+		Persistence = t.Persistence;
+		Frequency = t.Frequency;
+		Lacunarity = t.Lacunarity;
+		Turbulence = t.Turbulence;
+		cutOff = t.cutOff;
+		invCutOff = t.invCutOff;
 
+
+
+
+	}
 
 
 };

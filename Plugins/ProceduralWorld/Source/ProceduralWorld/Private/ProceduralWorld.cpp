@@ -482,7 +482,7 @@ TSharedRef<SDockTab> FProceduralWorldModule::OnSpawnPluginTab(const FSpawnTabArg
 			SNew(SNumericEntryBox<float>)
 			.AllowSpin(true)
 		.ToolTipText(FText::FromString("Lacunarity acts as a multiplier for the frequency per octave\nA higher lacunarity value will increase the frequency each octave\nLacunarity set to 2 is the standard for FBM"))
-		.MinValue(1)
+		.MinValue(0)
 		.MaxValue(8)
 		.MaxSliderValue(8)
 		.MinDesiredValueWidth(2)
@@ -2400,11 +2400,16 @@ FReply FProceduralWorldModule::GenerateTerrainData()
 	ptrToTerrain->GenerateAndAssignHeightData(tiles, BiotopeSettings);
 
 	//Concatinate heightData from all tiles and spawn a landscape
-	ptrToTerrain->concatHeightData(tiles);
+	//ptrToTerrain->concatHeightData(tiles);
 	//Interpolate using gaussian blur
-	ptrToTerrain->interpBiomes(tiles, 3, 1.0, 30, 10);
+	//ptrToTerrain->interpBiomes(tiles, 3, 1.0, 30, 10);
+	//ptrToTerrain->interpBiomesMixedNoise(tiles, BiotopeSettings); //EXPERIMENTAL
+	//ptrToTerrain->createAndInterpBiomesNoise(tiles, BiotopeSettings); //MORE EXPERIMENTAL
+	//ptrToTerrain->createAndInterpBiomesNoise2(tiles, BiotopeSettings); //MOST EXPERIMENTAL
+	ptrToTerrain->createAndInterpBiomesNoiseBilinear(tiles, BiotopeSettings); //New test Billinear Interpolation
+	//ptrToTerrain->createAndInterpBiomesNoiseBicubic(tiles, BiotopeSettings);
 
-	
+
 	ptrToTerrain->copyToRawConcatData();
 	
 	previewWindow.CreateHeightmapTexture(ptrToTerrain->rawConcatData);

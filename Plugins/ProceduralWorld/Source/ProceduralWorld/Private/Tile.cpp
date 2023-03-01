@@ -3,6 +3,11 @@
 
 #include "Tile.h"
 
+UTile::UTile()
+{
+	biotope = -1;
+}
+
 UTile::UTile(int32 NumOfQuads, int32 ComponentsPerProxy, int32 inTileSize)
 {
 	tileSize = inTileSize; 

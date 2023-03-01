@@ -1480,6 +1480,1771 @@ void CreateLandscape::interpGaussianBlur(TArray<UTile*>& inTiles, int kernelSize
 	}
 }
 
+void CreateLandscape::interpBiomesMixedNoise(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
+{
+	int rowLength = GetGridSizeOfProxies();
+	int rowCount = 0;
+
+	int32 originX;
+	int32 originY;
+
+	int32 X;
+	int32 Y;
+	PerlinNoiseGenerator<uint16, 64> PerlinNoise;
+	PerlinNoise.generateGradients(0);
+	int32 currentSeed = 0;
+
+	uint32 weightedValue{ 0 };
+	uint32 adjNoiseVal{ 0 };
+
+	int32 interpWidth = 30; //so total is 60, 30 on each tile
+	int index{ -1 };
+	for (auto it : inTiles)
+	{
+		//Iterate through all tiles, and interpolate the noise within the tile (it) if necessary.
+
+		if (it->adjacentTiles[1] && it->adjacentTiles[1]->biotope != it->biotope) //Top
+		{
+			//Coordinates of upper right corner
+			X = it->index % gridSizeOfProxies * (TileSize - 1);
+			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+			originX = X;
+			originY = Y;
+
+			
+
+			
+			
+
+			index = -1;
+			for (size_t i = 0; i < BiotopeSettings.Num(); i++)//find index for biotope setting
+			{
+				if (it->adjacentTiles[1]->biotope == BiotopeSettings[i]->BiotopeIndex)
+				{
+					index = i;
+					break;
+				}
+
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("TOP"));
+			UE_LOG(LogTemp, Warning, TEXT("X :%d"), originX);
+			UE_LOG(LogTemp, Warning, TEXT("Y : %d"), originY);
+			//Iterate through all values of the upper edge
+			for (size_t i = originY; i < originY + interpWidth; i++)
+			{
+				for (size_t j = originX; j < originX + (TileSize - 1); j++)
+				{
+
+
+					if (index != -1)
+					{
+						if (currentSeed != BiotopeSettings[index]->Seed) {
+							PerlinNoise.generateGradients(BiotopeSettings[index]->Seed);
+							currentSeed = BiotopeSettings[index]->Seed;
+						}
+
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index]);
+					}
+					else
+					{
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+					float v1 = i - originY;
+					float t = ((v1 + interpWidth) / (interpWidth * 2));
+					float step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+					//UE_LOG(LogTemp, Warning, TEXT("Smoothstep %f"),step);
+					/*UE_LOG(LogTemp, Warning, TEXT("v1 : %f"), v1);
+					UE_LOG(LogTemp, Warning, TEXT("Step : %f"), step);*/
+
+					weightedValue = concatedHeightData[GetVertexIndex(SizeX, j, i)] * step + adjNoiseVal * (1 - step);
+					concatedHeightData[GetVertexIndex(SizeX, j, i)] = weightedValue;
+				}
+
+			}
+
+			
+
+			/*uint32 concatX = it->index % gridSizeOfProxies * (TileSize - 1);
+			uint32 concatY = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);*/
+
+
+			
+			
+		}
+
+		if (it->adjacentTiles[6] && it->adjacentTiles[6]->biotope != it->biotope) //Bottom
+		{
+			//Coordinates of upper right corner
+			X = it->index % gridSizeOfProxies * (TileSize - 1);
+			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+			originX = X;
+			originY = Y + (TileSize-1);
+
+			
+
+
+
+
+			index = -1;
+			for (size_t i = 0; i < BiotopeSettings.Num(); i++)//find index for biotope setting
+			{
+				if (it->adjacentTiles[6]->biotope == BiotopeSettings[i]->BiotopeIndex)
+				{
+					index = i;
+					break;
+				}
+
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("BOTTOM"));
+			UE_LOG(LogTemp, Warning, TEXT("X :%d"), originX);
+			UE_LOG(LogTemp, Warning, TEXT("Y : %d"), originY);
+			//Iterate through all values of the upper edge
+			for (int i = originY; i > (originY - interpWidth); i--)
+			{
+				for (int j = originX; j < originX + (TileSize - 1); j++)
+				{
+
+
+					if (index != -1)
+					{
+						if (currentSeed != BiotopeSettings[index]->Seed) {
+							PerlinNoise.generateGradients(BiotopeSettings[index]->Seed);
+							currentSeed = BiotopeSettings[index]->Seed;
+						}
+
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index]);
+					}
+					else
+					{
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+					float v1 = i - originY;
+					float t = ((v1 + interpWidth) / (interpWidth * 2));
+					float step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+					/*UE_LOG(LogTemp, Warning, TEXT("Smoothstep %f"),step);
+					UE_LOG(LogTemp, Warning, TEXT("v1 : %f"), v1);*/
+					//UE_LOG(LogTemp, Warning, TEXT("Step : %f"), step);
+
+					weightedValue = concatedHeightData[GetVertexIndex(SizeX, j, i)] * (1 - step) + adjNoiseVal * step;
+					concatedHeightData[GetVertexIndex(SizeX, j, i)] = weightedValue;
+				}
+
+			}
+
+
+
+	
+
+			
+
+
+
+		}
+
+		if (it->adjacentTiles[3] && it->adjacentTiles[3]->biotope != it->biotope) //Right
+		{
+			//Coordinates of upper right corner
+			X = it->index % gridSizeOfProxies * (TileSize-1);
+			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+			originX = X;
+			originY = Y;
+
+			index = -1;
+			for (size_t i = 0; i < BiotopeSettings.Num(); i++)//find index for biotope setting
+			{
+				if (it->adjacentTiles[3]->biotope == BiotopeSettings[i]->BiotopeIndex)
+				{
+					index = i;
+					break;
+				}
+
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("RIGHT"));
+			UE_LOG(LogTemp, Warning, TEXT("X :%d"), originX);
+			UE_LOG(LogTemp, Warning, TEXT("Y : %d"), originY);
+			//Iterate through all values of the right edge
+			for (int i = originY; i < (originY + (TileSize - 1)); i++)
+			{
+				for (int j = originX; j <= originX + interpWidth; j++)
+				{
+					if (j == originX)
+					{
+						continue;
+					}
+					/*UE_LOG(LogTemp, Warning, TEXT("i :%d"), i);
+					UE_LOG(LogTemp, Warning, TEXT("j : %d"), j);*/
+
+
+					if (index != -1)
+					{
+						if (currentSeed != BiotopeSettings[index]->Seed) {
+							PerlinNoise.generateGradients(BiotopeSettings[index]->Seed);
+							currentSeed = BiotopeSettings[index]->Seed;
+						}
+
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index]);
+					}
+					else
+					{
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+					float v1 = j - originX;
+					float t = ((v1 + interpWidth) / (interpWidth * 2));
+					float step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+					/*UE_LOG(LogTemp, Warning, TEXT("Smoothstep %f"), step);
+					UE_LOG(LogTemp, Warning, TEXT("v1 : %f"), v1);*/
+					//UE_LOG(LogTemp, Warning, TEXT("Step : %f"), step);
+
+					weightedValue = concatedHeightData[GetVertexIndex(SizeX, j, i)] * step + adjNoiseVal * (1 - step);
+					concatedHeightData[GetVertexIndex(SizeX, j, i)] = weightedValue;
+				}
+
+			}
+
+
+
+		}
+
+		if (it->adjacentTiles[4] && it->adjacentTiles[4]->biotope != it->biotope) //New Left
+		{
+			//Coordinates of upper right corner
+			X = it->index % gridSizeOfProxies * (TileSize-1);
+			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+			originX = X + (TileSize-1);
+			originY = Y;
+
+
+
+
+
+
+			index = -1;
+			for (size_t i = 0; i < BiotopeSettings.Num(); i++)//find index for biotope setting
+			{
+				if (it->adjacentTiles[4]->biotope == BiotopeSettings[i]->BiotopeIndex)
+				{
+					index = i;
+					break;
+				}
+
+			}
+
+			/*UE_LOG(LogTemp, Warning, TEXT("LEFT"));
+			UE_LOG(LogTemp, Warning, TEXT("X :%d"), originX);
+			UE_LOG(LogTemp, Warning, TEXT("Y : %d"), originY);*/
+			//Iterate through all values of the Left edge
+			for (int i = originY; i < (originY + TileSize-1); i++)
+			{
+				for (int j = originX; j > originX -interpWidth; j--)
+				{
+					
+
+
+					if (index != -1)
+					{
+						if (currentSeed != BiotopeSettings[index]->Seed) {
+							PerlinNoise.generateGradients(BiotopeSettings[index]->Seed);
+							currentSeed = BiotopeSettings[index]->Seed;
+						}
+
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index]);
+					}
+					else
+					{
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+					float v1 = abs(j - originX);
+					float t = ((v1 + interpWidth) / (interpWidth * 2));
+					float step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+					/*UE_LOG(LogTemp, Warning, TEXT("Smoothstep %f"),step);
+					UE_LOG(LogTemp, Warning, TEXT("v1 : %f"), v1);*/
+					//UE_LOG(LogTemp, Warning, TEXT("Step : %f"), step);
+
+					weightedValue = concatedHeightData[GetVertexIndex(SizeX, j, i)] * step + adjNoiseVal * (1 - step);
+					concatedHeightData[GetVertexIndex(SizeX, j, i)] = weightedValue;
+				}
+
+			}
+
+
+
+
+
+
+
+
+
+		}
+
+		if (it->adjacentTiles[1] && it->adjacentTiles[1]->biotope != it->biotope || it->adjacentTiles[3] && it->adjacentTiles[3]->biotope != it->biotope) //Top Right Corner
+		{
+			//Coordinates of upper right corner
+			X = it->index % gridSizeOfProxies * (TileSize - 1);
+			Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+			originX = X;
+			originY = Y;
+
+			
+			UE_LOG(LogTemp, Warning, TEXT("Upper Right Corner---------------"));
+			UE_LOG(LogTemp, Warning, TEXT("X :%d"), originX);
+			UE_LOG(LogTemp, Warning, TEXT("Y : %d"), originY);
+			
+			
+			for (int i = originY; i < (originY + interpWidth); i++)
+			{
+				for (int j = originX; j <= originX + interpWidth; j++)
+				{
+					if (j == originX)
+					{
+						continue;
+					}
+					
+					UE_LOG(LogTemp, Warning, TEXT("i :%d"), i);
+					UE_LOG(LogTemp, Warning, TEXT("j : %d"), j);
+
+
+
+
+
+					if (index != -1)
+					{
+						if (currentSeed != BiotopeSettings[index]->Seed) {
+							PerlinNoise.generateGradients(BiotopeSettings[index]->Seed);
+							currentSeed = BiotopeSettings[index]->Seed;
+						}
+
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index]);
+					}
+					else
+					{
+						adjNoiseVal = PerlinNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+
+
+
+
+					//adjacent 1
+					float adjValue1 = concatedHeightData[GetVertexIndex(SizeX, originX, i - 1)];
+
+					float v1 = i - originY;
+					float t = ((v1) / (interpWidth));
+					float step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+
+					UE_LOG(LogTemp, Warning, TEXT("Step : %f"), step);
+					weightedValue = concatedHeightData[GetVertexIndex(SizeX, originX, i)] * step + adjValue1 * (1 - step);
+
+
+					//adjacent 3 weighted between adjValue2 and weightedValue
+					float adjValue2 = concatedHeightData[GetVertexIndex(SizeX, originX -1, i)];
+
+					v1 = j - originX;
+					t = ((v1) / (interpWidth));
+					step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+
+
+					weightedValue = weightedValue * step + adjValue2 * (1 - step);
+
+
+					concatedHeightData[GetVertexIndex(SizeX, j, i)] = weightedValue;
+
+
+
+					
+
+
+
+
+
+					
+				}
+
+			}
+
+
+
+		}
+
+		
+
+
+
+
+
+
+		
+
+
+
+
+
+
+	}
+}
+
+void CreateLandscape::createAndInterpBiomesNoise(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
+{
+
+	//Create a noise generator for each different seed, so there is no need to call 
+	TMap<int32,PerlinNoiseGenerator<uint16, 64>*> NoiseGenerators;
+
+	for (auto it : BiotopeSettings)
+	{
+		if (!NoiseGenerators.Contains(it->Seed))
+		{
+			PerlinNoiseGenerator<uint16, 64>* tempNoiseGen = new PerlinNoiseGenerator<uint16, 64>;
+			tempNoiseGen->generateGradients(it->Seed);
+
+			NoiseGenerators.Add(it->Seed, tempNoiseGen);
+
+		}
+		
+	}
+
+
+	PerlinNoiseGenerator<uint16, 64> defaultNoise;
+	defaultNoise.generateGradients(0);
+
+	concatedHeightData.Empty();
+	//concatedHeightData.Reserve(SizeX*SizeY);
+	
+	concatedHeightData.AddUninitialized(SizeX * SizeY);
+
+
+
+
+	int32 interpWidth = 15;
+
+	int32 X;
+	int32 Y;
+	int rowLength = GetGridSizeOfProxies();
+	for (auto it : inTiles)
+	{
+		X = it->index % gridSizeOfProxies * (TileSize - 1);
+		Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+
+
+		for (int32 i = Y; i <= Y + (TileSize - 1); i++)
+		{
+			for (int32 j = X; j <= X + (TileSize - 1); j++)
+			{
+
+				
+				//concatedHeightData[GetVertexIndex(SizeX, j, i)] = defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+				//int index = -1;
+				//for (size_t k = 0; k < BiotopeSettings.Num(); k++)//find index for biotope setting
+				//{
+				//	if (it->biotope == BiotopeSettings[k]->BiotopeIndex)
+				//	{
+				//		index = k;
+				//		break;
+				//	}
+
+				//}
+
+
+				//Loop through all adjacent tiles and calculate distance to each of them to position i,j
+
+
+				uint16 mixedNoise = 0;
+				float distance = 0;
+				//int index2 = -1;
+				float noiseScale = 0.2f;
+
+
+				FVector2D vertCoords(j,i);
+				FVector2D tileCornerCoords1(X, Y);
+				FVector2D tileCornerCoords2(X + TileSize -1, Y +TileSize - 1);
+
+				FVector2D diagonalVector1 = tileCornerCoords2 - tileCornerCoords1;
+				//float diagScaleFactor =  diagonalVector1.Length() / (TileSize - 1);
+				
+				//First Diagonal///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				FVector2D proj = (FVector2D::DotProduct(vertCoords - tileCornerCoords1, diagonalVector1) / diagonalVector1.SquaredLength()) * diagonalVector1;
+
+				//float weight = (1 - ((FMath::Clamp(proj.Length()*2,0,diagonalVector1.Length()) / diagonalVector1.Length())); //Wheight for Top Right Corner 
+				float t = (1 - ((proj.Length()) / diagonalVector1.Length())); //Wheight for Top Right Corner 
+
+				float step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+
+				if (it->adjacentTiles[0])// Top Right Corner
+				{
+					if (it->adjacentTiles[0]->biotope != -1)
+					{
+						mixedNoise += noiseScale * step * NoiseGenerators[BiotopeSettings[it->adjacentTiles[0]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[0]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * step * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					
+					}
+					
+				}
+				else
+				{
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * step * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * step * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+
+				//Bottom left Corner
+
+				if (it->adjacentTiles[7])
+				{
+					if (it->adjacentTiles[7]->biotope != -1)
+					{
+						mixedNoise += noiseScale * (1- step) * NoiseGenerators[BiotopeSettings[it->adjacentTiles[7]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[7]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * (1 - step) * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+				else
+				{
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * (1 - step) * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * (1 - step) * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+
+
+				//Second Diagonal///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				tileCornerCoords1 = FVector2D(X + TileSize - 1, Y);
+				tileCornerCoords2 = FVector2D(X, Y + TileSize - 1);
+				diagonalVector1 = tileCornerCoords2 - tileCornerCoords1;
+
+
+				proj = (FVector2D::DotProduct(vertCoords - tileCornerCoords1, diagonalVector1) / diagonalVector1.SquaredLength()) * diagonalVector1;
+				t = (1 - (proj.Length() / diagonalVector1.Length()));
+				step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+
+				if (it->adjacentTiles[2])// Top Left Corner
+				{
+					if (it->adjacentTiles[2]->biotope != -1)
+					{
+						mixedNoise += noiseScale * step * NoiseGenerators[BiotopeSettings[it->adjacentTiles[2]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[2]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * step * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+				else
+				{
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * step * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * step * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+
+				//Bottom Right Corner
+
+				if (it->adjacentTiles[5])
+				{
+					if (it->adjacentTiles[5]->biotope != -1)
+					{
+						mixedNoise += noiseScale * (1 - step) * NoiseGenerators[BiotopeSettings[it->adjacentTiles[5]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[5]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * (1 - step) * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+				else
+				{
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * (1 - step) * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * (1 - step) * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+
+				//TOP DOWN///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				tileCornerCoords1 = FVector2D(X + (TileSize - 1)/2, Y);
+				tileCornerCoords2 = FVector2D(X + (TileSize - 1) / 2, Y + TileSize - 1);
+				diagonalVector1 = tileCornerCoords2 - tileCornerCoords1;
+
+
+				proj = (FVector2D::DotProduct(vertCoords - tileCornerCoords1, diagonalVector1) / diagonalVector1.SquaredLength()) * diagonalVector1;
+				t = (1 - (proj.Length() / diagonalVector1.Length()));
+				step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+				if (it->adjacentTiles[1])// Top 
+				{
+					if (it->adjacentTiles[1]->biotope != -1)
+					{
+						mixedNoise += noiseScale * step * NoiseGenerators[BiotopeSettings[it->adjacentTiles[1]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[1]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * step * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+				else
+				{
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * step * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * step * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+
+				//Bottom
+
+				if (it->adjacentTiles[6])
+				{
+					if (it->adjacentTiles[6]->biotope != -1)
+					{
+						mixedNoise += noiseScale * (1 - step) * NoiseGenerators[BiotopeSettings[it->adjacentTiles[6]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[6]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * (1 - step) * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+				else
+				{
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * (1 - step) * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * (1 - step) * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+
+				//LEFT RIGHT///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				tileCornerCoords1 = FVector2D(X + (TileSize - 1), Y + (TileSize - 1) / 2);
+				tileCornerCoords2 = FVector2D(X, Y + (TileSize - 1) / 2);
+				diagonalVector1 = tileCornerCoords2 - tileCornerCoords1;
+
+
+				proj = (FVector2D::DotProduct(vertCoords - tileCornerCoords1, diagonalVector1) / diagonalVector1.SquaredLength()) * diagonalVector1;
+				t = (1 - (proj.Length() / diagonalVector1.Length()));
+				step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+				if (it->adjacentTiles[4])// Left 
+				{
+					if (it->adjacentTiles[4]->biotope != -1)
+					{
+						mixedNoise += noiseScale * step * NoiseGenerators[BiotopeSettings[it->adjacentTiles[4]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[4]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * step * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+				else
+				{
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * step * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * step * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+
+				//Right
+
+				if (it->adjacentTiles[3])
+				{
+					if (it->adjacentTiles[3]->biotope != -1)
+					{
+						mixedNoise += noiseScale * (1 - step) * NoiseGenerators[BiotopeSettings[it->adjacentTiles[3]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[3]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * (1 - step) * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+				else
+				{
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * (1 - step) * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * (1 - step) * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+
+
+
+				//The Noise of the tile itself//////////////////
+				if (it->biotope != -1)
+				{
+					mixedNoise += noiseScale  * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+				}
+				else
+				{
+					mixedNoise += noiseScale * defaultNoise.
+						GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+				}
+				
+
+
+
+				concatedHeightData[GetVertexIndex(SizeX, j, i)] = mixedNoise;
+				
+				//for (auto t : it->adjacentTiles)
+				//{
+				//	if (t)
+				//	{
+
+
+				//		index2 = -1;
+				//		for (size_t k = 0; k < BiotopeSettings.Num(); k++)//find index for biotope setting
+				//		{
+				//			if (t->biotope == BiotopeSettings[k]->BiotopeIndex)
+				//			{
+				//				index2 = k;
+				//				break;
+				//			}
+
+				//		}
+
+
+				//		if (index2 != -1)
+				//		{
+				//			//NoiseGenerators.
+				//			adjNoise += NoiseGenerators[BiotopeSettings[index2]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index2]);
+				//		}
+				//		else
+				//		{
+				//			adjNoise += defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+				//		}
+
+
+				//		//adjNoise += NoiseGenerators[BiotopeSettings[index2]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index2]);
+				//	}
+				//	else
+				//	{
+				//		if (index != -1)
+				//		{
+				//			//NoiseGenerators.
+				//			adjNoise += NoiseGenerators[BiotopeSettings[index]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index]);
+				//		}
+				//		else
+				//		{
+				//			adjNoise += defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+				//		}
+				//	}
+
+
+				//	
+
+				//}
+
+
+				//if (index != -1)
+				//{
+				//	//NoiseGenerators.
+				//	adjNoise += NoiseGenerators[BiotopeSettings[index]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index]);
+				//}
+				//else
+				//{
+				//	adjNoise += defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+				//}
+				//
+
+
+				//int32 tileOriginX = X + ((TileSize - 1) / 2);
+				//int32 tileOriginY = Y + ((TileSize - 1) / 2);
+
+
+
+				//distance = sqrt(pow(j - tileOriginX, 2) + pow(i - tileOriginY, 2));
+
+				////UE_LOG(LogTemp, Warning, TEXT("Step : %f"), distance);
+				//float t = ((FMath::Clamp(distance,0,interpWidth)) / (interpWidth));
+				//int32 step = 6 * pow(t, 5) - (15 * pow(t, 4)) + (10 * pow(t, 3));
+
+				//
+
+
+				//if (index != -1)
+				//{
+				//	concatedHeightData[GetVertexIndex(SizeX, j, i)] = (adjNoise * (1 -step) +
+				//		step * NoiseGenerators[BiotopeSettings[index]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[index]);
+				//}
+				//else
+				//{
+
+				//	concatedHeightData[GetVertexIndex(SizeX, j, i)] = (adjNoise * (1.0 / 9.0)) * step +
+				//		(1 - step) * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+
+				//	 
+				//}
+
+				
+
+
+
+			}
+		}
+
+
+
+
+
+
+
+	}
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Size of concated heightdata :%d"), concatedHeightData.Num());
+
+
+}
+
+void CreateLandscape::createAndInterpBiomesNoise2(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
+{
+	TMap<int32, PerlinNoiseGenerator<uint16, 64>*> NoiseGenerators;
+
+	for (auto it : BiotopeSettings)
+	{
+		if (!NoiseGenerators.Contains(it->Seed))
+		{
+			PerlinNoiseGenerator<uint16, 64>* tempNoiseGen = new PerlinNoiseGenerator<uint16, 64>;
+			tempNoiseGen->generateGradients(it->Seed);
+
+			NoiseGenerators.Add(it->Seed, tempNoiseGen);
+
+		}
+
+	}
+
+
+	PerlinNoiseGenerator<uint16, 64> defaultNoise;
+	defaultNoise.generateGradients(0);
+
+	concatedHeightData.Empty();
+	//concatedHeightData.Reserve(SizeX*SizeY);
+
+	concatedHeightData.AddUninitialized(SizeX * SizeY);
+
+	FMath mathInstance;
+	float randRange = 10;
+	int32 X;
+	int32 Y;
+
+	TArray<FVector2D> randomTileOrigins;
+	for (auto it: inTiles )
+	{
+		X = it->index % gridSizeOfProxies * (TileSize - 1);
+		Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+
+		float randX = mathInstance.FRandRange((float)X + ((TileSize - 1) / 2) - randRange, (float)X + ((TileSize - 1) / 2) + randRange);
+		float randY = mathInstance.FRandRange((float)Y + ((TileSize - 1) / 2) - randRange, (float)Y + ((TileSize - 1) / 2) + randRange);
+
+		randomTileOrigins.Add(FVector2D(randX, randY));
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Rand Origin for Index 0  : %s"), *randomTileOrigins[0].ToString());
+	UE_LOG(LogTemp, Warning, TEXT("Rand Origin for Index 1  : %s"), *randomTileOrigins[1].ToString());
+	UE_LOG(LogTemp, Warning, TEXT("Rand Origin for Index 2  : %s"), *randomTileOrigins[2].ToString());
+	UE_LOG(LogTemp, Warning, TEXT("Rand Origin for Index 3  : %s"), *randomTileOrigins[3].ToString());
+	
+	
+	int rowLength = GetGridSizeOfProxies();
+	
+	
+	int32 interpRadius = TileSize + randRange*2;
+
+
+	for (auto it : inTiles)
+	{
+		X = it->index % gridSizeOfProxies * (TileSize - 1);
+		Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+		float thisOriginX = X + (TileSize - 1) / 2;
+		float thisOriginY = Y + (TileSize - 1) / 2;
+
+
+		for (int32 i = Y; i <= Y + (TileSize - 1); i++)
+		{
+			for (int32 j = X; j <= X + (TileSize - 1); j++)
+			{
+
+				//This tiles origin:
+				
+				float adjOriginX;
+				float adjOriginY;
+				float weight;
+				float totalWeight = 0;
+				uint32 mixedNoise = 0;
+				float noiseScale = 1;
+				/*thisOriginX = mathInstance.FRandRange((thisOriginX - randRange / 2), (thisOriginX + randRange / 2));
+				thisOriginY = mathInstance.FRandRange((thisOriginY - randRange / 2), (thisOriginY + randRange / 2));*/
+				thisOriginX = randomTileOrigins[it->index].X;
+				thisOriginY = randomTileOrigins[it->index].Y;
+
+				if (it->adjacentTiles[0])////Top Right Corner/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				{
+						//calculate the origin of the adjacent tile:
+						/*adjOriginX = it->adjacentTiles[0]->index % gridSizeOfProxies * (TileSize - 1) + (TileSize - 1) / 2;
+						adjOriginY = FMath::Floor(it->adjacentTiles[0]->index / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1) / 2;
+
+						adjOriginX = mathInstance.FRandRange((adjOriginX - randRange/2), (adjOriginX + randRange / 2));
+						adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					adjOriginX = randomTileOrigins[it->adjacentTiles[0]->index].X;
+					adjOriginX = randomTileOrigins[it->adjacentTiles[0]->index].Y;
+
+
+						weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+						totalWeight += weight;
+
+						if (it->adjacentTiles[0]->biotope != -1)
+						{
+							mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->adjacentTiles[0]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[0]->biotope]);
+						}
+						else
+						{
+							mixedNoise += noiseScale * weight * defaultNoise.
+								GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+						}
+
+
+				}
+				else
+				{
+					adjOriginX = thisOriginX - (TileSize - 1);
+					adjOriginY = thisOriginY - (TileSize - 1);
+					/*adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+
+
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+					
+
+				}
+
+				if (it->adjacentTiles[1])////Top /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				{
+					//calculate the origin of the adjacent tile:
+					/*adjOriginX = it->adjacentTiles[1]->index % gridSizeOfProxies * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginY = FMath::Floor(it->adjacentTiles[1]->index / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					adjOriginX = randomTileOrigins[it->adjacentTiles[1]->index].X;
+					adjOriginX = randomTileOrigins[it->adjacentTiles[1]->index].Y;
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->adjacentTiles[1]->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->adjacentTiles[1]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[1]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+
+				}
+				else
+				{
+					adjOriginX = thisOriginX;
+					adjOriginY = thisOriginY - (TileSize - 1);
+					/*adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+
+				if (it->adjacentTiles[2])////Top Left Corner /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				{
+					//calculate the origin of the adjacent tile:
+					/*adjOriginX = it->adjacentTiles[2]->index % gridSizeOfProxies * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginY = FMath::Floor(it->adjacentTiles[2]->index / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					adjOriginX = randomTileOrigins[it->adjacentTiles[2]->index].X;
+					adjOriginX = randomTileOrigins[it->adjacentTiles[2]->index].Y;
+
+
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->adjacentTiles[2]->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->adjacentTiles[2]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[2]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+
+				}
+				else
+				{
+					adjOriginX = thisOriginX + (TileSize - 1);
+					adjOriginY = thisOriginY - (TileSize - 1);
+					/*adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+
+				if (it->adjacentTiles[3])////Right /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				{
+					//calculate the origin of the adjacent tile:
+					/*adjOriginX = it->adjacentTiles[3]->index % gridSizeOfProxies * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginY = FMath::Floor(it->adjacentTiles[3]->index / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					adjOriginX = randomTileOrigins[it->adjacentTiles[3]->index].X;
+					adjOriginX = randomTileOrigins[it->adjacentTiles[3]->index].Y;
+
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->adjacentTiles[3]->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->adjacentTiles[3]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[3]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+
+				}
+				else
+				{
+					adjOriginX = thisOriginX - (TileSize - 1);
+					adjOriginY = thisOriginY ;
+					/*adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+
+				if (it->adjacentTiles[4])////Left/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				{
+					//calculate the origin of the adjacent tile:
+					/*adjOriginX = it->adjacentTiles[4]->index % gridSizeOfProxies * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginY = FMath::Floor(it->adjacentTiles[4]->index / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					adjOriginX = randomTileOrigins[it->adjacentTiles[4]->index].X;
+					adjOriginX = randomTileOrigins[it->adjacentTiles[4]->index].Y;
+
+
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+					if (it->adjacentTiles[4]->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->adjacentTiles[4]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[4]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+
+				}
+				else
+				{
+					adjOriginX = thisOriginX + (TileSize - 1);
+					adjOriginY = thisOriginY;
+					/*adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+
+				if (it->adjacentTiles[5])////Bottom Right Corner/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				{
+					//calculate the origin of the adjacent tile:
+					/*adjOriginX = it->adjacentTiles[5]->index % gridSizeOfProxies * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginY = FMath::Floor(it->adjacentTiles[5]->index / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					adjOriginX = randomTileOrigins[it->adjacentTiles[5]->index].X;
+					adjOriginX = randomTileOrigins[it->adjacentTiles[5]->index].Y;
+
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->adjacentTiles[5]->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->adjacentTiles[5]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[5]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+
+				}
+				else
+				{
+					adjOriginX = thisOriginX - (TileSize - 1);
+					adjOriginY = thisOriginY + (TileSize - 1);
+					/*adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+
+				if (it->adjacentTiles[6])////Bottom/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				{
+					//calculate the origin of the adjacent tile:
+					/*adjOriginX = it->adjacentTiles[6]->index % gridSizeOfProxies * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginY = FMath::Floor(it->adjacentTiles[6]->index / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					adjOriginX = randomTileOrigins[it->adjacentTiles[6]->index].X;
+					adjOriginX = randomTileOrigins[it->adjacentTiles[6]->index].Y;
+
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->adjacentTiles[6]->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->adjacentTiles[6]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[6]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+
+				}
+				else
+				{
+					adjOriginX = thisOriginX;
+					adjOriginY = thisOriginY + (TileSize - 1);
+					/*adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+
+				if (it->adjacentTiles[7])////Bottom Left Corner/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				{
+					//calculate the origin of the adjacent tile:
+					/*adjOriginX = it->adjacentTiles[7]->index % gridSizeOfProxies * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginY = FMath::Floor(it->adjacentTiles[7]->index / gridSizeOfProxies) * (TileSize - 1) + (TileSize - 1) / 2;
+					adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					adjOriginX = randomTileOrigins[it->adjacentTiles[7]->index].X;
+					adjOriginX = randomTileOrigins[it->adjacentTiles[7]->index].Y;
+
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->adjacentTiles[7]->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->adjacentTiles[7]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[7]->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+
+				}
+				else
+				{
+					adjOriginX = thisOriginX + (TileSize - 1);
+					adjOriginY = thisOriginY + (TileSize - 1);
+					/*adjOriginX = mathInstance.FRandRange((adjOriginX - randRange / 2), (adjOriginX + randRange / 2));
+					adjOriginY = mathInstance.FRandRange((adjOriginY - randRange / 2), (adjOriginY + randRange / 2));*/
+
+					weight = FMath::Max(0, interpRadius - sqrt(pow(j - adjOriginX, 2) + pow(i - adjOriginY, 2))) / interpRadius;
+					totalWeight += weight;
+
+					if (it->biotope != -1)
+					{
+						mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+					}
+					else
+					{
+						mixedNoise += noiseScale * weight * defaultNoise.
+							GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+					}
+
+				}
+
+				////This TILE/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				
+
+				
+
+				weight = FMath::Max(0, interpRadius - sqrt(pow(j - thisOriginX, 2) + pow(i - thisOriginY, 2))) / interpRadius;
+				totalWeight += weight;
+
+				if (it->biotope != -1)
+				{
+					mixedNoise += noiseScale * weight * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);
+				}
+				else
+				{
+					mixedNoise += noiseScale * weight * defaultNoise.
+						GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+
+				}
+
+				//UE_LOG(LogTemp, Warning, TEXT("Total Weight : %f"), totalWeight);
+
+				concatedHeightData[GetVertexIndex(SizeX, j, i)] = (mixedNoise /totalWeight);
+
+			}
+		}
+	}
+}
+
+void CreateLandscape::createAndInterpBiomesNoiseBilinear(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& inBiotopeSettings)
+{
+	TMap<int32, PerlinNoiseGenerator<uint16, 64>*> NoiseGenerators;
+	TArray<TSharedPtr<BiotopePerlinNoiseSetting>> BiotopeSettings = inBiotopeSettings;
+	//BiotopeSettings.Add(MakeShareable(new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)));
+	for (auto it : BiotopeSettings)
+	{
+		if (!NoiseGenerators.Contains(it->Seed))
+		{
+			PerlinNoiseGenerator<uint16, 64>* tempNoiseGen = new PerlinNoiseGenerator<uint16, 64>;
+			tempNoiseGen->generateGradients(it->Seed);
+
+			NoiseGenerators.Add(it->Seed, tempNoiseGen);
+
+		}
+
+	}
+
+
+	PerlinNoiseGenerator<uint16, 64> defaultNoise;
+	defaultNoise.generateGradients(0);
+
+	concatedHeightData.Empty();
+	//concatedHeightData.Reserve(SizeX*SizeY);
+
+	concatedHeightData.AddUninitialized(SizeX * SizeY);
+
+	int32 X;
+	int32 Y;
+	uint16 noise1, noise2, noise3, noise4;
+	uint16 lerpNoise1, lerpNoise2, lerpNoise3;
+	float x, y;
+	float step;
+	float noiseScale = 0.25f;
+	int rowLength = GetGridSizeOfProxies();
+	for (auto it : inTiles)
+	{
+		X = it->index % gridSizeOfProxies * (TileSize - 1);
+		Y = FMath::Floor(it->index / gridSizeOfProxies) * (TileSize - 1);
+
+
+		for (int32 i = Y; i <= Y + (TileSize - 1); i++)
+		{
+			for (int32 j = X; j <= X + (TileSize - 1); j++)
+			{
+				noise1= noise2= noise3= noise4 = 0;
+				lerpNoise1= lerpNoise2= lerpNoise3 = 0;
+				//Bilinear Interp
+				// 
+				x = (float)(j - X) / (TileSize - 1);
+				y = (float)(i - Y) / (TileSize - 1);
+
+				/*UE_LOG(LogTemp, Warning, TEXT("x : %f"), x);
+				UE_LOG(LogTemp, Warning, TEXT("y : %f"), y);*/
+				//Upper Right Corner
+				if (it->adjacentTiles[0])
+				{
+					/*tempNoiseGen = NoiseGenerators.Find(it->adjacentTiles[0]->biotope);
+					if (tempNoiseGen)
+					{
+						&tempNoiseGen->
+					}*/
+					
+					
+					//noise1 += noiseScale * NoiseGenerators[it->adjacentTiles[0]->biotope]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[0]->biotope]);
+
+					if (it->adjacentTiles[0]->biotope != -1){noise1 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[0]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[0]->biotope]);}
+					else{noise1 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));}
+				}
+				else
+				{
+					if (it->biotope != -1){noise1 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);}
+					else{noise1 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));}
+				}
+
+				if (it->adjacentTiles[1])
+				{
+					if (it->adjacentTiles[1]->biotope != -1){noise1 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[1]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[1]->biotope]);}
+					else{noise1 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));}
+				}
+				else
+				{
+					if (it->biotope != -1){noise1 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]);}
+					else
+					{noise1 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));}
+				}
+
+				if (it->adjacentTiles[3])
+				{
+					if (it->adjacentTiles[3]->biotope != -1) {noise1 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[3]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[3]->biotope]); }
+					else { noise1 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise1 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else
+					{
+						noise1 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+				if (it->biotope != -1) { noise1 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+				else
+				{
+					noise1 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+				}
+
+				//Upper Left Corner
+				if (it->adjacentTiles[1])
+				{
+					if (it->adjacentTiles[1]->biotope != -1) { noise2 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[1]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[1]->biotope]); }
+					else { noise2 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise2 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else { noise2 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+
+				if (it->adjacentTiles[2])
+				{
+					if (it->adjacentTiles[2]->biotope != -1) { noise2 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[2]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[2]->biotope]); }
+					else { noise2 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise2 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else { noise2 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+
+				if (it->adjacentTiles[4])
+				{
+					if (it->adjacentTiles[4]->biotope != -1) { noise2 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[4]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[4]->biotope]); }
+					else { noise2 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise2 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else { noise2 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+
+				if (it->biotope != -1) { noise2 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+				else
+				{
+					noise2 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+				}
+
+				//Calculate Noise1///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				
+				lerpNoise1 = noise1 * (1-x) + noise2 * x;
+
+				//Test with using smoothstep
+				step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
+				lerpNoise1 = noise1 * (1 - step) + noise2 * step;
+				//Bottom Right Corner
+				if (it->adjacentTiles[3])
+				{
+					if (it->adjacentTiles[3]->biotope != -1) { noise3 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[3]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[3]->biotope]); }
+					else { noise3 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise3 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else { noise3 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+
+				if (it->adjacentTiles[5])
+				{
+					if (it->adjacentTiles[5]->biotope != -1) { noise3 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[5]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[5]->biotope]); }
+					else { noise3 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise3 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else
+					{
+						noise3 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+				if (it->adjacentTiles[6])
+				{
+					if (it->adjacentTiles[6]->biotope != -1) { noise3 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[6]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[6]->biotope]); }
+					else { noise3 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise3 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else
+					{
+						noise3 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+				if (it->biotope != -1) { noise3 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+				else
+				{
+					noise3 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+				}
+
+				//Bottom Left Corner
+				if (it->adjacentTiles[4])
+				{
+					if (it->adjacentTiles[4]->biotope != -1) { noise4 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[4]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[4]->biotope]); }
+					else { noise4 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise4 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else { noise4 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+
+				if (it->adjacentTiles[6])
+				{
+					if (it->adjacentTiles[6]->biotope != -1) { noise4 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[6]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[6]->biotope]); }
+					else { noise4 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise4 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else
+					{
+						noise4 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+				if (it->adjacentTiles[7])
+				{
+					if (it->adjacentTiles[7]->biotope != -1) { noise4 += noiseScale * NoiseGenerators[BiotopeSettings[it->adjacentTiles[7]->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->adjacentTiles[7]->biotope]); }
+					else { noise4 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0)); }
+				}
+				else
+				{
+					if (it->biotope != -1) { noise4 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+					else
+					{
+						noise4 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+					}
+				}
+
+				if (it->biotope != -1) { noise4 += noiseScale * NoiseGenerators[BiotopeSettings[it->biotope]->Seed]->GenerateNoiseValBiotope(rowLength, i, j, *BiotopeSettings[it->biotope]); }
+				else
+				{
+					noise4 += noiseScale * defaultNoise.GenerateNoiseValBiotope(rowLength, i, j, *new BiotopePerlinNoiseSetting("default", -1, 64, "", 1, 1, 1, 1, 1, 1, false, false, false, 0));
+				}
+				//noise1 = j
+
+				//Calculate leprNoise2 and lerpNoise3
+				lerpNoise2  = noise3 * (1 - x) + noise4 * x;
+
+				//test with smoothstep
+				step = 6 * pow(x, 5) - (15 * pow(x, 4)) + (10 * pow(x, 3));
+				lerpNoise2 = noise3 * (1 - step) + noise4 * step;
+
+
+				lerpNoise3 = lerpNoise1 * (1 - y) + lerpNoise2 * y;
+
+				step = 6 * pow(y, 5) - (15 * pow(y, 4)) + (10 * pow(y, 3));
+				lerpNoise3 = lerpNoise1 * (1 - step) + lerpNoise2 * step;
+
+				concatedHeightData[GetVertexIndex(SizeX, j, i)] = lerpNoise3;
+			}
+		}
+	}
+}
+
+void CreateLandscape::createAndInterpBiomesNoiseBicubic(TArray<UTile*>& inTiles, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings)
+{
+	uint16 paddWidth = 2;
+	int rowLength = GetGridSizeOfProxies();
+	int nmbrPaddedColumns = rowLength + 4;
+
+	TArray<UTile*> tilesWithPad;
+
+	//tilesWithPad.InsertDefaulted(0, (rowLength + paddWidth * 2) * 2);
+	for (size_t i = 0; i < (rowLength+paddWidth*2)*2; i++)
+	{
+		tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
+
+	}
+
+	for (auto& it : inTiles)
+	{
+
+		if (it->index % rowLength == 0)
+		{
+			tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
+			tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
+		}
+
+		tilesWithPad.Add(it);
+
+		if ((it->index +1) % rowLength == 0)
+		{
+			tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
+			tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
+		}
+
+		
+
+	}
+	//tilesWithPad.InsertDefaulted(0, (rowLength + paddWidth * 2)*2);
+	for (size_t i = 0; i < (rowLength + paddWidth * 2) * 2; i++)
+	{
+		tilesWithPad.Add(new UTile(QuadsPerComponent, ComponentsPerProxy, TileSize));
+
+	}
+
+
+	for (int i = 0; i < nmbrPaddedColumns; ++i)
+	{
+		// top
+		tilesWithPad[i]->biotope = tilesWithPad[i + nmbrPaddedColumns*2]->biotope;
+		tilesWithPad[i + nmbrPaddedColumns]->biotope = tilesWithPad[i + nmbrPaddedColumns * 2 ]->biotope;
+
+
+		//Bottom
+		tilesWithPad[i + nmbrPaddedColumns * (nmbrPaddedColumns - 1)]->biotope = tilesWithPad[i + nmbrPaddedColumns * (nmbrPaddedColumns - 1) - nmbrPaddedColumns*2]->biotope;
+		tilesWithPad[i + nmbrPaddedColumns * (nmbrPaddedColumns - 1) - nmbrPaddedColumns]->biotope = tilesWithPad[i + nmbrPaddedColumns * (nmbrPaddedColumns - 1) - nmbrPaddedColumns * 2]->biotope;
+	}
+
+	for (int j = 0; j < nmbrPaddedColumns; ++j)
+	{
+		// Right
+		tilesWithPad[j * nmbrPaddedColumns] = tilesWithPad[j * nmbrPaddedColumns + 2];
+		tilesWithPad[j * nmbrPaddedColumns + 1] = tilesWithPad[j * nmbrPaddedColumns + 2];
+
+		tilesWithPad[j * nmbrPaddedColumns + (nmbrPaddedColumns - 1)]->biotope = tilesWithPad[j * nmbrPaddedColumns + (nmbrPaddedColumns - 1) - 2]->biotope;
+		tilesWithPad[j * nmbrPaddedColumns + (nmbrPaddedColumns - 1) - 1]->biotope = tilesWithPad[j * nmbrPaddedColumns + (nmbrPaddedColumns - 1) - 2]->biotope;
+	}
+
+	for (auto& it: tilesWithPad)
+	{
+
+		it->updateAdjacentTiles(tilesWithPad, nmbrPaddedColumns);
+		UE_LOG(LogTemp, Warning, TEXT("Biotope: %d"), it->biotope);
+	}
+
+
+
+	//Bicubic interpolation-----------------------------------------------------------------------------------------------------
+	for (size_t i = paddWidth; i < rowLength + paddWidth; i++) //X
+	{
+		for (size_t j = paddWidth; j < rowLength + paddWidth; j++) //Y
+		{
+			//tilesWithPad[i*rowLength + j]
+		}
+	}
+
+
+
+	FMatrix F;
+
+
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Array Length: %d"), tilesWithPad.Num());
+}
+
 void CreateLandscape::AssignBiotopesToTiles(TArray<UTile*>& inTiles, const int &nmbrOfBiomes, const TArray<TSharedPtr<BiotopePerlinNoiseSetting>>& BiotopeSettings) const
 {
 
