@@ -276,8 +276,8 @@ public:
 
 	FReply saveAllBiomeSettings2() {
 
-		FString filePath = "C:/Users/viksj950/Desktop/TEMP2.txt";
-		FString filePathPre = "C:/Users/viksj950/Desktop/TEMP3.txt";
+		FString filePath = "C:/Users/William/Documents/Examensarbete/Rapport things/TEMP2.txt";
+		FString filePathPre = "C:/Users/William/Documents/Examensarbete/Rapport things/TEMP3.txt";
 
 		FString Line = "";
 		FString LinePre = "";
@@ -376,7 +376,7 @@ public:
 		TArray<std::string> previewInfo;
 		TArray<int> newBiomeIndexes;
 
-		myFile.open("C:/Users/viksj950/Desktop/TEMP2.txt", std::ios::in);
+		myFile.open("C:/Users/William/Documents/Examensarbete/Rapport things/TEMP2.txt", std::ios::in);
 		int fileLength = 0;
 
 		newBiomeIndexes.Add(0);
@@ -475,7 +475,7 @@ public:
 
 
 		//Here starts the preview read
-		myFile.open("C:/Users/viksj950/Desktop/TEMP3.txt", std::ios::in);
+		myFile.open("C:/Users/William/Documents/Examensarbete/Rapport things/TEMP3.txt", std::ios::in);
 		fileLength = 0;
 		bool voronoiMarked = false;
 		previewWindow.markedTiles.Empty();
